@@ -1,0 +1,21 @@
+name: clustermatch_gene_expr
+channels:
+  - conda-forge
+dependencies:
+  - ipython
+  - ipywidgets
+  - jupyterlab
+  - jupytext
+  - matplotlib
+  - numpy
+  - pandas
+  - papermill
+  - pip
+  - pytest
+  - python=3.9.*
+  - pyyaml
+  - requests
+  - scikit-learn
+  - scipy
+  - seaborn
+  - tqdm
