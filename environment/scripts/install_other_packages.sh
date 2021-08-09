@@ -11,7 +11,5 @@ jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 #
 # R dependencies
-# (disabled for now)
 #
-# TAR=$(which tar) Rscript ${SCRIPT_DIR}/install_r_packages.r
-
+TAR=$(which tar) Rscript ${SCRIPT_DIR}/install_r_packages.r
