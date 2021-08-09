@@ -15,8 +15,15 @@ dependencies:
   - python=3.9.*
   - pyyaml
   - requests
+  - r-base
+  - r-devtools
+  - r-essentials
+  - r-reticulate
+  - r-svglite
+  - rpy2
   - scikit-learn
   - scipy
   - seaborn
+  - tabulate
   - tqdm
 
