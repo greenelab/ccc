@@ -10,7 +10,7 @@ echo "PYTHONPATH=${PYTHONPATH}"
 
 # export the PhenoPLIER configuration as environmental variables (this is
 # helpful if the configuration is needed outside python)
-eval `python libs/conf.py`
+eval `python libs/clustermatch/conf.py`
 
 IP="127.0.0.1"
 TOKEN=""
