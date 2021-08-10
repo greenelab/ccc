@@ -5,6 +5,7 @@ Tests the conf.py module.
 
 def test_conf_module_load():
     from clustermatch import conf
+
     assert conf is not None
     assert conf.__file__ is not None
 
@@ -47,15 +48,19 @@ def test_conf_export_variables():
     r = subprocess.run(["python", conf_filepath], stdout=subprocess.PIPE)
     assert r is not None
     assert r.returncode == 0
-    r_output = r.stdout.decode('utf-8')
+    r_output = r.stdout.decode("utf-8")
     assert r_output is not None
     assert len(r_output) > 10
     assert r_output.count("export ") > 5
 
-    r = subprocess.run(f"eval `python {conf_filepath}` && echo $CM_ROOT_DIR", shell=True, stdout=subprocess.PIPE)
+    r = subprocess.run(
+        f"eval `python {conf_filepath}` && echo $CM_ROOT_DIR",
+        shell=True,
+        stdout=subprocess.PIPE,
+    )
     assert r is not None
     assert r.returncode == 0
-    r_output = r.stdout.decode('utf-8')
+    r_output = r.stdout.decode("utf-8")
     assert r_output is not None
     assert len(r_output) > 10
     assert r_output.startswith("/")

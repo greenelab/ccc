@@ -5,6 +5,7 @@ Tests the log.py module.
 
 def test_log_module_load():
     from clustermatch import log
+
     assert log is not None
     assert log.__file__ is not None
 
