@@ -13,10 +13,10 @@ def test_log_module_load():
 def test_log_get_logger():
     from clustermatch import log
 
-    l = log.get_logger("testing")
-    assert l is not None
-    assert hasattr(l, "info")
-    assert hasattr(l, "debug")
-    assert hasattr(l, "error")
+    logger = log.get_logger("testing")
+    assert logger is not None
+    assert hasattr(logger, "info")
+    assert hasattr(logger, "debug")
+    assert hasattr(logger, "error")
 
-    l.info("test")
+    logger.info("test")
