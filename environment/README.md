@@ -29,7 +29,7 @@ If you want to run on Windows, use the Docker image instead.
     ```
 
 1. (optional) Adjust other settings (i.e. root directory, available computational
-   resources, etc.) by modifying the file `../libs/settings.py`
+   resources, etc.) by modifying the file `../libs/clustermatch/settings.py`
 
 1. Adjust your `PYTHONPATH` variable to include the `libs` directory:
 
@@ -58,17 +58,17 @@ These steps are only for developers.
     bash scripts/install_other_packages.sh
     ```
 
-
+<!-- 
 1. (CHECK!) Install JupyterLab extensions (MIGHT NOT BE NECESSARY IN VERSION 3.0+):
  
     ```bash
     jupyter labextension install @jupyterlab/toc
-    ```
+    ``` -->
 
 1. Export conda environment:
 
     ```
-    conda env export --name phenoplier --file environment.yml
+    conda env export --name clustermatch_gene_expr --file environment.yml
     ```
 
 1. Modify `environment.yml` and leave only manually installed packages (not their dependencies).
