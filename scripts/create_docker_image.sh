@@ -1,12 +1,13 @@
 #/bin/bash
 
-VERSION="1.0"
+PROJECT_NAME="clustermatch_gene_expr"
+VERSION="dev"
 
-docker build -t miltondp/phenoplier:${VERSION} -t miltondp/phenoplier:latest .
+docker build -t miltondp/${PROJECT_NAME}:${VERSION} -t miltondp/${PROJECT_NAME}:latest .
 
 # remember to push image:
-# docker push miltondp/phenoplier:${VERSION}
-# docker push miltondp/phenoplier:latest
+# docker push miltondp/${PROJECT_NAME}:${VERSION}
+# docker push miltondp/${PROJECT_NAME}:latest
 
 # update description (short 100 chars)
 # update README.md in Docker Hub
