@@ -10,7 +10,7 @@ variable.
 # Specifies the main directory where all data and results generated are stored.
 # When setting up the environment for the first time, input data will be
 # automatically downloaded into a subfolder of ROOT_DIR.
-# 
+#
 # Default: if not specified (None), it defaults to the 'cm_gene_expr' subfolder
 # in the temporary directory of the operating system (i.e. '/tmp/cm_gene_expr'
 # in Unix systems).

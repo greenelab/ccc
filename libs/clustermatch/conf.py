@@ -60,9 +60,7 @@ RESULTS["BASE_DIR"] = RESULTS_DIR
 # Manuscript
 #
 MANUSCRIPT = {}
-MANUSCRIPT["BASE_DIR"] = os.environ.get(
-    "CM_MANUSCRIPT_DIR", settings.MANUSCRIPT_DIR
-)
+MANUSCRIPT["BASE_DIR"] = os.environ.get("CM_MANUSCRIPT_DIR", settings.MANUSCRIPT_DIR)
 if MANUSCRIPT["BASE_DIR"] is not None:
     # these paths are specific to manubot
     MANUSCRIPT["CONTENT_DIR"] = Path(MANUSCRIPT["BASE_DIR"], "content").resolve()
