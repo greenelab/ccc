@@ -8,7 +8,7 @@ import tempfile
 from multiprocessing import cpu_count
 from pathlib import Path
 
-import settings
+from clustermatch import settings
 
 #
 # General file structure
