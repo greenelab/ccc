@@ -72,7 +72,7 @@ docker pull miltondp/clustermatch_gene_expr
 The image only contains the conda environment with the code in this repository so, after pulling the image, you need to download the data as well:
 
 ```bash
-docker run \
+docker run --rm \
   -v "/tmp/clustermatch_gene_expr_data:/opt/clustermatch_gene_expr_data" \
   miltondp/clustermatch_gene_expr \
   python environment/scripts/setup_data.py
@@ -84,16 +84,16 @@ If you want to generate the figures and tables for the manuscript, you need to c
 You can run notebooks from the command line, for example:
 
 ```bash
-docker run \
+docker run --rm \
   -v "/tmp/clustermatch_gene_expr_data:/opt/clustermatch_gene_expr_data" \
   miltondp/clustermatch_gene_expr \
-  parallel -k --lb --halt 2 -j1 'bash nbs/run_nbs.sh {}' ::: nbs/01_preprocessing/*.ipynb
+  /bin/bash -c "parallel -k --lb --halt 2 -j1 'bash nbs/run_nbs.sh {}' ::: nbs/01_preprocessing/*.ipynb"
 ```
 
 or start a Jupyter Notebook server with:
 
 ```bash
-docker run \
+docker run --rm \
   -p 8888:8892 \
   -v "/tmp/clustermatch_gene_expr_data:/opt/clustermatch_gene_expr_data" \
   miltondp/clustermatch_gene_expr
