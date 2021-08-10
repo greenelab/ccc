@@ -6,7 +6,7 @@ default_repo = 'http://cran.us.r-project.org'
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager", repos=default_repo)
-BiocManager::install(version = "3.10", update=TRUE, ask=FALSE)
+BiocManager::install(version = "3.13", update=TRUE, ask=FALSE)
 
 # clusterProfiler
 # BiocManager::install("clusterProfiler", update=FALSE, ask=FALSE)
