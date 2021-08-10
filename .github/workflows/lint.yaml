@@ -32,3 +32,5 @@ jobs:
           auto_fix: true
           git_name: "Greene Lab Linter"
           git_email: "miltondp@gmail.com"
+          commit_message: "fix code style issues with ${linter}"
+
