@@ -6,22 +6,19 @@ on:
 
 env:
   # Increase this value to reset cache if environment.yml has not changed.
-  PY_CACHE_NUMBER: 0
-  PY_ENV: clustermatch_gene_expr
+  PY_CACHE_NUMBER: 1
+  PY_ENV: cm_gene_expr
 
 jobs:
   pytest:
     name: Python tests
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash -l {0}
     strategy:
       max-parallel: 4
       fail-fast: false
       matrix:
         python-version: [3.9]
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
       - name: Checkout git repo
         uses: actions/checkout@v2
@@ -45,28 +42,30 @@ jobs:
           auto-activate-base: false
       - name: Conda-Pack
         if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash -l {0}
         run: |
           conda install --yes -c conda-forge conda-pack
           conda pack -f -n ${{ env.PY_ENV }} -o "${{ env.PY_ENV }}.tar.gz"
       - name: Unpack environment
+        shell: bash -l {0}
         run: |
           mkdir -p "${{ env.PY_ENV }}"
           tar -xzf "${{ env.PY_ENV }}.tar.gz" -C "${{ env.PY_ENV }}"
-          source "${{ env.PY_ENV }}/bin/activate"
+      - name: Setup data and run pytest (Windows systems)
+        if: runner.os == 'Windows'
+        env:
+          PYTHONPATH: libs/
+        run: |
+          ${{ env.PY_ENV }}/python environment/scripts/setup_data.py --mode testing
+          ${{ env.PY_ENV }}/python -m pytest -v -rs tests
+      - name: Setup data and run pytest (non-Windows systems)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          PYTHONPATH: libs/
+        run: |
+          source ${{ env.PY_ENV }}/bin/activate
           conda-unpack
-      - name: testing testing
-        run: |
-          source "${{ env.PY_ENV }}/bin/activate"
-          python -c 'import sys; print(sys.version_info[:])'
-      - name: Setup data
-        env:
-          PYTHONPATH: libs/
-        run: |
-          source "${{ env.PY_ENV }}/bin/activate"
+
           python environment/scripts/setup_data.py --mode testing
-      - name: Run pytest
-        env:
-          PYTHONPATH: libs/
-        run: |
-          source "${{ env.PY_ENV }}/bin/activate"
-          pytest -rs tests/
+          pytest -v -rs tests
