@@ -4,9 +4,9 @@ It sets up the file/folder structure by downloading the necessary files.
 import os
 from pathlib import Path
 
-import conf
-from utils import curl, md5_matches
-from log import get_logger
+# import conf
+# from utils import curl, md5_matches
+from clustermatch.log import get_logger
 
 logger = get_logger("setup")
 

@@ -5,7 +5,7 @@ import logging
 import logging.config
 import yaml
 
-import conf
+from clustermatch import conf
 
 
 def _get_logger_config():
