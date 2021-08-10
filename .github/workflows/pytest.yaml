@@ -1,0 +1,42 @@
+name: tests
+on:
+  push:
+  pull_request:
+    types: [opened, reopened]
+jobs:
+  pytest:
+    name: Python tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 4
+      fail-fast: false
+      matrix:
+        python-version: [3.9]
+        os: [ubuntu-latest, macOS-latest]
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@v2
+        with:
+          lfs: false
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: "latest"
+          auto-update-conda: true
+          activate-environment: clustermatch_gene_expr
+          channel-priority: strict
+          environment-file: environment/environment.yml
+          python-version: ${{ matrix.python-version }}
+          auto-activate-base: false
+#          use-only-tar-bz2: true
+      - name: Setup data
+        shell: bash -l {0}
+        env:
+          PYTHONPATH: libs/
+        run: |
+          python environment/scripts/setup_data.py --mode testing
+      - name: Run pytest
+        shell: bash -l {0}
+        env:
+          PYTHONPATH: libs/
+        run: pytest -rs tests/

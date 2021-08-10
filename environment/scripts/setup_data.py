@@ -57,7 +57,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PhenoPLIER data setup.")
     parser.add_argument(
         "--mode",
-        choices=list(AVAILABLE_ACTIONS.keys()),
+        choices=["full", "testing"],
         default="full",
         help="Specifies which kind of data should be downloaded. It "
         "could be all the data (full) or a small subset (testing, which is "
