@@ -3,10 +3,19 @@ on:
   push:
   pull_request:
     types: [opened, reopened]
+
+env:
+  # Increase this value to reset cache if environment.yml has not changed.
+  PY_CACHE_NUMBER: 0
+  PY_ENV: clustermatch_gene_expr
+
 jobs:
   pytest:
     name: Python tests
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
     strategy:
       max-parallel: 4
       fail-fast: false
@@ -18,25 +27,46 @@ jobs:
         uses: actions/checkout@v2
         with:
           lfs: false
+      - name: Cache conda
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: "${{ env.PY_ENV }}.tar.gz"
+          key: ${{ runner.os }}-${{ env.PY_CACHE_NUMBER }}-${{ hashFiles('environment/environment.yml') }}
       - name: Setup Miniconda
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: "latest"
           auto-update-conda: true
-          activate-environment: clustermatch_gene_expr
+          activate-environment: ${{ env.PY_ENV }}
           channel-priority: strict
           environment-file: environment/environment.yml
-          python-version: ${{ matrix.python-version }}
           auto-activate-base: false
-#          use-only-tar-bz2: true
+      - name: Conda-Pack
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          conda install --yes -c conda-forge conda-pack
+          conda pack -f -n ${{ env.PY_ENV }} -o "${{ env.PY_ENV }}.tar.gz"
+      - name: Unpack environment
+        run: |
+          mkdir -p "${{ env.PY_ENV }}"
+          tar -xzf "${{ env.PY_ENV }}.tar.gz" -C "${{ env.PY_ENV }}"
+          source "${{ env.PY_ENV }}/bin/activate"
+          conda-unpack
+      - name: testing testing
+        run: |
+          source "${{ env.PY_ENV }}/bin/activate"
+          python -c 'import sys; print(sys.version_info[:])'
       - name: Setup data
-        shell: bash -l {0}
         env:
           PYTHONPATH: libs/
         run: |
+          source "${{ env.PY_ENV }}/bin/activate"
           python environment/scripts/setup_data.py --mode testing
       - name: Run pytest
-        shell: bash -l {0}
         env:
           PYTHONPATH: libs/
-        run: pytest -rs tests/
+        run: |
+          source "${{ env.PY_ENV }}/bin/activate"
+          pytest -rs tests/
