@@ -20,3 +20,4 @@ def test_log_get_logger():
     assert hasattr(logger, "error")
 
     logger.info("test")
+    logger.warning("test warn")
