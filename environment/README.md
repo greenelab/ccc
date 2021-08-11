@@ -2,8 +2,7 @@
 
 If you want to run the scripts/notebooks, you need to follow these steps to create a conda environment and download the necessary data.
 
-Keep in mind that the software is only tested on Linux or macOS (not MS Windows).
-If you want to run on Windows, use the Docker image instead.
+Keep in mind that although unit tests are automatically run on Linux, macOS and MS Windows, the software is manually tested only on Linux/Ubuntu.
 
 1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or Anaconda.
 
