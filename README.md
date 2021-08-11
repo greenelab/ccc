@@ -1,6 +1,7 @@
 # Clustermatch on gene expression data (code)
 
 [![Code tests](https://github.com/greenelab/clustermatch-gene-expr/actions/workflows/pytest.yaml/badge.svg)](https://github.com/greenelab/clustermatch-gene-expr/actions/workflows/pytest.yaml)
+[![codecov](https://codecov.io/gh/greenelab/clustermatch-gene-expr/branch/main/graph/badge.svg?token=QNK6O3Y1VF)](https://codecov.io/gh/greenelab/clustermatch-gene-expr)
 [![HTML Manuscript](https://img.shields.io/badge/manuscript-HTML-blue.svg)](https://greenelab.github.io/clustermatch-gene-expr-manuscript/)
 [![PDF Manuscript](https://img.shields.io/badge/manuscript-PDF-blue.svg)](https://greenelab.github.io/clustermatch-gene-expr-manuscript/manuscript.pdf)
 
