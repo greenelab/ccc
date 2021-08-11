@@ -36,7 +36,7 @@ COPY . ${CODE_DIR}
 WORKDIR ${CODE_DIR}
 
 RUN echo "Make sure modules can be loaded"
-RUN python -c "import conf"
+RUN python -c "from clustermatch import conf"
 
 ENTRYPOINT ["/opt/code/entrypoint.sh"]
 CMD ["scripts/run_nbs_server.sh", "--container-mode"]
