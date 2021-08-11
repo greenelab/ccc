@@ -6,7 +6,7 @@ on:
 
 env:
   # Increase this value to reset cache if environment.yml has not changed.
-  PY_CACHE_NUMBER: 1
+  PY_CACHE_NUMBER: 2
   PY_ENV: cm_gene_expr
 
 jobs:
@@ -44,7 +44,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash -l {0}
         run: |
-          conda install --yes -c conda-forge conda-pack
+          conda install --yes -c conda-forge conda-pack coverage
           conda pack -f -n ${{ env.PY_ENV }} -o "${{ env.PY_ENV }}.tar.gz"
       - name: Unpack environment
         shell: bash -l {0}
@@ -68,4 +68,18 @@ jobs:
           conda-unpack
 
           python environment/scripts/setup_data.py --mode testing
-          pytest -v -rs tests
+
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            coverage run --source=libs/ -m pytest -v -rs tests
+            coverage xml -o coverage.xml
+          else
+            pytest -v -rs tests
+          fi
+      - name: Codecov upload
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
+          name: codecov-${{ matrix.os }}-python${{ matrix.python-version }}
+          fail_ci_if_error: true
+          verbose: true # optional (default = false)
