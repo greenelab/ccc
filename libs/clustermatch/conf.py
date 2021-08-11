@@ -78,10 +78,13 @@ if __name__ == "__main__":
                 continue
 
             if isinstance(var_value, (str, int, PurePath)):
-                print(f'export CM_{var_name}="{str(var_value)}"')
+                new_var_name = f"CM_{var_name}"
+                print(f'export {new_var_name}="{str(var_value)}"')
+                yield new_var_name
             elif isinstance(var_value, dict):
                 new_dict = {f"{var_name}_{k}": v for k, v in var_value.items()}
-                print_conf(new_dict)
+                for x in print_conf(new_dict):
+                    yield x
             else:
                 raise ValueError(f"Configuration type not understood: {var_name}")
 
@@ -89,4 +92,4 @@ if __name__ == "__main__":
         k: v for k, v in locals().items() if not k.startswith("__") and k == k.upper()
     }
 
-    print_conf(local_variables)
+    print_vars = list(print_conf(local_variables))
