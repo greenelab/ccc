@@ -1,8 +1,12 @@
 #!/bin/bash
 
 # The script allows to run a JupyterLab server, listening to local connections
-# only by default. If the only optional argument is given, then the server will
-# request a token from users and will listen to any address (*).
+# only by default.
+# It accepts only one argument, which could be:
+#   * "--container-mode": it sets some parameters when starting the jupyter server
+#   to make it work inside a Docker container.
+#   * any other value: it is the token that the server will request from users;
+#   in addition, it will listen to any address (*).
 
 PORT=8893
 export PYTHONPATH=`pwd`/libs/
