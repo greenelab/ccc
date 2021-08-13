@@ -12,7 +12,7 @@ PORT=8893
 export PYTHONPATH=`pwd`/libs/
 echo "PYTHONPATH=${PYTHONPATH}"
 
-# export the PhenoPLIER configuration as environmental variables (this is
+# export the configuration as environmental variables (this is
 # helpful if the configuration is needed outside python)
 eval `python libs/clustermatch/conf.py`
 
