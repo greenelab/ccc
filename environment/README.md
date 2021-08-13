@@ -6,11 +6,11 @@ Keep in mind that although unit tests are automatically run on Linux, macOS and 
 
 1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or Anaconda.
 
-1. Open a terminal, clone this repository, and `cd` into the repository root folder.
+2. Open a terminal, clone this repository, and `cd` into the repository root folder.
 
-1. Run `cd environment`.
+3. Run `cd environment`.
 
-1. (optional) Adjust your environment variables:
+4. (optional) Adjust your environment variables:
 
     ```bash
     # (optional, will default to subfolder 'cm_gene_expr' under the system's temporary directory)
@@ -27,10 +27,10 @@ Keep in mind that although unit tests are automatically run on Linux, macOS and 
     export CM_MANUSCRIPT_DIR=/tmp/manuscript
     ```
 
-1. (optional) Adjust other settings (i.e. root directory, available computational
+5. (optional) Adjust other settings (i.e. root directory, available computational
    resources, etc.) by modifying the file `../libs/clustermatch/settings.py`
 
-1. Adjust your `PYTHONPATH` variable to include the `libs` directory:
+6. Adjust your `PYTHONPATH` variable to include the `libs` directory:
 
     ```bash
     export PYTHONPATH=`readlink -f ../libs/`:$PYTHONPATH
@@ -39,10 +39,14 @@ Keep in mind that although unit tests are automatically run on Linux, macOS and 
     `readlink` might not work on macOS. In that case, simply replace it with
     the absolute path to the `../libs/` folder.
 
-1. Run `bash scripts/setup_environment.sh`.
+7. Run `bash scripts/setup_environment.sh`.
 This will create a conda environment and download the data needed to run the analyses.
-This will download `XXX` GB, so it will take a while to finish.
-
+It will download `XXX` GB, so it will take a while to finish.
+Keep in mind two things here:
+1) the script requires conda >= 4.9.0 to work;
+if you cannot upgrade, just remove the `--no-capture-output` parameter in the script.
+2) we use conda packages from the `conda-forge` channel;
+if you find any issues with the installation, it is advisible to configure the channel priority of your conda to `strict` if possible (`conda config --set channel_priority strict`).
 
 # Developer usage
 
