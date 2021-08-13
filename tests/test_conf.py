@@ -38,6 +38,7 @@ def test_conf_entries():
     assert conf.RESULTS["BASE_DIR"] != ""
 
     assert conf.MANUSCRIPT is not None
+    assert "CONTENT_DIR" not in conf.MANUSCRIPT
 
 
 def test_conf_main():

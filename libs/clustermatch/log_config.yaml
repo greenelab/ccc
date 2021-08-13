@@ -17,7 +17,6 @@ handlers:
     class: logging.FileHandler
     level: DEBUG
     filename: logging.txt
-#    mode: w
     formatter: simple
     delay: true
 
@@ -25,9 +24,6 @@ loggers:
   none:
     handlers: [empty]
     propagate: false
-
-#  setup:
-#    handlers: []
 
 root:
   handlers: [console]
