@@ -1,6 +1,7 @@
 name: clustermatch_gene_expr
 channels:
   - conda-forge
+  - defaults
 dependencies:
   - ipython=7.*
   - ipywidgets
