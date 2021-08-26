@@ -1,11 +1,8 @@
 """
 It sets up the file/folder structure by downloading the necessary files.
 """
-# import os
-# from pathlib import Path
-
-# import conf
-# from utils import curl, md5_matches
+from clustermatch import conf
+from clustermatch.utils import curl
 from clustermatch.log import get_logger
 
 logger = get_logger("setup")
@@ -18,14 +15,24 @@ logger = get_logger("setup")
 DATA_IN_TESTING_MODE_ONLY = {}
 
 
-# def download_phenomexcan_rapid_gwas_pheno_info(**kwargs):
-#     output_file = conf.PHENOMEXCAN["RAPID_GWAS_PHENO_INFO_FILE"]
-#     curl(
-#         "https://upenn.box.com/shared/static/163mkzgd4uosk4pnzx0xsj7n0reu8yjv.gz",
-#         output_file,
-#         "cba910ee6f93eaed9d318edcd3f1ce18",
-#         logger=logger,
-#     )
+def download_gtex_v8_sample_attributes(**kwargs):
+    output_file = conf.GTEX["SAMPLE_ATTRS_FILE"]
+    curl(
+        "https://storage.googleapis.com/gtex_analysis_v8/annotations/GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt",
+        output_file,
+        "3a863b00db00a0a08a5c7900d44ea119",
+        logger=logger,
+    )
+
+
+def download_gtex_v8_data(**kwargs):
+    output_file = conf.GTEX["DATA_TPM_GCT_FILE"]
+    curl(
+        "https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz",
+        output_file,
+        "ff6aade0ef5b55e38af9fef98bad760b",
+        logger=logger,
+    )
 
 
 if __name__ == "__main__":

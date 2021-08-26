@@ -67,6 +67,19 @@ if MANUSCRIPT["BASE_DIR"] is not None:
     MANUSCRIPT["FIGURES_DIR"] = Path(MANUSCRIPT["CONTENT_DIR"], "images").resolve()
 
 
+#
+# GTEx
+#
+GTEX = {}
+GTEX["BASE_DIR"] = Path(DATA_DIR, "gtex_v8").resolve()
+GTEX["SAMPLE_ATTRS_FILE"] = Path(
+    GTEX["BASE_DIR"], "GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt"
+).resolve()
+GTEX["DATA_TPM_GCT_FILE"] = Path(
+    GTEX["BASE_DIR"], "GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz"
+).resolve()
+
+
 if __name__ == "__main__":
     # if this script is run, then it exports the configuration as environment
     # variables (for bash/R, etc)
