@@ -6,4 +6,8 @@ set +eu
 conda activate clustermatch_gene_expr
 set -euo pipefail
 
+# load environment variables
+eval `python libs/conf.py`
+
 exec "$@"
+
