@@ -3,7 +3,6 @@ General utility functions.
 """
 import re
 import hashlib
-import subprocess
 from pathlib import Path
 from subprocess import run
 
