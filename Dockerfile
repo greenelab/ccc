@@ -34,9 +34,11 @@ RUN python -c "import papermill"
 
 COPY . ${CODE_DIR}
 WORKDIR ${CODE_DIR}
+RUN mkdir /.local /.jupyter && chmod -R 0777 ./ /.local /.jupyter
 
 RUN echo "Make sure modules can be loaded"
 RUN python -c "from clustermatch import conf"
 
 ENTRYPOINT ["/opt/code/entrypoint.sh"]
 CMD ["scripts/run_nbs_server.sh", "--container-mode"]
+
