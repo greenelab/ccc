@@ -27,7 +27,7 @@ import pickle
 from pathlib import Path
 
 import pandas as pd
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from clustermatch.utils import simplify_string
 from clustermatch import conf
