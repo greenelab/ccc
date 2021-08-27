@@ -276,7 +276,7 @@ _tmp.drop_duplicates(subset=["id_len"])
 # Unique gene id lengths seem to be valid
 
 # %%
-assert list(_tmp_unique) == [17, 18, 24, 23]
+assert set(_tmp_unique) == set([17, 18, 24, 23])
 
 # %%
 _tmp_unique = _tmp["symbol_len"].unique()
