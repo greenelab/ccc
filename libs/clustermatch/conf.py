@@ -50,11 +50,6 @@ options = [
 ]
 GENERAL["N_JOBS_LOW"] = next(int(opt) for opt in options if opt is not None)
 
-#
-# Results
-#
-RESULTS = {}
-RESULTS["BASE_DIR"] = RESULTS_DIR
 
 #
 # Manuscript
@@ -71,13 +66,21 @@ if MANUSCRIPT["BASE_DIR"] is not None:
 # GTEx
 #
 GTEX = {}
-GTEX["BASE_DIR"] = Path(DATA_DIR, "gtex_v8").resolve()
+
+# Input data
+GTEX["DATA_DIR"] = Path(DATA_DIR, "gtex_v8").resolve()
+
 GTEX["SAMPLE_ATTRS_FILE"] = Path(
-    GTEX["BASE_DIR"], "GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt"
+    GTEX["DATA_DIR"], "GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt"
 ).resolve()
 GTEX["DATA_TPM_GCT_FILE"] = Path(
-    GTEX["BASE_DIR"], "GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz"
+    GTEX["DATA_DIR"], "GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz"
 ).resolve()
+
+# Results
+GTEX["RESULTS_DIR"] = Path(RESULTS_DIR, "gtex_v8").resolve()
+
+GTEX["GENE_SELECTION_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_selection").resolve()
 
 
 if __name__ == "__main__":
