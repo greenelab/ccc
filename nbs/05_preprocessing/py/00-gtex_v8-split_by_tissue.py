@@ -36,7 +36,7 @@ from clustermatch import conf
 # # Settings
 
 # %% tags=[]
-OUTPUT_DIR = conf.GTEX["BASE_DIR"] / "data_by_tissue"
+OUTPUT_DIR = conf.GTEX["DATA_DIR"] / "data_by_tissue"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_DIR)
 
