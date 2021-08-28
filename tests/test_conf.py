@@ -34,9 +34,6 @@ def test_conf_entries():
     assert conf.GENERAL["N_JOBS_LOW"] is not None
     assert conf.GENERAL["N_JOBS_LOW"] > 0
 
-    assert conf.RESULTS["BASE_DIR"] is not None
-    assert conf.RESULTS["BASE_DIR"] != ""
-
     assert conf.MANUSCRIPT is not None
     assert "CONTENT_DIR" not in conf.MANUSCRIPT
 
