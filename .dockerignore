@@ -1,11 +1,18 @@
-# git
-.git/lfs/
-.github/
-
-# python
-.pytest_cache/
-
 # project specific
 data/
 images/
 base/
+
+# git
+.git/
+.gitignore
+.github/
+
+# python
+.idea/
+.pytest_cache/
+**/__pycache__
+*.py[cod]
+
+# other
+*.swp
