@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# This script runs the Docker container of this project by mounting the code and
+# This script is intended to be used by the developer not the end user.
+#
+# It runs the Docker container of this project by mounting the code and
 # manuscript directories inside the container. This makes that any file created
 # during the execution is locally available and ready to be pushed to the repo.
+# Plus, the code is always run inside the same environment (including the full
+# operating system).
 
 CODE_DIR="/home/miltondp/projects/labs/greenelab/clustermatch_repos/clustermatch-gene-expr"
 DATA_DIR="${CODE_DIR}/base"
