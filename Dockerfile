@@ -34,7 +34,7 @@ RUN python -c "import papermill"
 
 COPY . ${CODE_DIR}
 WORKDIR ${CODE_DIR}
-RUN mkdir /.local /.jupyter && chmod -R 0777 ./ /.local /.jupyter
+RUN mkdir /.local /.config /.cache /.jupyter && chmod -R 0777 ./ /.config /.cache /.local /.jupyter
 
 RUN echo "Make sure modules can be loaded"
 RUN python -c "from clustermatch import conf"
