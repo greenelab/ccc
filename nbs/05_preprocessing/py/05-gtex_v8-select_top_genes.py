@@ -450,9 +450,7 @@ for tissue_data_file in pbar:
 
     tissue_data = pd.read_pickle(tissue_data_file)
 
-    # select top genes
-
-    ## var_raw
+    # var_raw
     top_genes_var = (
         tissue_data.var(axis=1)
         .sort_values(ascending=False)
@@ -463,7 +461,7 @@ for tissue_data_file in pbar:
     output_filename = f"{tissue_data_file.stem}-var_raw.pkl"
     selected_tissue_data.to_pickle(path=OUTPUT_DIR / output_filename)
 
-    ## var_log2
+    # var_log2
     log2_tissue_data = np.log2(tissue_data)
     log2_tissue_data = log2_tissue_data.apply(replace_by_minimum)
 
