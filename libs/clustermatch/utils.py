@@ -13,7 +13,20 @@ PATTERN_NOT_ALPHANUMERIC = re.compile(r"[^0-9a-zA-Z_]")
 PATTERN_UNDERSCORE_DUPLICATED = re.compile(r"_{2,}")
 
 
-def curl(url: str, output_file: str, md5hash: str = None, logger=None):
+def download_file(url: str, output_file: str):
+    """Default function to download a file given an URL and output path"""
+    command = ["curl", "-s", "-L", url, "-o", output_file]
+    run(command)
+
+
+def curl(
+    url: str,
+    output_file: str,
+    md5hash: str = None,
+    logger=None,
+    download_file_func=download_file,
+    raise_on_md5hash_mismatch=True,
+):
     """Downloads a file from an URL. If the md5hash option is specified, it checks
     if the file was successfully downloaded (whether MD5 matches).
 
@@ -26,6 +39,12 @@ def curl(url: str, output_file: str, md5hash: str = None, logger=None):
         output_file: path of file to store content.
         md5hash: expected MD5 hash of file to download.
         logger: Logger instance.
+        download_file_func: a function that receives two arguments (a url to
+            a file and an output file path). It is supposed to download the file
+            pointed by the URL and save it to the specified path. This argument is
+            mainly used for unit testing purposes.
+        raise_on_md5hash_mismatch: if the method should raise an AssertionError
+            if the downloaded file does not match the given md5 hash.
     """
     logger = logger or get_logger("none")
 
@@ -38,12 +57,14 @@ def curl(url: str, output_file: str, md5hash: str = None, logger=None):
         return
 
     logger.info(f"Downloading {output_file}")
-    run(["curl", "-s", "-L", url, "-o", output_file])
+    download_file_func(url, output_file)
 
     if md5hash is not None and not md5_matches(md5hash, output_file):
         msg = "MD5 does not match"
         logger.error(msg)
-        raise AssertionError(msg)
+
+        if raise_on_md5hash_mismatch:
+            raise AssertionError(msg)
 
 
 def md5_matches(expected_md5: str, filepath: str) -> bool:
