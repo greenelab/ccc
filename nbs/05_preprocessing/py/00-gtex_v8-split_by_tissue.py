@@ -179,6 +179,7 @@ for tissue_name in pbar:
 
     tissue_data = tissue_data.drop(columns=["gene_symbol"]).set_index("gene_ens_id")
 
+    assert not tissue_data.isna().any().any()
     assert tissue_data.index.is_unique
     assert tissue_data.columns.is_unique
 
@@ -188,6 +189,9 @@ for tissue_name in pbar:
 
 # %% [markdown] tags=[]
 # ## Testing
+
+# %% [markdown]
+# Here I take a random tissue file that was just generate it, read it, and check the expected number of samples, and that the expected sample IDs are there. I also check that same expression values for gene/sample pairs are correct (I read those from a different console, just to make sure I'm not making a mistake here).
 
 # %% tags=[]
 _tmp = pd.read_pickle(OUTPUT_DIR / "gtex_v8_data_brain_cerebellar_hemisphere.pkl")
