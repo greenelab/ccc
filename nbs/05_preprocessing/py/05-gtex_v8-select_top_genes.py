@@ -108,7 +108,7 @@ test_data.shape
 # %% tags=[]
 test_data.head()
 
-# %%
+# %% tags=[]
 test_data_desc = pd.Series(test_data.to_numpy().flatten()).describe()
 display(test_data_desc)
 
@@ -118,7 +118,7 @@ assert test_data_desc["max"] < 7.5e5
 # %% [markdown] tags=[]
 # ## Get test data in log2
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here I attempt a direct log transformation without any change to the raw data, and replacing -inf values by the minimum.
 
 # %% tags=[]
@@ -130,7 +130,7 @@ log2_test_data.shape
 # %% tags=[]
 log2_test_data.head()
 
-# %%
+# %% tags=[]
 # get minimum values by removing -np.inf first
 sample_min_values = (
     pd.Series(log2_test_data.replace(-np.inf, np.nan).to_numpy().flatten())
@@ -138,23 +138,23 @@ sample_min_values = (
     .sort_values()
 )
 
-# %%
+# %% tags=[]
 sample_min_values.head()
 
-# %%
+# %% tags=[]
 # get the min value and replace -np.inf by it
 log2_min_value = sample_min = sample_min_values.iloc[0]
 display(log2_min_value)
 assert log2_min_value < -13.0
 assert log2_min_value > -13.5
 
-# %%
+# %% tags=[]
 log2_test_data = log2_test_data.replace(-np.inf, log2_min_value * 1.3)
 
 # %% tags=[]
 log2_test_data.shape
 
-# %%
+# %% tags=[]
 assert (
     log2_test_data.iloc[:, [0]].squeeze().loc["ENSG00000278267.1"].round(5) == -17.28173
 )
@@ -173,11 +173,11 @@ display(log2_test_data_desc)
 # %% [markdown] tags=[]
 # ## Get test data in log2 after pseudocount
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here I try another approach to log-transform the data by using pseudocounts. See:
 #  - https://github.com/greenelab/clustermatch-gene-expr/pull/4#discussion_r698793383
 
-# %%
+# %% tags=[]
 log2_pc_test_data = np.log2(test_data + 1)
 
 # %% tags=[]
@@ -429,7 +429,7 @@ assert _tmp_top.index[:4].tolist() == [
 # %% [markdown] tags=[]
 # # How different are genes selected by `raw` and `pc_log2`?
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here I try to see how different are the expression distribution of genes selected using `raw` and `pc_log2`.
 
 # %% tags=[]
@@ -442,7 +442,7 @@ genes_df.shape
 # %% tags=[]
 genes_df.head()
 
-# %%
+# %% tags=[]
 _tmp = genes_df.describe()
 display(_tmp)
 
@@ -453,7 +453,7 @@ assert (_tmp.loc["max"] == 5000.0).all()
 cols = ["var_raw", "var_pc_log2"]
 
 
-# %%
+# %% tags=[]
 def plot_genes_kde(_gene_ids):
     fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(15, 5))
     axs = axs.flatten()
@@ -489,7 +489,7 @@ _gene_ids = [
     "ENSG00000188536.12",  # smaller in log2
 ]
 
-# %%
+# %% tags=[]
 plot_genes_kde(_gene_ids)
 
 # %% [markdown] tags=[]
@@ -510,10 +510,10 @@ _gene_ids = [
     "ENSG00000198712.1",
 ]
 
-# %%
+# %% tags=[]
 plot_genes_kde(_gene_ids)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # These are the top three genes selected by `var_raw` and not by `var_pc_log2`. Distributions seem similar with different means.
 
 # %% [markdown] tags=[]
@@ -534,16 +534,16 @@ _gene_ids = [
     "ENSG00000254288.1",
 ]
 
-# %%
+# %% tags=[]
 plot_genes_kde(_gene_ids)
 
 # %% [markdown] tags=[]
 # **CONCLUSION:** Both `var_raw` (that is, the strategy that selects the top genes with highest variance on raw TPM-normalized data) and `var_pc_log2` (highest variance on pseudocount log2-transformed TPM-normalized data) agree on most genes. The difference seem to be that `pc_log2` is more sensitive to genes that are mostly not-expressed and expressed only on some conditions, which might capture important genes such as transcriptor factors (see https://www.biorxiv.org/content/10.1101/2020.02.13.944777v1).
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Is correlation affected by a log-transformation?
 
-# %%
+# %% tags=[]
 _genes_intersect = sorted(
     list(set(top_genes_var["var_pc_log2"].index) & set(top_genes_var["var_raw"].index))
 )
@@ -552,52 +552,52 @@ display(_genes_intersect[:5])
 
 assert len(_genes_intersect) == 3330
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Pearson
 
-# %%
+# %% tags=[]
 raw_corr = test_data.loc[_genes_intersect[:10]].T.corr(method="pearson")
 display(raw_corr.shape)
 display(raw_corr)
 
 assert raw_corr.shape == (10, 10)
 
-# %%
+# %% tags=[]
 pc_log2_corr = log2_pc_test_data.loc[_genes_intersect[:10]].T.corr(method="pearson")
 display(pc_log2_corr.shape)
 display(pc_log2_corr)
 
 assert raw_corr.shape == (10, 10)
 
-# %%
+# %% tags=[]
 _g0, _g1 = "ENSG00000000419.12", "ENSG00000000938.12"
 assert raw_corr.loc[_g0, _g1] != pc_log2_corr.loc[_g0, _g1]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # The Pearson correlation between raw and pc_log2 for the same pair of genes is not the same, since relationships are not exactly linear after the transformation.
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Spearman
 
-# %%
+# %% tags=[]
 raw_corr = test_data.loc[_genes_intersect[:10]].T.corr(method="spearman")
 display(raw_corr.shape)
 display(raw_corr)
 
 assert raw_corr.shape == (10, 10)
 
-# %%
+# %% tags=[]
 pc_log2_corr = log2_pc_test_data.loc[_genes_intersect[:10]].T.corr(method="spearman")
 display(pc_log2_corr.shape)
 display(pc_log2_corr)
 
 assert raw_corr.shape == (10, 10)
 
-# %%
+# %% tags=[]
 _g0, _g1 = "ENSG00000000419.12", "ENSG00000000938.12"
 assert raw_corr.loc[_g0, _g1] == pc_log2_corr.loc[_g0, _g1]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # The Spearman correlation between raw and pc_log2 for the same pair of genes is the same, since relationships are still monotonic.
 
 # %% [markdown] tags=[]
@@ -673,11 +673,11 @@ assert _tmp_raw.columns.tolist() == _tmp_log2.columns.tolist()
 _genes_intersect = sorted(list(set(_tmp_raw.index) & set(_tmp_log2.index)))
 assert len(_genes_intersect) == 2926
 
-# %%
+# %% tags=[]
 # make sure the same data is stored
 assert _tmp_raw.loc[_genes_intersect].equals(_tmp_log2.loc[_genes_intersect])
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### raw
 
 # %% tags=[]
@@ -693,7 +693,7 @@ assert _tmp_desc.loc["min"].max() == 37640.0
 assert _tmp_desc.loc["max"].min() == 30.66
 assert _tmp_desc.loc["max"].max() == 201000.0
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### pc_log2
 
 # %% tags=[]
