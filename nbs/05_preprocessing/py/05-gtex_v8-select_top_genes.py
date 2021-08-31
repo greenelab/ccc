@@ -130,7 +130,11 @@ log2_test_data.head()
 
 # %%
 # get minimum values by removing -np.inf first
-sample_min_values = pd.Series(log2_test_data.replace(-np.inf, np.nan).to_numpy().flatten()).dropna().sort_values()
+sample_min_values = (
+    pd.Series(log2_test_data.replace(-np.inf, np.nan).to_numpy().flatten())
+    .dropna()
+    .sort_values()
+)
 
 # %%
 sample_min_values.head()
@@ -150,11 +154,7 @@ log2_test_data.shape
 
 # %%
 assert (
-    log2_test_data.iloc[:, [0]]
-    .squeeze()
-    .loc["ENSG00000278267.1"]
-    .round(5)
-    == -17.28173
+    log2_test_data.iloc[:, [0]].squeeze().loc["ENSG00000278267.1"].round(5) == -17.28173
 )
 
 # %% tags=[]
@@ -417,7 +417,12 @@ display(_tmp)
 _tmp_top = (_tmp.sum() - 5000).sort_values(ascending=False)
 display(_tmp_top)
 
-assert _tmp_top.index[:4].tolist() == ["var_pc_log2", "mad_pc_log2", "var_raw", "mad_raw"]
+assert _tmp_top.index[:4].tolist() == [
+    "var_pc_log2",
+    "mad_pc_log2",
+    "var_raw",
+    "mad_raw",
+]
 
 # %% [markdown] tags=[]
 # # How different are genes selected by `raw`/`pc_log2` and `log2`?
@@ -448,7 +453,7 @@ cols = ["var_raw", "var_pc_log2", "var_log2"]
 
 # %%
 def plot_genes_kde(_gene_ids):
-    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15,5))
+    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
     axs = axs.flatten()
 
     # plot density on raw
@@ -481,10 +486,11 @@ def plot_genes_kde(_gene_ids):
 # show top genes selected by var_raw, var_pc_log2 and var_log2
 genes_df.loc[
     list(
-        set(top_genes_var["var_raw"].index) &
-        set(top_genes_var["var_pc_log2"].index) &
-        set(top_genes_var["var_log2"].index)
-    ), cols
+        set(top_genes_var["var_raw"].index)
+        & set(top_genes_var["var_pc_log2"].index)
+        & set(top_genes_var["var_log2"].index)
+    ),
+    cols,
 ].sort_values("var_raw", ascending=False).head()
 
 # %% tags=[]
@@ -513,7 +519,7 @@ genes_df.loc[top_genes_var["var_raw"].index, cols].head()
 _gene_ids = [
     "ENSG00000244734.3",  # largest in raw
     "ENSG00000188536.12",  # lower in pc_log2
-    "ENSG00000163220.10",   # larger in pc_log2
+    "ENSG00000163220.10",  # larger in pc_log2
 ]
 
 # %%
