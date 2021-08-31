@@ -240,7 +240,7 @@ gene_mappings.head()
 # ## Save
 
 # %% tags=[]
-output_filename = conf.GTEX["BASE_DIR"] / "gtex_gene_id_symbol_mappings.pkl"
+output_filename = conf.GTEX["DATA_DIR"] / "gtex_gene_id_symbol_mappings.pkl"
 display(output_filename)
 
 # %% tags=[]
