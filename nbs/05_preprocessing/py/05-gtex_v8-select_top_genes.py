@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# It analyzes different strategies to take the genes from GTEx data with the highest variability, being this variability measured with different strategies: variance (`var`), coefficient of variation (`cv`) and mean absolute variation (`mad`) applied on two different versions of the data: 1) the raw TPM-normalized gene expression data (here refered to as `raw`), and 2) the log2-transformed version of the raw data (here refered to as `log2`).
+# It analyzes different strategies to take the genes from GTEx data with the highest variability, being this variability measured with different strategies: variance (`var`), coefficient of variation (`cv`) and mean absolute variation (`mad`) applied on two different versions of the data: 1) the raw TPM-normalized gene expression data (here refered to as `raw`), and 2) the log2-transformed version of the raw data (here refered to as `log2` and `pc_log2`).
 
 # %% [markdown] tags=[]
 # # Modules
@@ -208,6 +208,9 @@ top_genes_var[exp_id] = (
 # %% tags=[]
 top_genes_var[exp_id]
 
+# %% [markdown]
+# Here I take a quick look at how these selected genes look like in a PCA plot. I do not use PCA to select genes, just a visual assessment.
+
 # %% tags=[]
 selected_data = test_data.loc[top_genes_var[exp_id].index]
 
@@ -265,6 +268,9 @@ top_genes_var[exp_id] = (
 
 # %% tags=[]
 top_genes_var[exp_id]
+
+# %% [markdown]
+# Here I take a quick look at how these selected genes look like in a PCA plot. I do not use PCA to select genes, just a visual assessment.
 
 # %% tags=[]
 # plot on raw
@@ -336,6 +342,29 @@ top_genes_var[exp_id] = (
 
 # %% tags=[]
 top_genes_var[exp_id]
+
+# %% [markdown]
+# Here I take a quick look at how these selected genes look like in a PCA plot. I do not use PCA to select genes, just a visual assessment.
+
+# %% tags=[]
+# plot on raw
+selected_data = test_data.loc[top_genes_var[exp_id].index]
+
+# %% tags=[]
+selected_data.shape
+
+# %% tags=[]
+plot_pca(selected_data)
+
+# %% tags=[]
+# plot on pc_log2
+selected_data = log2_pc_test_data.loc[top_genes_var[exp_id].index]
+
+# %% tags=[]
+selected_data.shape
+
+# %% tags=[]
+plot_pca(selected_data)
 
 # %% [markdown] tags=[]
 # ### Coefficient of variation
