@@ -190,7 +190,7 @@ for tissue_name in pbar:
 # %% [markdown] tags=[]
 # ## Testing
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here I take a random tissue file that was just generate it, read it, and check the expected number of samples, and that the expected sample IDs are there. I also check that same expression values for gene/sample pairs are correct (I read those from a different console, just to make sure I'm not making a mistake here).
 
 # %% tags=[]
