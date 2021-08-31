@@ -108,38 +108,19 @@ test_data.shape
 # %% tags=[]
 test_data.head()
 
+# %%
+test_data_desc = pd.Series(test_data.to_numpy().flatten()).describe()
+display(test_data_desc)
+
+assert test_data_desc["min"] == 0.0
+assert test_data_desc["max"] < 7.5e5
+
 # %% [markdown] tags=[]
 # ## Get test data in log2
 
 # %% tags=[]
+# attempt a direct log transformation without any change to the raw data
 log2_test_data = np.log2(test_data)
-
-# %% tags=[]
-log2_test_data.head()
-
-
-# %% tags=[]
-def replace_by_minimum(sample_data):
-    """Replaces the -np.inf values in a pandas series by [the minimum non-inf value in it] * 1.3."""
-
-    sample_min_values = sample_data.replace(-np.inf, np.nan).dropna().sort_values()
-    sample_min = sample_min_values.iloc[0]
-
-    return sample_data.replace(-np.inf, sample_min * 1.3)
-
-
-# %% tags=[]
-assert (
-    log2_test_data.iloc[:, [0]]
-    .apply(replace_by_minimum)
-    .squeeze()
-    .loc["ENSG00000278267.1"]
-    .round(5)
-    == -14.76284
-)
-
-# %% tags=[]
-log2_test_data = log2_test_data.apply(replace_by_minimum)
 
 # %% tags=[]
 log2_test_data.shape
@@ -147,8 +128,66 @@ log2_test_data.shape
 # %% tags=[]
 log2_test_data.head()
 
+# %%
+# get minimum values by removing -np.inf first
+sample_min_values = pd.Series(log2_test_data.replace(-np.inf, np.nan).to_numpy().flatten()).dropna().sort_values()
+
+# %%
+sample_min_values.head()
+
+# %%
+# get the min value and replace -np.inf by it
+log2_min_value = sample_min = sample_min_values.iloc[0]
+display(log2_min_value)
+assert log2_min_value < -13.0
+assert log2_min_value > -13.5
+
+# %%
+log2_test_data = log2_test_data.replace(-np.inf, log2_min_value * 1.3)
+
+# %% tags=[]
+log2_test_data.shape
+
+# %%
+assert (
+    log2_test_data.iloc[:, [0]]
+    .squeeze()
+    .loc["ENSG00000278267.1"]
+    .round(5)
+    == -17.28173
+)
+
+# %% tags=[]
+log2_test_data.head()
+
 # %% tags=[]
 log2_test_data.iloc[:10, :].T.describe()
+
+# %% tags=[]
+# get some stats
+log2_test_data_desc = pd.Series(log2_test_data.to_numpy().flatten()).describe()
+display(log2_test_data_desc)
+
+# %% [markdown] tags=[]
+# ## Get test data in log2 after pseudocount
+
+# %% [markdown]
+# Here I try another approach to log-transform the data by using pseudocounts. See:
+#  - https://github.com/greenelab/clustermatch-gene-expr/pull/4#discussion_r698793383
+
+# %%
+log2_pc_test_data = np.log2(test_data + 1)
+
+# %% tags=[]
+log2_pc_test_data.shape
+
+# %% tags=[]
+# get some stats
+log2_pc_test_data_desc = pd.Series(log2_pc_test_data.to_numpy().flatten()).describe()
+display(log2_pc_test_data_desc)
+
+# %% tags=[]
+log2_pc_test_data.head()
 
 # %% [markdown] tags=[]
 # ## On TPM-normalized data (raw)
@@ -277,6 +316,57 @@ top_genes_var[exp_id] = (
 # %% tags=[]
 top_genes_var[exp_id]
 
+# %% [markdown] tags=[]
+# ## On pseudocount/log2 TPM-normalized data
+
+# %% [markdown] tags=[]
+# ### Variance
+
+# %% tags=[]
+exp_id = "var_pc_log2"
+
+# %% tags=[]
+top_genes_var[exp_id] = (
+    log2_pc_test_data.var(axis=1)
+    .sort_values(ascending=False)
+    .head(N_TOP_GENES_MAX_VARIANCE)
+)
+
+# %% tags=[]
+top_genes_var[exp_id]
+
+# %% [markdown] tags=[]
+# ### Coefficient of variation
+
+# %% tags=[]
+exp_id = "cv_pc_log2"
+
+# %% tags=[]
+top_genes_var[exp_id] = (
+    (log2_pc_test_data.std(axis=1) / log2_pc_test_data.mean(axis=1))
+    .sort_values(ascending=False)
+    .head(N_TOP_GENES_MAX_VARIANCE)
+)
+
+# %% tags=[]
+top_genes_var[exp_id]
+
+# %% [markdown] tags=[]
+# ### Mean absolute deviation
+
+# %% tags=[]
+exp_id = "mad_pc_log2"
+
+# %% tags=[]
+top_genes_var[exp_id] = (
+    log2_pc_test_data.mad(axis=1)
+    .sort_values(ascending=False)
+    .head(N_TOP_GENES_MAX_VARIANCE)
+)
+
+# %% tags=[]
+top_genes_var[exp_id]
+
 
 # %% [markdown] tags=[]
 # ## Do selected genes with different methods overlap?
@@ -295,7 +385,7 @@ assert overlap([1, 2, 3], [2, 3, 4]) == 2
 genes_selection_methods = list(top_genes_var.keys())
 
 display(genes_selection_methods)
-assert len(genes_selection_methods) == 6
+assert len(genes_selection_methods) == 9
 
 # %% tags=[]
 _gene_sets = np.array(
@@ -318,22 +408,26 @@ _tmp = pd.DataFrame(
 display(_tmp)
 
 # %% [markdown] tags=[]
-# Some methods select very different sets of genes, particularly between `cv`, where there is no agreement between the same approach on `log2` and `raw` data.
+# Some methods select very different sets of highly variable genes. `cv_*` methods do not seem to agree much with the rest.
 #
-# Since they are similar, the largest overlap is between `var_*` anad `mad_*` approaches.
+# `var_*` and `mad_*` are similar, so it is expected their large overlap among the same data version. However, these two approaches (`var` and `mad`) also agree quite a lot between data versions `raw` and `pc_log2`.
 
 # %% tags=[]
 # get list of methods that agree more with the rest
-(_tmp.sum() - 5000).sort_values(ascending=False)
+_tmp_top = (_tmp.sum() - 5000).sort_values(ascending=False)
+display(_tmp_top)
+
+assert _tmp_top.index[:4].tolist() == ["var_pc_log2", "mad_pc_log2", "var_raw", "mad_raw"]
 
 # %% [markdown] tags=[]
-# # How different are genes selected by `raw` and `log2`?
+# # How different are genes selected by `raw`/`pc_log2` and `log2`?
 
-# %% [markdown] tags=[]
-# Here I focus on `raw` and `log2` with the `var` (variance) method.
+# %% [markdown]
+# Here I try to see how different are the expression distribution of genes selected using `raw`/`pc_log2` (which seem similar) with the `log2`.
 
 # %% tags=[]
-genes_df = pd.DataFrame(top_genes_var)
+# get the rank for each method for easier comparison
+genes_df = pd.DataFrame(top_genes_var).rank()
 
 # %% tags=[]
 genes_df.shape
@@ -341,91 +435,128 @@ genes_df.shape
 # %% tags=[]
 genes_df.head()
 
+# %%
+_tmp = genes_df.describe()
+display(_tmp)
+
+assert (_tmp.loc["min"] == 1.0).all()
+assert (_tmp.loc["max"] == 5000.0).all()
+
 # %% tags=[]
-cols = ["var_raw", "var_log2"]
+cols = ["var_raw", "var_pc_log2", "var_log2"]
+
+
+# %%
+def plot_genes_kde(_gene_ids):
+    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15,5))
+    axs = axs.flatten()
+
+    # plot density on raw
+    ax = axs[0]
+    for gene_id in _gene_ids:
+        a = sns.kdeplot(data=test_data.T, x=gene_id, ax=ax, label=gene_id)
+        a.set_xlabel(None)
+    ax.set_title("raw")
+
+    # same genes, but plot density on log2
+    ax = axs[1]
+    for gene_id in _gene_ids:
+        a = sns.kdeplot(data=log2_test_data.T, x=gene_id, ax=ax, label=gene_id)
+        a.set_xlabel(None)
+    ax.set_title("log2")
+
+    # same genes, but plot density on pc_log2
+    ax = axs[2]
+    for gene_id in _gene_ids:
+        a = sns.kdeplot(data=log2_pc_test_data.T, x=gene_id, ax=ax, label=gene_id)
+        a.set_xlabel(None)
+    ax.set_title("pseudocount (pc) log2")
+    ax.legend()
+
 
 # %% [markdown] tags=[]
-# ## Genes select in both raw and log2
+# ## Genes selected in all raw, pc_log2 and log2
 
 # %% tags=[]
-# show top genes selected by both var_raw and var_log2
+# show top genes selected by var_raw, var_pc_log2 and var_log2
 genes_df.loc[
-    top_genes_var["var_raw"].index.intersection(top_genes_var["var_log2"].index), cols
-].head()
+    list(
+        set(top_genes_var["var_raw"].index) &
+        set(top_genes_var["var_pc_log2"].index) &
+        set(top_genes_var["var_log2"].index)
+    ), cols
+].sort_values("var_raw", ascending=False).head()
 
 # %% tags=[]
 _gene_ids = [
-    "ENSG00000163631.16",  # larger in raw
-    "ENSG00000110245.11",  # larger in log2
+    "ENSG00000110245.11",  # larger in all
+    "ENSG00000206047.2",  # smaller in log2
 ]
 
-# %% tags=[]
-# plot density on raw
-for gene_id in _gene_ids:
-    sns.kdeplot(data=test_data.T, x=gene_id, label=gene_id)
-
-plt.legend()
-
-# %% tags=[]
-# same genes, but plot density on log2
-for gene_id in _gene_ids:
-    sns.kdeplot(data=log2_test_data.T, x=gene_id, label=gene_id)
-
-plt.legend()
+# %%
+plot_genes_kde(_gene_ids)
 
 # %% [markdown] tags=[]
-# `var_log2` seems to select genes that tend to be more bimodal (with many cases around no expression and other around highly expressed), whereas `var_raw` selects genes with a unimodal distribution.
+# Since these are two genes selected by all three methods, they have similar distributions. `var_log2` seems to prioritize genes that tend to be more bimodal (with many cases around no expression and many others with higher expression). This will be apparent in the following analyses below.
 
 # %% [markdown] tags=[]
-# ## Genes selected in raw only
+# ## Genes selected in raw
 
 # %% tags=[]
 # show top genes selected by var_raw
 genes_df.loc[top_genes_var["var_raw"].index, cols].head()
 
-# %% tags=[]
-_gene_ids = ["ENSG00000244734.3", "ENSG00000188536.12"]
+# %% [markdown]
+# As we've seen before, here top genes selected by `var_raw` were also selected by `var_pc_log2` (not nan values).
 
 # %% tags=[]
-# plot density on raw
-for gene_id in _gene_ids:
-    sns.kdeplot(data=test_data.T, x=gene_id, label=gene_id)
+_gene_ids = [
+    "ENSG00000244734.3",  # largest in raw
+    "ENSG00000188536.12",  # lower in pc_log2
+    "ENSG00000163220.10",   # larger in pc_log2
+]
 
-plt.legend()
+# %%
+plot_genes_kde(_gene_ids)
 
-# %% tags=[]
-# same genes, but plot density on log2
-for gene_id in _gene_ids:
-    sns.kdeplot(data=log2_test_data.T, x=gene_id, label=gene_id)
-
-plt.legend()
+# %% [markdown]
+# These are the top three genes selected by `var_raw`. Distributions seem similar with different means.
 
 # %% [markdown] tags=[]
-# ## Genes selected in log2 only
+# ## Genes selected in pc_log2
+
+# %% tags=[]
+# show top genes selected by var_raw
+genes_df.loc[top_genes_var["var_pc_log2"].index, cols].head()
+
+# %% tags=[]
+_gene_ids = [
+    "ENSG00000169429.10",  # 1st largest in pc_log2
+    "ENSG00000135245.9",  # 2nd largest in pc_log2
+    "ENSG00000239839.6",  # larger in raw
+]
+
+# %%
+plot_genes_kde(_gene_ids)
+
+# %% [markdown] tags=[]
+# ## Genes selected in log2
 
 # %% tags=[]
 # show top genes selected by var_log2
 genes_df.loc[top_genes_var["var_log2"].index, cols].head()
 
 # %% tags=[]
-_gene_ids = ["ENSG00000213058.3", "ENSG00000200879.1", "ENSG00000211918.1"]
+_gene_ids = [
+    "ENSG00000200879.1",  # 1st largest in log2, high in pc_log2
+    "ENSG00000213058.3",  # selected by all, but large in pc_log2 too
+]
 
-# %% tags=[]
-# plot density on raw
-for gene_id in _gene_ids:
-    sns.kdeplot(data=test_data.T, x=gene_id, label=gene_id)
-
-plt.legend()
-
-# %% tags=[]
-# same genes, but plot density on log2
-for gene_id in _gene_ids:
-    sns.kdeplot(data=log2_test_data.T, x=gene_id, label=gene_id)
-
-plt.legend()
+# %%
+plot_genes_kde(_gene_ids)
 
 # %% [markdown] tags=[]
-# **CONCLUSION:** Both `var_raw` (that is, the strategy that selects the top genes with highest variance on raw TPM-normalized data) and `var_log2` (highest variance on log2-transformed TPM-normalized data) seem to be interesting. `var_raw` seems to select genes that are expressed around a mean, less expressed in some conditions and more expressed in others. `var_log2` tends to select genes that are not expressed (zero expression) in several conditions, and relatively highly expressed in others, which might capture important genes such as transcriptor factors (see https://www.biorxiv.org/content/10.1101/2020.02.13.944777v1).
+# **CONCLUSION:** Both `var_raw` (that is, the strategy that selects the top genes with highest variance on raw TPM-normalized data) and `var_pc_log2` (highest variance on pseudocount log2-transformed TPM-normalized data) agree on most genes. The difference seem to be that `pc_log2` is more sensitive to genes that are mostly not-expressed and expressed only on some conditions, which might capture important genes such as transcriptor factors (see https://www.biorxiv.org/content/10.1101/2020.02.13.944777v1).
 
 # %% [markdown] tags=[]
 # # Select top genes for each tissue data file
