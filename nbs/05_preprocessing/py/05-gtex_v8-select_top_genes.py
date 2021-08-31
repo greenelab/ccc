@@ -208,7 +208,7 @@ top_genes_var[exp_id] = (
 # %% tags=[]
 top_genes_var[exp_id]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here I take a quick look at how these selected genes look like in a PCA plot. I do not use PCA to select genes, just a visual assessment.
 
 # %% tags=[]
@@ -269,7 +269,7 @@ top_genes_var[exp_id] = (
 # %% tags=[]
 top_genes_var[exp_id]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here I take a quick look at how these selected genes look like in a PCA plot. I do not use PCA to select genes, just a visual assessment.
 
 # %% tags=[]
@@ -343,7 +343,7 @@ top_genes_var[exp_id] = (
 # %% tags=[]
 top_genes_var[exp_id]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here I take a quick look at how these selected genes look like in a PCA plot. I do not use PCA to select genes, just a visual assessment.
 
 # %% tags=[]
