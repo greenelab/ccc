@@ -76,11 +76,15 @@ GTEX["SAMPLE_ATTRS_FILE"] = Path(
 GTEX["DATA_TPM_GCT_FILE"] = Path(
     GTEX["DATA_DIR"], "GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz"
 ).resolve()
+GTEX["N_TISSUES"] = 54
 
 # Results
 GTEX["RESULTS_DIR"] = Path(RESULTS_DIR, "gtex_v8").resolve()
 
 GTEX["GENE_SELECTION_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_selection").resolve()
+GTEX["SIMILARITY_MATRICES_DIR"] = Path(
+    GTEX["RESULTS_DIR"], "similarity_matrices"
+).resolve()
 
 
 if __name__ == "__main__":
