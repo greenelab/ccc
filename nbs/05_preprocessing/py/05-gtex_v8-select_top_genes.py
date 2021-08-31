@@ -118,8 +118,10 @@ assert test_data_desc["max"] < 7.5e5
 # %% [markdown] tags=[]
 # ## Get test data in log2
 
+# %% [markdown]
+# Here I attempt a direct log transformation without any change to the raw data, and replacing -inf values by the minimum.
+
 # %% tags=[]
-# attempt a direct log transformation without any change to the raw data
 log2_test_data = np.log2(test_data)
 
 # %% tags=[]
@@ -425,10 +427,10 @@ assert _tmp_top.index[:4].tolist() == [
 ]
 
 # %% [markdown] tags=[]
-# # How different are genes selected by `raw`/`pc_log2` and `log2`?
+# # How different are genes selected by `raw` and `pc_log2`?
 
 # %% [markdown]
-# Here I try to see how different are the expression distribution of genes selected using `raw`/`pc_log2` (which seem similar) with the `log2`.
+# Here I try to see how different are the expression distribution of genes selected using `raw` and `pc_log2`.
 
 # %% tags=[]
 # get the rank for each method for easier comparison
@@ -448,12 +450,12 @@ assert (_tmp.loc["min"] == 1.0).all()
 assert (_tmp.loc["max"] == 5000.0).all()
 
 # %% tags=[]
-cols = ["var_raw", "var_pc_log2", "var_log2"]
+cols = ["var_raw", "var_pc_log2"]
 
 
 # %%
 def plot_genes_kde(_gene_ids):
-    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(15, 5))
     axs = axs.flatten()
 
     # plot density on raw
@@ -463,15 +465,8 @@ def plot_genes_kde(_gene_ids):
         a.set_xlabel(None)
     ax.set_title("raw")
 
-    # same genes, but plot density on log2
-    ax = axs[1]
-    for gene_id in _gene_ids:
-        a = sns.kdeplot(data=log2_test_data.T, x=gene_id, ax=ax, label=gene_id)
-        a.set_xlabel(None)
-    ax.set_title("log2")
-
     # same genes, but plot density on pc_log2
-    ax = axs[2]
+    ax = axs[1]
     for gene_id in _gene_ids:
         a = sns.kdeplot(data=log2_pc_test_data.T, x=gene_id, ax=ax, label=gene_id)
         a.set_xlabel(None)
@@ -480,82 +475,63 @@ def plot_genes_kde(_gene_ids):
 
 
 # %% [markdown] tags=[]
-# ## Genes selected in all raw, pc_log2 and log2
+# ## Genes selected in both raw and pc_log2
 
 # %% tags=[]
-# show top genes selected by var_raw, var_pc_log2 and var_log2
 genes_df.loc[
-    list(
-        set(top_genes_var["var_raw"].index)
-        & set(top_genes_var["var_pc_log2"].index)
-        & set(top_genes_var["var_log2"].index)
-    ),
+    list(set(top_genes_var["var_raw"].index) & set(top_genes_var["var_pc_log2"].index)),
     cols,
 ].sort_values("var_raw", ascending=False).head()
 
 # %% tags=[]
 _gene_ids = [
-    "ENSG00000110245.11",  # larger in all
-    "ENSG00000206047.2",  # smaller in log2
+    "ENSG00000163220.10",  # large in both
+    "ENSG00000188536.12",  # smaller in log2
 ]
 
 # %%
 plot_genes_kde(_gene_ids)
 
 # %% [markdown] tags=[]
-# Since these are two genes selected by all three methods, they have similar distributions. `var_log2` seems to prioritize genes that tend to be more bimodal (with many cases around no expression and many others with higher expression). This will be apparent in the following analyses below.
-
-# %% [markdown] tags=[]
-# ## Genes selected in raw
+# ## Genes selected in raw only
 
 # %% tags=[]
-# show top genes selected by var_raw
-genes_df.loc[top_genes_var["var_raw"].index, cols].head()
+_tmp = genes_df.loc[
+    set(top_genes_var["var_raw"].index) - set(top_genes_var["var_pc_log2"].index), cols
+].sort_values("var_raw", ascending=False)
 
-# %% [markdown]
-# As we've seen before, here top genes selected by `var_raw` were also selected by `var_pc_log2` (not nan values).
+display(_tmp.shape)
+display(_tmp.head())
 
 # %% tags=[]
 _gene_ids = [
-    "ENSG00000244734.3",  # largest in raw
-    "ENSG00000188536.12",  # lower in pc_log2
-    "ENSG00000163220.10",  # larger in pc_log2
+    "ENSG00000087086.14",
+    "ENSG00000234745.10",
+    "ENSG00000198712.1",
 ]
 
 # %%
 plot_genes_kde(_gene_ids)
 
 # %% [markdown]
-# These are the top three genes selected by `var_raw`. Distributions seem similar with different means.
+# These are the top three genes selected by `var_raw` and not by `var_pc_log2`. Distributions seem similar with different means.
 
 # %% [markdown] tags=[]
-# ## Genes selected in pc_log2
+# ## Genes selected in pc_log2 only
 
 # %% tags=[]
-# show top genes selected by var_raw
-genes_df.loc[top_genes_var["var_pc_log2"].index, cols].head()
+_tmp = genes_df.loc[
+    set(top_genes_var["var_pc_log2"].index) - set(top_genes_var["var_raw"].index), cols
+].sort_values("var_pc_log2", ascending=False)
+
+display(_tmp.shape)
+display(_tmp.head())
 
 # %% tags=[]
 _gene_ids = [
-    "ENSG00000169429.10",  # 1st largest in pc_log2
-    "ENSG00000135245.9",  # 2nd largest in pc_log2
-    "ENSG00000239839.6",  # larger in raw
-]
-
-# %%
-plot_genes_kde(_gene_ids)
-
-# %% [markdown] tags=[]
-# ## Genes selected in log2
-
-# %% tags=[]
-# show top genes selected by var_log2
-genes_df.loc[top_genes_var["var_log2"].index, cols].head()
-
-# %% tags=[]
-_gene_ids = [
-    "ENSG00000200879.1",  # 1st largest in log2, high in pc_log2
-    "ENSG00000213058.3",  # selected by all, but large in pc_log2 too
+    "ENSG00000241112.1",
+    "ENSG00000198692.9",
+    "ENSG00000254288.1",
 ]
 
 # %%
@@ -564,14 +540,76 @@ plot_genes_kde(_gene_ids)
 # %% [markdown] tags=[]
 # **CONCLUSION:** Both `var_raw` (that is, the strategy that selects the top genes with highest variance on raw TPM-normalized data) and `var_pc_log2` (highest variance on pseudocount log2-transformed TPM-normalized data) agree on most genes. The difference seem to be that `pc_log2` is more sensitive to genes that are mostly not-expressed and expressed only on some conditions, which might capture important genes such as transcriptor factors (see https://www.biorxiv.org/content/10.1101/2020.02.13.944777v1).
 
+# %% [markdown]
+# # Is correlation affected by a log-transformation?
+
+# %%
+_genes_intersect = sorted(
+    list(set(top_genes_var["var_pc_log2"].index) & set(top_genes_var["var_raw"].index))
+)
+display(len(_genes_intersect))
+display(_genes_intersect[:5])
+
+assert len(_genes_intersect) == 3330
+
+# %% [markdown]
+# ## Pearson
+
+# %%
+raw_corr = test_data.loc[_genes_intersect[:10]].T.corr(method="pearson")
+display(raw_corr.shape)
+display(raw_corr)
+
+assert raw_corr.shape == (10, 10)
+
+# %%
+pc_log2_corr = log2_pc_test_data.loc[_genes_intersect[:10]].T.corr(method="pearson")
+display(pc_log2_corr.shape)
+display(pc_log2_corr)
+
+assert raw_corr.shape == (10, 10)
+
+# %%
+_g0, _g1 = "ENSG00000000419.12", "ENSG00000000938.12"
+assert raw_corr.loc[_g0, _g1] != pc_log2_corr.loc[_g0, _g1]
+
+# %% [markdown]
+# The Pearson correlation between raw and pc_log2 for the same pair of genes is not the same, since relationships are not exactly linear after the transformation.
+
+# %% [markdown]
+# ## Spearman
+
+# %%
+raw_corr = test_data.loc[_genes_intersect[:10]].T.corr(method="spearman")
+display(raw_corr.shape)
+display(raw_corr)
+
+assert raw_corr.shape == (10, 10)
+
+# %%
+pc_log2_corr = log2_pc_test_data.loc[_genes_intersect[:10]].T.corr(method="spearman")
+display(pc_log2_corr.shape)
+display(pc_log2_corr)
+
+assert raw_corr.shape == (10, 10)
+
+# %%
+_g0, _g1 = "ENSG00000000419.12", "ENSG00000000938.12"
+assert raw_corr.loc[_g0, _g1] == pc_log2_corr.loc[_g0, _g1]
+
+# %% [markdown]
+# The Spearman correlation between raw and pc_log2 for the same pair of genes is the same, since relationships are still monotonic.
+
 # %% [markdown] tags=[]
 # # Select top genes for each tissue data file
 
 # %% [markdown] tags=[]
-# Based on the previous findings, I select genes with both strategies `var_raw` and `var_log2`.
+# Based on the previous findings, I select genes with both strategies `var_raw` and `var_pc_log2`.
+#
+# Then I save, for both, the raw data (note that I only use the strategies to select genes, not to log-transform the data).
 
 # %% tags=[]
-input_files = list(INPUT_DIR.glob("*.pkl"))
+input_files = sorted(list(INPUT_DIR.glob("*.pkl")))
 assert len(input_files) == 54, len(input_files)
 
 display(input_files[:5])
@@ -598,18 +636,18 @@ for tissue_data_file in pbar:
     output_filename = f"{tissue_data_file.stem}-var_raw.pkl"
     selected_tissue_data.to_pickle(path=OUTPUT_DIR / output_filename)
 
-    # var_log2
-    log2_tissue_data = np.log2(tissue_data)
-    log2_tissue_data = log2_tissue_data.apply(replace_by_minimum)
+    # var_pc_log2
+    log2_tissue_data = np.log2(tissue_data + 1)
 
     top_genes_var = (
         log2_tissue_data.var(axis=1)
         .sort_values(ascending=False)
         .head(N_TOP_GENES_MAX_VARIANCE)
     )
+    # save the same raw data, but with genes selected by var_pc_log2
     selected_tissue_data = tissue_data.loc[top_genes_var.index]
 
-    output_filename = f"{tissue_data_file.stem}-var_log2.pkl"
+    output_filename = f"{tissue_data_file.stem}-var_pc_log2.pkl"
     selected_tissue_data.to_pickle(path=OUTPUT_DIR / output_filename)
 
 # %% [markdown] tags=[]
@@ -618,39 +656,58 @@ for tissue_data_file in pbar:
 # %% tags=[]
 _tmp_raw = pd.read_pickle(
     OUTPUT_DIR / "gtex_v8_data_brain_nucleus_accumbens_basal_ganglia-var_raw.pkl"
-)
+).sort_index()
+
 _tmp_log2 = pd.read_pickle(
-    OUTPUT_DIR / "gtex_v8_data_brain_nucleus_accumbens_basal_ganglia-var_log2.pkl"
-)
+    OUTPUT_DIR / "gtex_v8_data_brain_nucleus_accumbens_basal_ganglia-var_pc_log2.pkl"
+).sort_index()
 
 # %% tags=[]
 display(_tmp_raw.shape)
 assert _tmp_raw.shape == _tmp_log2.shape
 
 # %% tags=[]
+assert _tmp_raw.columns.tolist() == _tmp_log2.columns.tolist()
+
+# %% tags=[]
+_genes_intersect = sorted(list(set(_tmp_raw.index) & set(_tmp_log2.index)))
+assert len(_genes_intersect) == 2926
+
+# %%
+# make sure the same data is stored
+assert _tmp_raw.loc[_genes_intersect].equals(_tmp_log2.loc[_genes_intersect])
+
+# %% [markdown]
+# ### raw
+
+# %% tags=[]
 _tmp_raw.head()
 
 # %% tags=[]
-_tmp_desc = _tmp_raw.T.iloc[:, :5].describe()
+_tmp_desc = _tmp_raw.T.describe()
 display(_tmp_desc)
 
-assert _tmp_desc.loc["max"].min() > 80000
-assert _tmp_desc.loc["max"].min() < 205000
+assert _tmp_desc.loc["min"].min() == 0.0
+assert _tmp_desc.loc["min"].max() == 37640.0
+
+assert _tmp_desc.loc["max"].min() == 30.66
+assert _tmp_desc.loc["max"].max() == 201000.0
+
+# %% [markdown]
+# ### pc_log2
 
 # %% tags=[]
 _tmp_log2.head()
 
 # %% tags=[]
-_tmp_desc = _tmp_log2.T.iloc[:, :5].describe()
+# the stats are different than _tmp_raw
+_tmp_desc = _tmp_log2.T.describe()
 display(_tmp_desc)
 
-assert _tmp_desc.loc["max"].min() > 8
-assert _tmp_desc.loc["max"].min() < 300
+assert _tmp_desc.loc["min"].min() == 0.0
+assert _tmp_desc.loc["min"].max() == 201.4
 
-# %% tags=[]
-assert _tmp_raw.columns.tolist() == _tmp_log2.columns.tolist()
-
-# %% tags=[]
-assert len(set(_tmp_raw.index).intersection(set(_tmp_log2.index))) == 23
+assert _tmp_desc.loc["max"].min() == 5.824
+assert _tmp_desc.loc["max"].max() == 15320.0
 
 # %% tags=[]
