@@ -86,6 +86,7 @@ def test_corr_spearman():
 
     # calculate pearson with a different method and check if it is the same
     from scipy.stats import spearmanr
+
     scipy_spearman_mat = spearmanr(data.to_numpy(), axis=1)[0]
 
     assert np.allclose(
