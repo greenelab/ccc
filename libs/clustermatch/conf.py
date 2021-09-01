@@ -5,7 +5,6 @@ This file IS NOT intended to be modified by the user.
 """
 import os
 import tempfile
-from multiprocessing import cpu_count
 from pathlib import Path
 
 from clustermatch import settings
@@ -39,7 +38,7 @@ GENERAL["LOG_CONFIG_FILE"] = Path(
 options = [
     os.environ.get("CM_N_JOBS"),
     getattr(settings, "N_JOBS", None),
-    int(cpu_count() / 2),
+    1,
 ]
 GENERAL["N_JOBS"] = next(int(opt) for opt in options if opt is not None)
 
