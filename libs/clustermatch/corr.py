@@ -7,11 +7,7 @@ from sklearn.metrics import pairwise_distances
 
 
 def pearson(data):
-    corr_mat = 1 - pairwise_distances(
-        data.to_numpy(),
-        metric="correlation",
-        n_jobs=1
-    )
+    corr_mat = 1 - pairwise_distances(data.to_numpy(), metric="correlation", n_jobs=1)
 
     np.fill_diagonal(corr_mat, 1.0)
 
@@ -26,11 +22,7 @@ def spearman(data):
     # compute ranks
     data = data.rank(axis=1)
 
-    corr_mat = 1 - pairwise_distances(
-        data.to_numpy(),
-        metric="correlation",
-        n_jobs=1
-    )
+    corr_mat = 1 - pairwise_distances(data.to_numpy(), metric="correlation", n_jobs=1)
 
     np.fill_diagonal(corr_mat, 1.0)
 
