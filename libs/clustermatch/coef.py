@@ -4,7 +4,19 @@ from scipy.spatial.distance import cdist
 from sklearn.metrics import adjusted_rand_score as ari
 
 
-def _get_perc_from_k(k):
+def _get_perc_from_k(k: int) -> list[float]:
+    """
+    It returns the percentiles (from 0.0 to 1.0) that separate the data into k
+    clusters. For example, if k=2, it returns [0.5]; if k=4, it returns [0.25,
+    0.50, 0.75].
+
+    Args:
+        k: number of clusters. If less than 2, the function returns an empty
+            list.
+
+    Returns:
+        A list of percentiles (from 0.0 to 1.0).
+    """
     return [(1.0 / k) * i for i in range(1, k)]
 
 

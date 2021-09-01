@@ -4,7 +4,19 @@ import numpy as np
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
 
-from clustermatch.coef import cm, _get_range_n_clusters, run_quantile_clustering
+from clustermatch.coef import cm, _get_range_n_clusters, run_quantile_clustering, _get_perc_from_k
+
+
+def test_get_perc_from_k_with_k_less_than_two():
+    assert _get_perc_from_k(1) == []
+    assert _get_perc_from_k(0) == []
+    assert _get_perc_from_k(-1) == []
+
+
+def test_get_perc_from_k():
+    assert _get_perc_from_k(2) == [0.5]
+    assert np.round(_get_perc_from_k(3), 3).tolist() == [0.333, 0.667]
+    assert _get_perc_from_k(4) == [0.25, 0.50, 0.75]
 
 
 def test_run_quantile_clustering_with_two_clusters01():
