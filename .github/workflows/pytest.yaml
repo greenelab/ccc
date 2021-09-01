@@ -55,9 +55,15 @@ jobs:
         if: runner.os == 'Windows'
         env:
           PYTHONPATH: libs/
+        shell: cmd
         run: |
-          ${{ env.PY_ENV }}/python environment/scripts/setup_data.py --mode testing
-          ${{ env.PY_ENV }}/python -m pytest -v -rs tests
+          echo on
+          cd ${{ env.PY_ENV }}
+          call .\Scripts\activate.bat
+          .\Scripts\conda-unpack.exe
+          cd ..
+          python environment\scripts\setup_data.py --mode testing
+          pytest -v -rs tests
       - name: Setup data and run pytest (non-Windows systems)
         if: runner.os != 'Windows'
         shell: bash
