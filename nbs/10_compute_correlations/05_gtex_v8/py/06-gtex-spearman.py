@@ -13,10 +13,10 @@
 #     name: python3
 # ---
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Description
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # According to the settings specified below, this notebook:
 #  1. reads all the data from one source (GTEx, recount2, etc) according to the gene selection method (`GENE_SELECTION_STRATEGY`),
 #  2. runs a quick performance test using the correlation coefficient specified (`CORRELATION_METHOD`), and
@@ -25,7 +25,7 @@
 # %% [markdown] tags=[]
 # # Modules
 
-# %%
+# %% tags=[]
 import pandas as pd
 from tqdm import tqdm
 
@@ -35,16 +35,16 @@ from clustermatch.corr import spearman
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 GENE_SELECTION_STRATEGY = "var_raw"
 
-# %%
+# %% tags=[]
 CORRELATION_METHOD = spearman
 
 method_name = CORRELATION_METHOD.__name__
 display(method_name)
 
-# %%
+# %% tags=[]
 PERFORMANCE_TEST_N_TOP_GENES = 500
 
 # %% [markdown] tags=[]
@@ -77,32 +77,32 @@ display(input_files[:5])
 # %% [markdown] tags=[]
 # ## Performance test
 
-# %%
+# %% tags=[]
 display(input_files[0])
 test_data = pd.read_pickle(input_files[0])
 
-# %%
+# %% tags=[]
 test_data.shape
 
-# %%
+# %% tags=[]
 test_data.head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # This is a quick performance test of the correlation measure. The following line (`_tmp = ...`) is the setup code, which is needed in case the correlation method was optimized using `numba` and needs to be compiled before performing the test.
 
-# %%
+# %% tags=[]
 _tmp = CORRELATION_METHOD(test_data.iloc[:3])
 
 display(_tmp.shape)
 display(_tmp)
 
-# %%
+# %% tags=[]
 # %timeit CORRELATION_METHOD(test_data.iloc[:PERFORMANCE_TEST_N_TOP_GENES])
 
 # %% [markdown] tags=[]
 # ## Run
 
-# %%
+# %% tags=[]
 pbar = tqdm(input_files, ncols=100)
 
 for tissue_data_file in pbar:
@@ -118,4 +118,4 @@ for tissue_data_file in pbar:
     output_filename = f"{tissue_data_file.stem}-{method_name}.pkl"
     data_corrs.to_pickle(path=OUTPUT_DIR / output_filename)
 
-# %%
+# %% tags=[]
