@@ -65,9 +65,30 @@ def test_corr_pearson():
     assert np.sign(corr_values.max()) != np.sign(corr_values.min())
 
     # calculate pearson with a different method and check if it is the same
-    numpy_pearson = np.corrcoef(data.to_numpy())
+    numpy_pearson_mat = np.corrcoef(data.to_numpy())
 
     assert np.allclose(
-        numpy_pearson,
+        numpy_pearson_mat,
+        corr_mat.to_numpy(),
+    )
+
+
+def test_corr_spearman():
+    # run basic tests first
+    data, corr_mat = _run_basic_checks(corr.spearman)
+
+    corr_values = pd.Series(corr_mat.to_numpy().flatten())
+
+    # check ranges
+    assert corr_values.max() <= 1.0
+    assert corr_values.min() >= -1.0
+    assert np.sign(corr_values.max()) != np.sign(corr_values.min())
+
+    # calculate pearson with a different method and check if it is the same
+    from scipy.stats import spearmanr
+    scipy_spearman_mat = spearmanr(data.to_numpy(), axis=1)[0]
+
+    assert np.allclose(
+        scipy_spearman_mat,
         corr_mat.to_numpy(),
     )
