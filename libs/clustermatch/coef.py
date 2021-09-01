@@ -8,16 +8,25 @@ def _get_perc_from_k(k):
     return [(1.0 / k) * i for i in range(1, k)]
 
 
-def run_quantile_clustering(data, k, **kwargs):
+def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
     """
-    TODO
+    Performs a simple quantile clustering on one dimensional data (1d). Quantile
+    clustering is defined as the procedure that forms clusters in 1d data by
+    separating objects using quantiles (for instance, if the median is used, two
+    clusters are generated with objects separated by the median). In the case
+    data contains all the same values (zero variance), this implementation can
+    return less clusters than specified with k.
 
-    it can return less clusters than specified if all the values are the same
+    Args:
+        data: a 1d numpy array with numerical values.
+        k: the number of clusters to split the data into.
+
+    Returns:
+        A 1d array with the data partition.
     """
     data_perc = stats.rankdata(data, "average") / len(data)
     data_perc_sort_idx = np.argsort(data_perc)
 
-    # data_perc = data
     percentiles = [0.0] + _get_perc_from_k(k) + [1.0]
 
     cut_points = np.searchsorted(
@@ -37,37 +46,46 @@ def run_quantile_clustering(data, k, **kwargs):
     return part
 
 
-# def _isempty(row):
-#     return np.array([x is None or (np.isreal(x) and np.isnan(x)) for x in row])
+def _get_range_n_clusters(n_features: int, **kwargs) -> list[int]:
+    """
+    Given the number of features it returns a list of k values to cluster those
+    features into. By default, it generates a list of k values from 2 to
+    int(np.round(np.sqrt(n_features))) (inclusive). For example, for 25 features,
+    it will generate this list: [2, 3, 4, 5].
 
-
-# def _get_common_features(obj1, obj2):
-#     obj1_notnan = np.logical_not(_isempty(obj1))
-#     obj2_notnan = np.logical_not(_isempty(obj2))
-#
-#     common_features = np.logical_and(obj1_notnan, obj2_notnan)
-#     n_common_features = common_features.sum()
-#
-#     return common_features, n_common_features
-
-
-def _get_range_n_clusters(n_common_features, **kwargs):
+    Args:
+        n_features: a positive number representing the number of features that
+            will be clustered into different groups/clusters.
+        internal_n_clusters: it allows to force a different list of clusters. It
+            can be a list/tuple of integers (floats will be converted into int) or a
+            range object, or even an integer (in that case, it will return a list
+            with that integer). Invalid or repeated values will be dropped, such
+            as values lesser than 2 (a singleton partition is not allowed)
+    """
     internal_n_clusters = kwargs.get("internal_n_clusters")
 
-    if internal_n_clusters is None:
-        estimated_k = int(np.floor(np.sqrt(n_common_features)))
-        estimated_k = np.min((estimated_k, 10))
-        range_n_clusters = range(2, np.max((estimated_k, 3)))
-    elif isinstance(internal_n_clusters, (tuple, list, range)):
-        # TODO: test the case where this is a range, because it's a generator
-        range_n_clusters = internal_n_clusters
+    if isinstance(internal_n_clusters, (tuple, list, range)):
+        clusters_range_list = internal_n_clusters
     elif isinstance(internal_n_clusters, int):
-        # TODO: test this case
-        range_n_clusters = (internal_n_clusters,)
+        clusters_range_list = [internal_n_clusters]
     else:
-        raise ValueError("n_clusters is invalid")
+        clusters_range_list = []
 
-    return range_n_clusters
+    # keep values larger than one only and remove repeated
+    # code to remove repeated values taken from: https://stackoverflow.com/a/480227
+    seen = set()
+    seen_add = seen.add
+
+    clusters_range_list = [
+        int(x) for x in clusters_range_list
+        if x > 1 and not (x in seen or seen_add(x))
+    ]
+
+    if len(clusters_range_list) == 0:
+        n_sqrt = int(np.round(np.sqrt(n_features)))
+        clusters_range_list = range(2, n_sqrt + 1)
+
+    return tuple(clusters_range_list)
 
 
 def _get_internal_parts(data_obj, range_n_clusters, **kwargs):

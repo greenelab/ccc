@@ -1,7 +1,243 @@
+from random import shuffle
+
 import numpy as np
 from sklearn.preprocessing import minmax_scale
+from sklearn.metrics import adjusted_rand_score as ari
 
-from clustermatch.coef import cm
+from clustermatch.coef import cm, _get_range_n_clusters, run_quantile_clustering
+
+
+def test_run_quantile_clustering_with_two_clusters01():
+    # Prepare
+    np.random.seed(0)
+
+    data = np.concatenate((
+        np.random.normal(0, 1, 10),
+        np.random.normal(5, 1, 10),
+    ))
+    data_ref = np.concatenate(([0] * 10, [1] * 10))
+
+    idx_shuffled = list(range(len(data)))
+    shuffle(idx_shuffled)
+
+    data = data[idx_shuffled]
+    data_ref = data_ref[idx_shuffled]
+
+    # Run
+    part = run_quantile_clustering(data, 2)
+
+    # Validate
+    assert part is not None
+    assert len(part) == 20
+    assert len(np.unique(part)) == 2
+    assert ari(data_ref, part) == 1.0, ari(data_ref, part)
+
+
+def test_run_quantile_clustering_with_two_clusters_mixed():
+    # Prepare
+    np.random.seed(0)
+
+    data = np.concatenate(
+        (
+            np.random.normal(-3, 0.5, 5),
+            np.random.normal(0, 1, 5),
+            np.random.normal(5, 1, 5),
+            np.random.normal(10, 1, 5),
+        )
+    )
+    data_ref = np.concatenate(([0] * 10, [1] * 10))
+
+    idx_shuffled = list(range(len(data)))
+    shuffle(idx_shuffled)
+
+    data = data[idx_shuffled]
+    data_ref = data_ref[idx_shuffled]
+
+    # Run
+    part = run_quantile_clustering(data, 2)
+
+    # Validate
+    assert part is not None
+    assert len(part) == 20
+    assert len(np.unique(part)) == 2
+    assert ari(data_ref, part) == 1.0, ari(data_ref, part)
+
+
+def test_run_quantile_clustering_with_four_clusters():
+    # Prepare
+    np.random.seed(0)
+
+    data = np.concatenate(
+        (
+            np.random.normal(-3, 0.5, 5),
+            np.random.normal(0, 1, 5),
+            np.random.normal(5, 1, 5),
+            np.random.normal(10, 1, 5),
+        )
+    )
+    data_ref = np.concatenate(([0] * 5, [1] * 5, [2] * 5, [3] * 5))
+
+    idx_shuffled = list(range(len(data)))
+    shuffle(idx_shuffled)
+
+    data = data[idx_shuffled]
+    data_ref = data_ref[idx_shuffled]
+
+    # Run
+    part = run_quantile_clustering(data, 4)
+
+    # Validate
+    assert part is not None
+    assert len(part) == 20
+    assert len(np.unique(part)) == 4
+    assert ari(data_ref, part) == 1.0
+
+
+def test_get_range_n_clusters_without_internal_n_clusters():
+    # 100 features
+    range_n_clusters = _get_range_n_clusters(100)
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25)
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4, 5)
+
+
+def test_get_range_n_clusters_with_internal_n_clusters_is_list():
+    # 100 features
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[2,])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[2,])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[2, 3, 4])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4)
+
+
+def test_get_range_n_clusters_with_internal_n_clusters_empty():
+    # 100 features
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4, 5)
+
+
+def test_get_range_n_clusters_with_internal_n_clusters_is_tuple():
+    # 100 features
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=(2,))
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=(2,))
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=(2, 3, 4))
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4)
+
+
+def test_get_range_n_clusters_with_internal_n_clusters_is_range():
+    # 100 features
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=range(2,3))
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=range(2,3))
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=range(2, 4+1))
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4)
+
+
+def test_get_range_n_clusters_with_internal_n_clusters_is_int():
+    # 100 features
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=2)
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+    # 25 features
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=3)
+    assert range_n_clusters is not None
+    assert range_n_clusters == (3,)
+
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=1)
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4, 5)
+
+
+def test_get_range_n_clusters_with_internal_n_clusters_are_less_than_two():
+    # 100 features
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 3, 4])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4)
+
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 1, 4])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 4)
+
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 3, 1])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3)
+
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 0, 4])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 4)
+
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 1, -4, 6])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 6)
+
+
+def test_get_range_n_clusters_with_internal_n_clusters_are_repeated():
+    # 100 features
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[2, 3, 2, 4])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2, 3, 4)
+
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[2, 2, 2])
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+
+def test_get_range_n_clusters_with_very_few_features():
+    # 3 features
+    range_n_clusters = _get_range_n_clusters(3)
+    assert range_n_clusters is not None
+    assert range_n_clusters == (2,)
+
+    # 2 features
+    range_n_clusters = _get_range_n_clusters(2)
+    assert range_n_clusters is not None
+    assert range_n_clusters == tuple()
+
+    # 1 features
+    range_n_clusters = _get_range_n_clusters(1)
+    assert range_n_clusters is not None
+    assert range_n_clusters == tuple()
+
+    # 0 features
+    range_n_clusters = _get_range_n_clusters(0)
+    assert range_n_clusters is not None
+    assert range_n_clusters == tuple()
 
 
 def test_cm_basic():
@@ -112,8 +348,6 @@ def test_all_features_with_all_same_values():
     ## Validate
     assert cm_value == 0.0
 
-
-# TODO: _get_range_n_clusters !!! it's returning less clusters in range(2, 10) -> 8 clusters instead of 9
 
 # TODO: test data has two features with different shape
 
