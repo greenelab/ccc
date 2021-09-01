@@ -7,11 +7,28 @@ import pandas as pd
 from clustermatch import corr
 
 
-def _get_random_data(n_genes, n_samples, random_state=0):
+def _get_random_data(n_genes: int, n_samples: int, random_state=0) -> pd.DataFrame:
+    """
+    Simulates with random data a gene expression data matrix in the same format
+    of real datasets.
+
+    Args:
+        n_genes: number of genes (rows) to be generated.
+        n_samples: number of samples (columns) to be generated.
+        random_state: random seed for np.random.seed.
+
+    Returns:
+        A pandas DataFrame with random numerical values generated with
+        np.random.rand. The index will have simulated gene Ensembl IDs with the
+        following format: ENSG00000123456.{i}, where {i} is the index of the
+        gene (starting from zero to n_genes - 1). The columns will have
+        simulated sample IDs with the following format: Sample-Number-{i}.
+    """
     np.random.seed(random_state)
 
     # simulate data with a real structure of genes and samples
     random_data = np.random.rand(n_genes, n_samples)
+
     return pd.DataFrame(
         data=random_data,
         index=[f"ENSG00000123456.{i}" for i in range(random_data.shape[0])],
@@ -19,7 +36,21 @@ def _get_random_data(n_genes, n_samples, random_state=0):
     )
 
 
-def _run_basic_checks(corr_method, random_state=0):
+def _run_basic_checks(corr_method, random_state=0) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Performs basic checks on the output of a correlation method.
+
+    Args:
+        corr_method: a function that computes the correlations among genes. This
+            function receives the data as the only arguments, which has the same
+            format returned by function _get_random_data. It must return a
+            correlation matrix as with the same format specified in the corr.py
+            module (description at the top of file).
+        random_state: passed to the _get_random_data function.
+
+    Returns:
+        A tuple with the random data generated and the correlation matrix.
+    """
     n_genes = 10
     n_samples = 100
     random_data = _get_random_data(n_genes, n_samples, random_state)
