@@ -4,7 +4,12 @@ import numpy as np
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
 
-from clustermatch.coef import cm, _get_range_n_clusters, run_quantile_clustering, _get_perc_from_k
+from clustermatch.coef import (
+    cm,
+    _get_range_n_clusters,
+    run_quantile_clustering,
+    _get_perc_from_k,
+)
 
 
 def test_get_perc_from_k_with_k_less_than_two():
@@ -23,10 +28,12 @@ def test_run_quantile_clustering_with_two_clusters01():
     # Prepare
     np.random.seed(0)
 
-    data = np.concatenate((
-        np.random.normal(0, 1, 10),
-        np.random.normal(5, 1, 10),
-    ))
+    data = np.concatenate(
+        (
+            np.random.normal(0, 1, 10),
+            np.random.normal(5, 1, 10),
+        )
+    )
     data_ref = np.concatenate(([0] * 10, [1] * 10))
 
     idx_shuffled = list(range(len(data)))
@@ -119,12 +126,22 @@ def test_get_range_n_clusters_without_internal_n_clusters():
 
 def test_get_range_n_clusters_with_internal_n_clusters_is_list():
     # 100 features
-    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[2,])
+    range_n_clusters = _get_range_n_clusters(
+        100,
+        internal_n_clusters=[
+            2,
+        ],
+    )
     assert range_n_clusters is not None
     assert range_n_clusters == (2,)
 
     # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[2,])
+    range_n_clusters = _get_range_n_clusters(
+        25,
+        internal_n_clusters=[
+            2,
+        ],
+    )
     assert range_n_clusters is not None
     assert range_n_clusters == (2,)
 
@@ -165,17 +182,17 @@ def test_get_range_n_clusters_with_internal_n_clusters_is_tuple():
 
 def test_get_range_n_clusters_with_internal_n_clusters_is_range():
     # 100 features
-    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=range(2,3))
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=range(2, 3))
     assert range_n_clusters is not None
     assert range_n_clusters == (2,)
 
     # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=range(2,3))
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=range(2, 3))
     assert range_n_clusters is not None
     assert range_n_clusters == (2,)
 
     # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=range(2, 4+1))
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=range(2, 4 + 1))
     assert range_n_clusters is not None
     assert range_n_clusters == (2, 3, 4)
 
@@ -331,7 +348,7 @@ def test_cm_quadratic2():
     assert cm_value > 0.40
 
 
-def test_feature_with_all_same_values():
+def test_cm_feature_with_all_same_values():
     ## Prepare
     np.random.seed(0)
 
@@ -346,7 +363,7 @@ def test_feature_with_all_same_values():
     assert cm_value == 0.0
 
 
-def test_all_features_with_all_same_values():
+def test_cm_all_features_with_all_same_values():
     ## Prepare
     np.random.seed(0)
 
@@ -371,3 +388,7 @@ def test_all_features_with_all_same_values():
 # TODO: add stats options to get the partitions or number of clusters that
 #  generated each cm value (this will be useful to debug the method as we
 #  talked with Diego)
+
+
+# TODO: add a tsv file with numerical data and clustermatch computed using the original implementation;
+#  this will make sure that we are not making a mistake in the implementation here
