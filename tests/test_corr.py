@@ -109,7 +109,7 @@ def test_corr_pearson_manual():
     test_data = pd.DataFrame(np.array([x, y]))
 
     num = (x - x.mean()) @ (y - y.mean())
-    dem=np.sqrt(np.sum((x-x.mean())**2) * np.sum((y-y.mean())**2))
+    dem = np.sqrt(np.sum((x - x.mean()) ** 2) * np.sum((y - y.mean()) ** 2))
     expected_corr = num / dem
     assert expected_corr == 0.5879747322073337
 
@@ -156,7 +156,7 @@ def test_corr_spearman_manual():
     y = order.argsort()
 
     num = (x - x.mean()) @ (y - y.mean())
-    dem=np.sqrt(np.sum((x-x.mean())**2) * np.sum((y-y.mean())**2))
+    dem = np.sqrt(np.sum((x - x.mean()) ** 2) * np.sum((y - y.mean()) ** 2))
     expected_corr = num / dem
     assert round(expected_corr, 5) == 0.2
 
