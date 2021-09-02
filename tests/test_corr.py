@@ -102,6 +102,24 @@ def test_corr_pearson():
     )
 
 
+def test_corr_pearson_manual():
+    # add basic check with manual calculation of the correlation
+    x = np.array([0, 1, 2, 3])
+    y = np.array([0, -1, -3, 8])
+    test_data = pd.DataFrame(np.array([x, y]))
+
+    num = (x - x.mean()) @ (y - y.mean())
+    dem=np.sqrt(np.sum((x-x.mean())**2) * np.sum((y-y.mean())**2))
+    expected_corr = num / dem
+    assert expected_corr == 0.5879747322073337
+
+    test_result = corr.pearson(test_data)
+    assert test_result.iloc[0, 0] == 1.0
+    assert test_result.iloc[0, 1] == expected_corr
+    assert test_result.iloc[1, 0] == expected_corr
+    assert test_result.iloc[1, 1] == 1.0
+
+
 def test_corr_spearman():
     # run basic tests first
     data, corr_mat = _run_basic_checks(corr.spearman)
@@ -122,3 +140,28 @@ def test_corr_spearman():
         scipy_spearman_mat,
         corr_mat.to_numpy(),
     )
+
+
+def test_corr_spearman_manual():
+    # add basic check with manual calculation of the correlation
+    x = np.array([0, 1, 2, 3])
+    y = np.array([0, -1, -3, 8])
+    test_data = pd.DataFrame(np.array([x, y]))
+
+    # get ranks
+    order = x.argsort()
+    x = order.argsort()
+
+    order = y.argsort()
+    y = order.argsort()
+
+    num = (x - x.mean()) @ (y - y.mean())
+    dem=np.sqrt(np.sum((x-x.mean())**2) * np.sum((y-y.mean())**2))
+    expected_corr = num / dem
+    assert round(expected_corr, 5) == 0.2
+
+    test_result = corr.spearman(test_data)
+    assert test_result.iloc[0, 0] == 1.0
+    assert test_result.iloc[0, 1].round(5) == expected_corr
+    assert test_result.iloc[1, 0].round(5) == expected_corr
+    assert test_result.iloc[1, 1] == 1.0
