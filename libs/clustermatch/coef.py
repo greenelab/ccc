@@ -1,3 +1,7 @@
+"""
+Contains function that implement the Clustermatch coefficient
+(https://doi.org/10.1093/bioinformatics/bty899).
+"""
 import numpy as np
 from scipy import stats
 from scipy.spatial.distance import cdist
@@ -58,12 +62,12 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
     return part
 
 
-def _get_range_n_clusters(n_features: int, **kwargs) -> list[int]:
+def _get_range_n_clusters(n_features: int, **kwargs) -> tuple[int]:
     """
-    Given the number of features it returns a list of k values to cluster those
-    features into. By default, it generates a list of k values from 2 to
+    Given the number of features it returns a tuple of k values to cluster those
+    features into. By default, it generates a tuple of k values from 2 to
     int(np.round(np.sqrt(n_features))) (inclusive). For example, for 25 features,
-    it will generate this list: [2, 3, 4, 5].
+    it will generate this tuple: (2, 3, 4, 5).
 
     Args:
         n_features: a positive number representing the number of features that
@@ -72,7 +76,10 @@ def _get_range_n_clusters(n_features: int, **kwargs) -> list[int]:
             can be a list/tuple of integers (floats will be converted into int) or a
             range object, or even an integer (in that case, it will return a list
             with that integer). Invalid or repeated values will be dropped, such
-            as values lesser than 2 (a singleton partition is not allowed)
+            as values lesser than 2 (a singleton partition is not allowed).
+
+    Returns:
+        A tuple with integer values representing number of clusters.
     """
     internal_n_clusters = kwargs.get("internal_n_clusters")
 
@@ -89,8 +96,7 @@ def _get_range_n_clusters(n_features: int, **kwargs) -> list[int]:
     seen_add = seen.add
 
     clusters_range_list = [
-        int(x) for x in clusters_range_list
-        if x > 1 and not (x in seen or seen_add(x))
+        int(x) for x in clusters_range_list if x > 1 and not (x in seen or seen_add(x))
     ]
 
     if len(clusters_range_list) == 0:
@@ -100,7 +106,20 @@ def _get_range_n_clusters(n_features: int, **kwargs) -> list[int]:
     return tuple(clusters_range_list)
 
 
-def _get_internal_parts(data_obj, range_n_clusters, **kwargs):
+def _get_internal_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
+    """
+    Given a 1d data array, it computes a partition for each k value in the given
+    range of clusters. This function only supports numerical data, and it
+    always runs run_run_quantile_clustering with the different k values.
+
+    Args:
+        data: a 1d data vector.
+        range_n_clusters: a tuple with the number of clusters.
+
+    Returns:
+        A numpy array with partitions of data, with length equal to the number
+        of k values given.
+    """
     partitions = []
 
     for k in range_n_clusters:
@@ -109,21 +128,37 @@ def _get_internal_parts(data_obj, range_n_clusters, **kwargs):
         # if len(data_obj) <= k:
         #     part = np.array([np.nan] * len(data_obj))
         # else:
-        part = run_quantile_clustering(data_obj, k, **kwargs)
+        part = run_quantile_clustering(data, k)
 
         partitions.append(part)
 
+    # TODO: use np.int8 or something like that as dtype
     return np.array(partitions)
 
 
 def _compute_ari(part1, part2):
-    if np.isnan(part1).any() or len(part1) == 0:
-        return 0.0
+    # TODO: not sure why I have this here, test it!
+    # if np.isnan(part1).any() or len(part1) == 0:
+    #     return 0.0
 
+    # TODO: maybe replace with my own ari implementation, which also fixes some issues.
+    #  this will also be necessary for numba.
     return ari(part1, part2)
 
 
 def cm(obj1, obj2, **kwargs):
+    """
+    This is the main function that computes the Clustermatch coefficient between
+    two arrays. This implementation only supports numerical data for
+    optimization purposes, but it can also work with categorical data in the
+    original implementation (https://github.com/sinc-lab/clustermatch).
+
+    TODO: this function might check whether obj1 (which should probably by x, and obj2 be y)
+     is one or two dimensional, and if y is given; if 2d, use optimized approach to compute
+     cm on all column pairs
+
+    TODO: finish
+    """
     range_n_clusters = _get_range_n_clusters(len(obj1), **kwargs)
 
     obj1_parts = _get_internal_parts(obj1, range_n_clusters, **kwargs)
@@ -134,111 +169,14 @@ def cm(obj1, obj2, **kwargs):
     max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
     max_ari = comp_values[max_pos]
 
-    # if the partition that maximizes the ARI in either of the two input vectors
-    # has only one cluster (for example, all the values are the same), then
+    # get the partition in obj1 and the partition in obj2 that maximized ari
     obj1_max_part = obj1_parts[max_pos[0]]
     obj2_max_part = obj2_parts[max_pos[1]]
 
+    # if the partition that maximizes the ARI in either of the two input vectors
+    # has only one cluster (for example, all the values are the same), then the
+    # coefficient is zero
     if len(np.unique(obj1_max_part)) == 1 or len(np.unique(obj2_max_part)) == 1:
         return 0.0
 
     return max_ari
-
-
-# def _calculate_sub_simmatrix(data, idx_range, sim_func='cm', return_pvalue=False, min_n_common_features=3, **kwargs):
-#     p_dist = []
-#     p_dist_pvalue = []
-#     n_objects = data.shape[0]
-#
-#     if sim_func == 'cm':
-#         similarity_func = cm
-#     elif sim_func == 'pearson':
-#         similarity_func = get_pearson
-#     elif sim_func == 'shared_objects':
-#         similarity_func = get_shared_objects
-#     else:
-#         raise ValueError('Invalid sim_func')
-#
-#     for idx in idx_range:
-#         obj1_idx, obj2_idx = row_col_from_condensed_index(n_objects, idx)
-#
-#         obj1 = data[obj1_idx]
-#         obj2 = data[obj2_idx]
-#
-#         common_features, n_common_features = _get_common_features(obj1, obj2)
-#
-#         if n_common_features < min_n_common_features:
-#             sim_values = (0.0, 1.0) # sim value and pvalue
-#         else:
-#             sim_values = similarity_func(obj1[common_features], obj2[common_features], **kwargs)
-#
-#         p_dist.append(sim_values[0])
-#
-#         if return_pvalue:
-#             p_dist_pvalue.append(sim_values[1])
-#
-#     return p_dist, p_dist_pvalue
-
-
-# def calculate_simmatrix(data, fill_diag_value=1.0, n_jobs=1, **kwargs):
-#     data_index = None
-#     if hasattr(data, 'index'):
-#         data_index = data.index.tolist()
-#
-#     if hasattr(data, 'values'):
-#         data = data.values
-#
-#     # FIXME: quantiles clustering is only for 1d comparisons. Use kmeans for n-dimensional.
-#     # kwargs['clustering_method'] = _get_clustering_method(**kwargs)
-#
-#     n_objects = data.shape[0]
-#
-#     p_dist_len = int((n_objects * (n_objects - 1)) / 2)
-#
-#     # FIXME: set n_jobs according to data size. Do some performance test with unit tests
-#     n_cpus = n_jobs if n_jobs > 0 else cpu_count()
-#
-#     step = int(np.ceil(p_dist_len / n_cpus))
-#     p_dist_range = range(0, p_dist_len, step)
-#
-#     p_dist_values = Parallel(n_jobs=n_jobs)(
-#         delayed(_calculate_sub_simmatrix)(data, idx_range, **kwargs)
-#         for idx_range in [range(s, min(s + p_dist_range.step, p_dist_range.stop)) for s in p_dist_range]
-#     )
-#
-#     p_dist = []
-#     p_dist_pval = []
-#     for p, pval in p_dist_values:
-#         p_dist.extend(p)
-#
-#         if len(pval) > 0:
-#             p_dist_pval.extend(pval)
-#
-#     p_dist = np.array(p_dist)
-#     p_dist_pval = np.array(p_dist_pval)
-#
-#     return_pvalue = kwargs.get('return_pvalue', False)
-#
-#     if data_index is not None:
-#         sqmatrix = get_squareform(p_dist, fill_diag_value)
-#         sim_matrix = pd.DataFrame(
-#             sqmatrix,
-#             index=data_index,
-#             columns=data_index
-#         )
-#
-#         if return_pvalue:
-#             sqmatrix_pval = get_squareform(p_dist_pval, np.nan)
-#             pval_matrix = pd.DataFrame(
-#                 sqmatrix_pval,
-#                 index=data_index,
-#                 columns=data_index
-#             )
-#     else:
-#         sim_matrix = p_dist
-#         pval_matrix = p_dist_pval
-#
-#     if return_pvalue:
-#         return sim_matrix, pval_matrix
-#     else:
-#         return sim_matrix
