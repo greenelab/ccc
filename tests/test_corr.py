@@ -70,8 +70,6 @@ def _run_basic_checks(corr_method, random_state=0) -> tuple[pd.DataFrame, pd.Dat
     assert hasattr(corr_mat, "columns")
     assert list(corr_mat.columns) == list(random_data.index)
 
-    assert hasattr(corr_mat, "columns")
-
     # dtype
     assert np.issubdtype(corr_mat.to_numpy().dtype, np.number)
 
