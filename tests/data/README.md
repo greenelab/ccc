@@ -33,6 +33,30 @@ index 9f7d06c..07e8192 100644
 
 Then I moved to the git root directory and executed the following commands in ipython:
 
+
+THIS IS WITH RANDOM DATA WITHOUT NANS
+```python
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from clustermatch.cluster import calculate_simmatrix
+
+np.random.seed(0)
+random_data = pd.DataFrame(np.random.rand(20, 100))
+
+OUTPUT_DIR = Path("/home/miltondp/projects/labs/greenelab/clustermatch_repos/clustermatch-gene-expr/tests/data/")
+
+random_data.to_pickle(OUTPUT_DIR / "clustermatch-random_data-data.pkl")
+
+int_n_clusters = range(2, 10+1)
+cm_sim_matrix = calculate_simmatrix(random_data, internal_n_clusters=int_n_clusters, n_jobs=3)
+cm_sim_matrix.to_pickle(OUTPUT_DIR / "clustermatch-random_data-coef.pkl")
+```
+
+
+THIS IS WITH THE ORIGINAL DATA WITH NANS
 ```python
 from pathlib import Path
 
