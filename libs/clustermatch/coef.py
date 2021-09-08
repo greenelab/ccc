@@ -108,9 +108,7 @@ def _get_range_n_clusters(n_features: int, **kwargs) -> tuple[int]:
     return tuple(clusters_range_list)
 
 
-def _get_parts(
-    data: np.ndarray, range_n_clusters: tuple[int]
-) -> np.ndarray:
+def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
     """
     Given a 1d data array, it computes a partition for each k value in the given
     range of clusters. This function only supports numerical data, and it
@@ -148,7 +146,12 @@ def _get_parts(
 
 def _compute_ari(part1, part2):
     # TODO: not sure why I have this here, test it!
-    if np.isnan(part1).any() or np.isnan(part2).any() or len(part1) == 0 or len(part2) == 0:
+    if (
+        np.isnan(part1).any()
+        or np.isnan(part2).any()
+        or len(part1) == 0
+        or len(part2) == 0
+    ):
         return 0.0
 
     # TODO: maybe replace with my own ari implementation, which also fixes some issues.

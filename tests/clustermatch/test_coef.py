@@ -8,7 +8,8 @@ from clustermatch.coef import (
     cm,
     _get_range_n_clusters,
     run_quantile_clustering,
-    _get_perc_from_k, _get_parts,
+    _get_perc_from_k,
+    _get_parts,
 )
 
 
@@ -472,4 +473,3 @@ def test_get_parts_k_is_greater_or_equal_than_n_objects():
     parts = _get_parts(feature0, (20,))
     assert parts is not None
     assert len(parts) == 0
-
