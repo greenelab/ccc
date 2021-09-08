@@ -50,18 +50,13 @@ def spearman(data: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def clustermatch_naive(data: pd.DataFrame) -> pd.DataFrame:
-    """
-    TODO: it would be good to have this one to compare performance with optmized version
-
-    - do not use this; use instead clustermatch
-    """
+def clustermatch(data: pd.DataFrame, internal_n_clusters=None, precompute_parts=True) -> pd.DataFrame:
+    from scipy.spatial.distance import squareform
     from clustermatch.coef import cm
 
-    corr_mat = pairwise_distances(
-        data.to_numpy(), metric=cm, n_jobs=1, force_all_finite="allow-nan"
-    )
+    corr_mat = cm(data.to_numpy(), internal_n_clusters=internal_n_clusters, precompute_parts=precompute_parts)
 
+    corr_mat = squareform(corr_mat)
     np.fill_diagonal(corr_mat, 1.0)
 
     return pd.DataFrame(
@@ -69,7 +64,3 @@ def clustermatch_naive(data: pd.DataFrame) -> pd.DataFrame:
         index=data.index.copy(),
         columns=data.index.copy(),
     )
-
-
-def clustermatch(data: pd.DataFrame) -> pd.DataFrame:
-    pass
