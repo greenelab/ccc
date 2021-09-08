@@ -82,6 +82,45 @@ def _run_basic_checks(corr_method, random_state=0) -> tuple[pd.DataFrame, pd.Dat
     return random_data, corr_mat
 
 
+def _run_tests_against_clustermatch_original_implementation(clustermatch_method):
+    """
+    TODO: complete
+
+    - it takes a lot of time, since these are ~160 features (too much for a unit test)
+    """
+    # compare with results obtained from the original clustermatch
+    # implementation (https://github.com/sinc-lab/clustermatch) plus some
+    # patches (see README.md in tests/data about clustermatch data).
+    from pathlib import Path
+    from pandas.testing import assert_frame_equal
+
+    input_data_dir = Path(__file__).parent / "data"
+
+    # load data
+    data = pd.read_pickle(input_data_dir / "clustermatch-random_data-data.pkl")
+    # data = data.iloc[:60]
+
+    # run new clustermatch implementation.
+    # Here, I fixed the internal number of clusters, since that slightly changed
+    # in the new implementation compared with the original one.
+    corr_mat = clustermatch_method(data)
+
+    expected_corr_matrix = pd.read_pickle(
+        input_data_dir / "clustermatch-random_data-coef.pkl"
+    )
+    expected_corr_matrix = expected_corr_matrix.loc[data.index, data.index]
+
+    assert corr_mat.shape == expected_corr_matrix.shape
+    assert corr_mat.index.tolist() == expected_corr_matrix.index.tolist()
+    assert corr_mat.columns.tolist() == expected_corr_matrix.columns.tolist()
+
+    assert_frame_equal(
+        expected_corr_matrix,
+        corr_mat,
+        check_exact=False,
+    )
+
+
 def test_corr_pearson():
     # run basic tests first
     data, corr_mat = _run_basic_checks(corr.pearson)
@@ -167,54 +206,6 @@ def test_corr_spearman_manual():
     assert test_result.iloc[1, 1] == 1.0
 
 
-def test_corr_clustermatch_naive_basics():
-    # run basic tests first
-    data, corr_mat = _run_basic_checks(corr.clustermatch_naive)
-
-    corr_values = pd.Series(corr_mat.to_numpy().flatten())
-
-    # check ranges
-    assert corr_values.max() <= 1.0
-    assert corr_values.min() >= 0.0
-    assert np.sign(corr_values.max()) == np.sign(corr_values.min())
-
-
-def test_corr_clustermatch_naive_outputs_same_as_original_clustermatch():
-    # TODO: this test takes a lot of time; remove it once finished implementing
-    #  the more efficient clustermatch
-
-    # compare with results obtained from the original clustermatch
-    # implementation (https://github.com/sinc-lab/clustermatch)
-    from pathlib import Path
-    from pandas.testing import assert_frame_equal
-
-    input_data_dir = Path(__file__).parent / "data"
-
-    data = pd.read_pickle(input_data_dir / "clustermatch-example-data.pkl")
-    data = data.iloc[:5]
-    corr_mat = corr.clustermatch_naive(data)
-
-    expected_corr_matrix = pd.read_pickle(
-        input_data_dir / "clustermatch-example-coef.pkl"
-    )
-    expected_corr_matrix = expected_corr_matrix.loc[data.index, data.index]
-
-    # # TODO: remove
-    # _one, _two = "Weight", "Firmness"
-    # expected_corr_matrix.loc[_one, _two] = corr_mat.loc[_one, _two]
-    # expected_corr_matrix.loc[_two, _one] = expected_corr_matrix.loc[_one, _two]
-
-    assert corr_mat.shape == expected_corr_matrix.shape
-    assert corr_mat.index.tolist() == expected_corr_matrix.index.tolist()
-    assert corr_mat.columns.tolist() == expected_corr_matrix.columns.tolist()
-    # assert observed_corr_matrix.equals(expected_corr_matrix)
-
-    assert_frame_equal(
-        expected_corr_matrix,
-        corr_mat,
-    )
-
-
 def test_corr_clustermatch_basics():
     # run basic tests first
     data, corr_mat = _run_basic_checks(corr.clustermatch)
@@ -228,36 +219,14 @@ def test_corr_clustermatch_basics():
 
 
 def test_corr_clustermatch_outputs_same_as_original_clustermatch():
-    # TODO: this test takes a lot of time; remove it once finished implementing
-    #  the more efficient clustermatch
+    def cm(data):
+        return corr.clustermatch(data, internal_n_clusters=range(2, 10 + 1))
 
-    # compare with results obtained from the original clustermatch
-    # implementation (https://github.com/sinc-lab/clustermatch)
-    from pathlib import Path
-    from pandas.testing import assert_frame_equal
+    _run_tests_against_clustermatch_original_implementation(cm)
 
-    input_data_dir = Path(__file__).parent / "data"
 
-    data = pd.read_pickle(input_data_dir / "clustermatch-example-data.pkl")
-    data = data.iloc[:5]
-    corr_mat = corr.clustermatch(data)
+def test_corr_clustermatch_outputs_same_as_original_clustermatch_no_precompute_parts():
+    def cm(data):
+        return corr.clustermatch(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=False)
 
-    expected_corr_matrix = pd.read_pickle(
-        input_data_dir / "clustermatch-example-coef.pkl"
-    )
-    expected_corr_matrix = expected_corr_matrix.loc[data.index, data.index]
-
-    # # TODO: remove
-    # _one, _two = "Weight", "Firmness"
-    # expected_corr_matrix.loc[_one, _two] = corr_mat.loc[_one, _two]
-    # expected_corr_matrix.loc[_two, _one] = expected_corr_matrix.loc[_one, _two]
-
-    assert corr_mat.shape == expected_corr_matrix.shape
-    assert corr_mat.index.tolist() == expected_corr_matrix.index.tolist()
-    assert corr_mat.columns.tolist() == expected_corr_matrix.columns.tolist()
-    # assert observed_corr_matrix.equals(expected_corr_matrix)
-
-    assert assert_frame_equal(
-        expected_corr_matrix,
-        corr_mat,
-    )
+    _run_tests_against_clustermatch_original_implementation(cm)
