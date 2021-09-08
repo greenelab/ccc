@@ -405,6 +405,30 @@ def test_cm_single_argument_is_matrix():
     assert cm_value[2] < 0.03
 
 
+def test_cm_single_argument_is_matrix_with_precomputing_of_parts():
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+    feature2 = np.random.rand(feature0.shape[0])
+
+    input_data = np.array([feature0, feature1, feature2])
+
+    # Run
+    cm_value = cm(input_data, precompute_parts=True)
+
+    # Validate
+    assert cm_value is not None
+    assert hasattr(cm_value, "shape")
+    assert cm_value.shape == (3,)
+    # assert np.array_equal(np.diag(cm_value), np.ones(cm_value.shape[0]))
+
+    assert cm_value[0] == 1.0
+    assert cm_value[1] < 0.03
+    assert cm_value[2] < 0.03
+
+
 # TODO: test data has two features with different shape
 
 # TODO: test data with some nan in feature0
