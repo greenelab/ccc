@@ -271,23 +271,23 @@ def test_get_range_n_clusters_with_very_few_features():
 
 
 def test_cm_basic():
-    ## Prepare
+    # Prepare
     np.random.seed(123)
 
     # two features on 100 objects (random data)
     feature0 = np.random.rand(100)
     feature1 = np.random.rand(100)
 
-    ## Run
+    # Run
     cm_value = cm(feature0, feature1)
 
-    ## Validate
+    # Validate
     assert cm_value is not None
     assert isinstance(cm_value, float)
 
 
 def test_cm_random_data():
-    ## Prepare
+    # Prepare
     np.random.seed(123)
 
     for i in range(10):
@@ -297,88 +297,88 @@ def test_cm_random_data():
         )  # with negative values
         feature1 = np.random.rand(100)  # all positive values between 0 and 1
 
-        ## Run
+        # Run
         cm_value = cm(feature0, feature1)
 
-        ## Validate
+        # Validate
         assert cm_value < 0.05
 
 
 def test_cm_linear():
-    ## Prepare
+    # Prepare
     np.random.seed(0)
 
     # two features on 100 objects with a linear relationship
     feature0 = np.random.rand(100)
     feature1 = feature0 * 5.0
 
-    ## Run
+    # Run
     cm_value = cm(feature0, feature1)
 
-    ## Validate
+    # Validate
     assert cm_value == 1.0
 
 
 def test_cm_quadratic():
-    ## Prepare
+    # Prepare
     np.random.seed(1)
 
     # two features on 100 objects with a linear relationship
     feature0 = minmax_scale(np.random.rand(100), (-1.0, 1.0))
     feature1 = np.power(feature0, 2.0)
 
-    ## Run
+    # Run
     cm_value = cm(feature0, feature1)
 
-    ## Validate
+    # Validate
     assert cm_value > 0.40
 
 
 def test_cm_quadratic2():
-    ## Prepare
+    # Prepare
     np.random.seed(1)
 
     # two features on 100 objects with a linear relationship
     feature0 = minmax_scale(np.random.rand(100), (-1.0, 1.0))
     feature1 = np.power(feature0, 2.0) + (0.10 * np.random.rand(feature0.shape[0]))
 
-    ## Run
+    # Run
     cm_value = cm(feature0, feature1)
 
-    ## Validate
+    # Validate
     assert cm_value > 0.40
 
 
 def test_cm_feature_with_all_same_values():
-    ## Prepare
+    # Prepare
     np.random.seed(0)
 
     # two features on 100 objects with a linear relationship
     feature0 = np.random.rand(100)
     feature1 = np.array([5] * feature0.shape[0])
 
-    ## Run
+    # Run
     cm_value = cm(feature0, feature1)
 
-    ## Validate
+    # Validate
     assert np.isnan(cm_value)
 
 
 def test_cm_all_features_with_all_same_values():
-    # this test generates internal partitions with only one cluster. In this case,
-    # clustermatch returns NaN
+    # this test generates internal partitions with only one cluster. In this
+    # case, clustermatch returns NaN
 
-    ## Prepare
+    # Prepare
     np.random.seed(0)
 
     # two features with constant values
     feature0 = np.array([0] * 100)
     feature1 = np.array([5] * feature0.shape[0])
 
-    ## Run
+    # Run
     cm_value = cm(feature0, feature1)
 
-    ## Validate
+    # Validate
     assert np.isnan(cm_value)
 
 
