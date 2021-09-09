@@ -8,21 +8,45 @@
 # Plus, the code is always run inside the same environment (including the full
 # operating system).
 
-CODE_DIR="/home/miltondp/projects/labs/greenelab/clustermatch_repos/clustermatch-gene-expr"
-DATA_DIR="${CODE_DIR}/base"
-MANUSCRIPT_DIR="/home/miltondp/projects/labs/greenelab/clustermatch_repos/clustermatch-gene-expr-manuscript"
-N_JOBS=3
+# We assume the repo code is in the current directory, so the user has to make
+# sure this is right.
+
+echo "Configuration:"
+
+CODE_DIR=`pwd`
+echo "  Code dir: ${CODE_DIR}"
+
+if [ -z "${CM_ROOT_DIR}" ]; then
+  ROOT_DIR="${CODE_DIR}/base"
+else
+  ROOT_DIR="${CM_ROOT_DIR}"
+fi
+
+echo "  Root dir: ${ROOT_DIR}"
+
+if [ -z "${CM_MANUSCRIPT_DIR}" ]; then
+  echo "  ERROR: manuscript directory is not set"
+  exit 1
+fi
+
+echo "  Manuscript dir: ${CM_MANUSCRIPT_DIR}"
+
+echo "  CPU cores: ${CM_N_JOBS}"
+
+echo ""
+echo "Waiting 5 seconds before starting"
+sleep 5
 
 # always create data directory before running Docker
-mkdir -p ${DATA_DIR}
+mkdir -p ${ROOT_DIR}
 
 COMMAND="$@"
 
 docker run --rm \
-  -e CM_N_JOBS=${N_JOBS} \
+  -e CM_N_JOBS=${CM_N_JOBS} \
   -v "${CODE_DIR}:/opt/code" \
-  -v "${DATA_DIR}:/opt/data" \
-  -v "${MANUSCRIPT_DIR}:/opt/manuscript" \
+  -v "${ROOT_DIR}:/opt/data" \
+  -v "${CM_MANUSCRIPT_DIR}:/opt/manuscript" \
   --user "$(id -u):$(id -g)" \
   miltondp/clustermatch_gene_expr \
   /bin/bash -c "${COMMAND}"
