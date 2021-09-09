@@ -3,18 +3,18 @@ import math
 import numpy as np
 from sklearn.metrics import adjusted_rand_score as sklearn_ari
 
-from clustermatch.metrics import adjusted_rand_index, get_contingency_matrix, get_pair_confusion_matrix
+from clustermatch.metrics import (
+    adjusted_rand_index,
+    get_contingency_matrix,
+    get_pair_confusion_matrix,
+)
 
 
 def test_get_contingency_matrix_k0_equal_k1():
     part0 = np.array([0, 0, 1, 1, 2, 2])
     part1 = np.array([0, 1, 0, 2, 1, 2])
 
-    expected_mat = np.array([
-        [1, 1, 0],
-        [1, 0, 1],
-        [0, 1, 1]
-    ])
+    expected_mat = np.array([[1, 1, 0], [1, 0, 1], [0, 1, 1]])
 
     observed_mat = get_contingency_matrix(part0, part1)
 
@@ -25,12 +25,7 @@ def test_get_contingency_matrix_k0_greater_k1():
     part0 = np.array([0, 0, 1, 1, 2, 2, 3, 3, 3])
     part1 = np.array([0, 1, 0, 2, 1, 2, 2, 2, 2])
 
-    expected_mat = np.array([
-        [1, 1, 0],
-        [1, 0, 1],
-        [0, 1, 1],
-        [0, 0, 3]
-    ])
+    expected_mat = np.array([[1, 1, 0], [1, 0, 1], [0, 1, 1], [0, 0, 3]])
 
     observed_mat = get_contingency_matrix(part0, part1)
 
@@ -41,12 +36,9 @@ def test_get_contingency_matrix_k0_lesser_k1():
     part0 = np.array([0, 0, 1, 1, 2, 2, 3, 3, 3, 2, 2, 2, 1])
     part1 = np.array([0, 1, 0, 2, 1, 2, 3, 3, 3, 4, 4, 5, 5])
 
-    expected_mat = np.array([
-        [1, 1, 0, 0, 0, 0],
-        [1, 0, 1, 0, 0, 1],
-        [0, 1, 1, 0, 2, 1],
-        [0, 0, 0, 3, 0, 0]
-    ])
+    expected_mat = np.array(
+        [[1, 1, 0, 0, 0, 0], [1, 0, 1, 0, 0, 1], [0, 1, 1, 0, 2, 1], [0, 0, 0, 3, 0, 0]]
+    )
 
     observed_mat = get_contingency_matrix(part0, part1)
 
@@ -57,10 +49,7 @@ def test_get_pair_confusion_matrix_k0_equal_k1():
     part0 = np.array([0, 0, 1, 1, 2, 2])
     part1 = np.array([0, 1, 0, 2, 1, 2])
 
-    expected_mat = np.array([
-        [18, 6],
-        [6,  0]
-    ])
+    expected_mat = np.array([[18, 6], [6, 0]])
 
     observed_mat = get_pair_confusion_matrix(part0, part1)
 
@@ -71,10 +60,7 @@ def test_get_pair_confusion_matrix_k0_greater_k1():
     part0 = np.array([0, 0, 1, 1, 2, 2, 3, 3, 3])
     part1 = np.array([0, 1, 0, 2, 1, 2, 2, 2, 2])
 
-    expected_mat = np.array([
-        [42, 18],
-        [6,  6]
-    ])
+    expected_mat = np.array([[42, 18], [6, 6]])
 
     observed_mat = get_pair_confusion_matrix(part0, part1)
 

@@ -31,9 +31,7 @@ def get_pair_confusion_matrix(part0, part1):
     n_samples = np.int64(part0.shape[0])
 
     # Computation using the contingency data
-    contingency = get_contingency_matrix(
-        part0, part1
-    )
+    contingency = get_contingency_matrix(part0, part1)
     n_c = np.ravel(contingency.sum(axis=1))
     n_k = np.ravel(contingency.sum(axis=0))
     sum_squares = (contingency ** 2).sum()
@@ -56,5 +54,4 @@ def adjusted_rand_index(part0, part1):
     if fn == 0 and fp == 0:
         return 1.0
 
-    return 2. * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) +
-                                       (tp + fp) * (fp + tn))
+    return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
