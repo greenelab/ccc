@@ -68,10 +68,10 @@ display(OUTPUT_DIR)
 # %% tags=[]
 data = pd.read_pickle(INPUT_FILE)
 
-# %%
+# %% tags=[]
 data.shape
 
-# %%
+# %% tags=[]
 data.head()
 
 # %% [markdown] tags=[]
@@ -105,15 +105,15 @@ display(_tmp)
 # %% [markdown] tags=[]
 # ## Run
 
-# %%
+# %% tags=[]
 # compute correlations
 data_corrs = CORRELATION_METHOD(data)
 
-# %%
+# %% tags=[]
 output_filename = OUTPUT_DIR / f"{INPUT_FILE.stem}-{method_name}.pkl"
 display(output_filename)
 
-# %%
+# %% tags=[]
 # save
 data_corrs.to_pickle(output_filename)
 
