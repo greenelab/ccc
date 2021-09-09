@@ -8,6 +8,7 @@ dependencies:
   - jupyterlab
   - jupytext
   - matplotlib
+  - numba
   - numpy
   - openpyxl
   - pandas
