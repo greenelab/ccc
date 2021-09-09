@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 from sklearn.metrics import adjusted_rand_score as sklearn_ari
 
