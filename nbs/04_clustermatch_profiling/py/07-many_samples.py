@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.4
+#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -19,7 +19,7 @@ import numpy as np
 from clustermatch.coef import cm
 
 # %% tags=[]
-n_genes, n_samples = 100, 30000
+n_genes, n_samples = 10, 30000
 
 # %% tags=[]
 np.random.seed(0)
@@ -47,4 +47,4 @@ func()
 # %%prun -s cumulative -l 20 -T 07-cm_many_samples.txt
 func()
 
-# %%
+# %% tags=[]

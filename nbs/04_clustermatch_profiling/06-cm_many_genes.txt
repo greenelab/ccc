@@ -1,0 +1,26 @@
+         12560506 function calls in 1263.543 seconds
+
+   Ordered by: cumulative time
+   List reduced from 70 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000 1263.543 1263.543 {built-in method builtins.exec}
+        1    0.000    0.000 1263.543 1263.543 <string>:1(<module>)
+        1    0.000    0.000 1263.543 1263.543 674090675.py:1(func)
+        1    0.538    0.538 1263.543 1263.543 coef.py:163(cm)
+   124750    0.457    0.000 1260.921    0.010 distance.py:2616(cdist)
+   124750   25.373    0.000 1260.340    0.010 distance.py:2606(_cdist_callable)
+ 10104750 1234.826    0.000 1234.826    0.000 metrics.py:46(adjusted_rand_index)
+   169750    0.576    0.000    1.202    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+      500    0.012    0.000    1.184    0.002 coef.py:113(_get_parts)
+     4500    0.106    0.000    0.983    0.000 coef.py:29(run_quantile_clustering)
+   124750    0.126    0.000    0.681    0.000 <__array_function__ internals>:2(unravel_index)
+     4500    0.130    0.000    0.616    0.000 stats.py:8631(rankdata)
+    18000    0.013    0.000    0.429    0.000 fromnumeric.py:51(_wrapfunc)
+     9000    0.008    0.000    0.415    0.000 <__array_function__ internals>:2(argsort)
+     9000    0.007    0.000    0.401    0.000 fromnumeric.py:1006(argsort)
+     9000    0.384    0.000    0.384    0.000 {method 'argsort' of 'numpy.ndarray' objects}
+   124750    0.216    0.000    0.216    0.000 {method 'argmax' of 'numpy.ndarray' objects}
+     9000    0.073    0.000    0.193    0.000 index_tricks.py:323(__getitem__)
+     4500    0.004    0.000    0.183    0.000 <__array_function__ internals>:2(unique)
+     4500    0.007    0.000    0.173    0.000 arraysetops.py:138(unique)
