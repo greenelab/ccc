@@ -27,7 +27,6 @@
 
 # %% tags=[]
 import pandas as pd
-from tqdm import tqdm
 
 from clustermatch import conf
 from clustermatch.corr import spearman
@@ -108,6 +107,14 @@ display(_tmp)
 # %% tags=[]
 # compute correlations
 data_corrs = CORRELATION_METHOD(data)
+
+# %%
+display(data_corrs.shape)
+
+assert data.shape[0] == data_corrs.shape[0]
+
+# %%
+data_corrs.head()
 
 # %% tags=[]
 output_filename = OUTPUT_DIR / f"{INPUT_FILE.stem}-{method_name}.pkl"
