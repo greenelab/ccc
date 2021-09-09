@@ -29,8 +29,6 @@
 
 # %% tags=[]
 import sys
-from pathlib import Path
-from shutil import copyfile
 
 import pandas as pd
 import rpy2.robjects as ro
