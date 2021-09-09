@@ -21,6 +21,8 @@
 # This notebook reads 1) the normalized gene expression and 2) pathways from the data processed by
 # MultiPLIER scripts (https://github.com/greenelab/multi-plier) and saves it into a more friendly Python
 # format (Pandas DataFrames as pickle files).
+#
+# For recount2 we will not perform gene selection as in GTEx, since in this dataset (from MUltiPLIER) we only have ~6,700 genes, which is managable enough to compute the similarity matrices.
 
 # %% [markdown] tags=[]
 # # Modules
