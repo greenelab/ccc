@@ -13,13 +13,13 @@
 #     name: python3
 # ---
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Description
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # TODO
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Modules
 
 # %% tags=[]
@@ -27,7 +27,7 @@ import numpy as np
 
 from clustermatch.coef import cm
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Data
 
 # %% tags=[]
