@@ -13,10 +13,22 @@
 #     name: python3
 # ---
 
+# %% [markdown] tags=[]
+# # Description
+
+# %% [markdown]
+# TODO
+
+# %% [markdown] tags=[]
+# # Modules
+
 # %% tags=[]
 import numpy as np
 
 from clustermatch import coef
+
+# %% [markdown] tags=[]
+# # Data
 
 # %% tags=[]
 n_genes, n_samples = 100, 1000
