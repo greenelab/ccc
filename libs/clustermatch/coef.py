@@ -5,7 +5,9 @@ Contains function that implement the Clustermatch coefficient
 import numpy as np
 from scipy import stats
 from scipy.spatial.distance import cdist
-from sklearn.metrics import adjusted_rand_score as ari
+
+
+from clustermatch.metrics import adjusted_rand_index as ari
 
 
 def _get_perc_from_k(k: int) -> list[float]:
@@ -144,21 +146,6 @@ def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
     return np.array(partitions)
 
 
-def _compute_ari(part1, part2):
-    # TODO: not sure why I have this here, test it!
-    if (
-        np.isnan(part1).any()
-        or np.isnan(part2).any()
-        or len(part1) == 0
-        or len(part2) == 0
-    ):
-        return 0.0
-
-    # TODO: maybe replace with my own ari implementation, which also fixes some issues.
-    #  this will also be necessary for numba.
-    return ari(part1, part2)
-
-
 def _isempty(row):
     return np.array([x is None or (np.isreal(x) and np.isnan(x)) for x in row])
 
@@ -243,7 +230,7 @@ def cm(x, y=None, precompute_parts=False, **kwargs):
                 max_ari = np.nan
             else:
 
-                comp_values = cdist(obji_parts, objj_parts, metric=_compute_ari)
+                comp_values = cdist(obji_parts, objj_parts, metric=ari)
 
                 max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
                 max_ari = comp_values[max_pos]
