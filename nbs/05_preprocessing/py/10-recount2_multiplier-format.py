@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.4
+#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -98,7 +98,7 @@ recount2_rpkl_cm.head()
 # %% [markdown] tags=[]
 # ## Test
 
-# %%
+# %% tags=[]
 assert not recount2_rpkl_cm.isna().any().any()
 assert recount2_rpkl_cm.index.is_unique
 assert recount2_rpkl_cm.columns.is_unique
