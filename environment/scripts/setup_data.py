@@ -1,6 +1,8 @@
 """
 It sets up the file/folder structure by downloading the necessary files.
 """
+from pathlib import Path
+
 from clustermatch import conf
 from clustermatch.utils import curl
 from clustermatch.log import get_logger
@@ -13,6 +15,58 @@ logger = get_logger("setup")
 # mode (see below).
 #
 DATA_IN_TESTING_MODE_ONLY = {}
+
+
+def get_file_from_zip(
+    zip_file_url,
+    zip_file_path,
+    zip_file_md5,
+    zip_internal_filename,
+    output_file,
+    output_file_md5,
+):
+    """
+    This method downloads a zip file and extracts a particular file inside
+    it.
+    TODO: finish documentation of arguments
+    Args:
+        zip_file_url:
+        zip_file_path:
+        zip_file_md5:
+        zip_internal_filename:
+        output_file:
+        output_file_md5:
+    """
+    from clustermatch.utils import md5_matches
+
+    # do not download file again if it exists and MD5 matches the expected one
+    if output_file.exists() and md5_matches(output_file_md5, output_file):
+        logger.info(f"File already downloaded: {output_file}")
+        return
+
+    # download zip file
+    parent_dir = output_file.parent
+
+    curl(
+        zip_file_url,
+        zip_file_path,
+        zip_file_md5,
+        logger=logger,
+    )
+
+    # extract file from zip
+    logger.info(f"Extracting {zip_internal_filename}")
+    import zipfile
+
+    with zipfile.ZipFile(zip_file_path, "r") as z:
+        z.extract(str(zip_internal_filename), path=parent_dir)
+
+    # rename file
+    Path(parent_dir, zip_internal_filename).rename(output_file)
+    Path(parent_dir, zip_internal_filename.parent).rmdir()
+
+    # delete zip file
+    # zip_file_path.unlink()
 
 
 def download_gtex_v8_sample_attributes(**kwargs):
@@ -32,6 +86,24 @@ def download_gtex_v8_data(**kwargs):
         output_file,
         "ff6aade0ef5b55e38af9fef98bad760b",
         logger=logger,
+    )
+
+
+def download_multiplier_recount2_data(**kwargs):
+    """
+    This method downloads the recount2 data used in MultiPLIER.
+    """
+    get_file_from_zip(
+        zip_file_url="https://ndownloader.figshare.com/files/10881866",
+        zip_file_path=Path(
+            conf.RECOUNT2["DATA_RDS_FILE"].parent, "recount2_PLIER_data.zip"
+        ).resolve(),
+        zip_file_md5="f084992c5d91817820a2782c9441b9f6",
+        zip_internal_filename=Path(
+            "recount2_PLIER_data", "recount_data_prep_PLIER.RDS"
+        ),
+        output_file=conf.RECOUNT2["DATA_RDS_FILE"],
+        output_file_md5="4f806e06069fd339f8fcff7c98cecff0",
     )
 
 
