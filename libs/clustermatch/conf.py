@@ -87,6 +87,22 @@ GTEX["SIMILARITY_MATRICES_DIR"] = Path(
 ).resolve()
 
 
+#
+# recount2 (from MultiPLIER)
+#
+RECOUNT2 = {}
+
+# Input data
+RECOUNT2["DATA_DIR"] = Path(DATA_DIR, "recount2").resolve()
+
+RECOUNT2["DATA_RDS_FILE"] = Path(
+    RECOUNT2["DATA_DIR"], "recount_data_prep_PLIER.RDS"
+).resolve()
+RECOUNT2["DATA_FILE"] = Path(
+    RECOUNT2["DATA_DIR"], "recount_data_prep_PLIER.pkl"
+).resolve()
+
+
 if __name__ == "__main__":
     # if this script is run, then it exports the configuration as environment
     # variables (for bash/R, etc)
