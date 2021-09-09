@@ -1,6 +1,7 @@
 from random import shuffle
 
 import numpy as np
+from scipy import stats
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
 
@@ -10,7 +11,118 @@ from clustermatch.coef import (
     run_quantile_clustering,
     _get_perc_from_k,
     _get_parts,
+    rank,
 )
+
+
+def test_rank_no_duplicates():
+    data = np.array([0, 10, 1, 5, 7, 8, -5, -2])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_one_duplicate_group():
+    data = np.array([0, 10, 1, 5, 7, 8, 1, -2])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_one_duplicate_group_with_more_elements():
+    data = np.array([0, 10, 1, 1, 7, 8, 1, -2])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_one_duplicate_group_at_beginning():
+    data = np.array([0, 0, 1, -10, 7, 8, 9.4, -2])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_one_duplicate_group_at_beginning_with_more_elements():
+    data = np.array([0.13, 0.13, 0.13, 1, -10, 7, 8, 9.4, -2])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_one_duplicate_group_at_beginning_are_smallest():
+    data = np.array([0, 10, 1.5, -99.5, -99.5, -99.5, 5, 7, 8, -5, -2])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_one_duplicate_group_at_end():
+    data = np.array([0, 1, -10, 7, 8, 9.4, -2.5, -2.5])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_one_duplicate_group_at_end_with_more_elements():
+    data = np.array([0, 1, -10, 7, 8, 9.4, -12.5, -12.5, -12.5])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_one_duplicate_group_at_end_is_the_largest():
+    data = np.array([0, 1, -10, 7, 8, 9.4, 120.5, 120.5, 120.5])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
+
+
+def test_rank_all_are_duplicates():
+    data = np.array([1.5, 1.5, 1.5, 1.5])
+
+    expected_ranks = stats.rankdata(data, "average")
+    observed_ranks = rank(data)
+
+    np.testing.assert_array_equal(
+        observed_ranks, expected_ranks
+    )
 
 
 def test_get_perc_from_k_with_k_less_than_two():
@@ -117,12 +229,12 @@ def test_get_range_n_clusters_without_internal_n_clusters():
     # 100 features
     range_n_clusters = _get_range_n_clusters(100)
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4, 5, 6, 7, 8, 9, 10)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10]))
 
     # 25 features
     range_n_clusters = _get_range_n_clusters(25)
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4, 5)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5]))
 
 
 def test_get_range_n_clusters_with_internal_n_clusters_is_list():
@@ -134,7 +246,7 @@ def test_get_range_n_clusters_with_internal_n_clusters_is_list():
         ],
     )
     assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
     # 25 features
     range_n_clusters = _get_range_n_clusters(
@@ -144,130 +256,102 @@ def test_get_range_n_clusters_with_internal_n_clusters_is_list():
         ],
     )
     assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
     # 25 features
     range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[2, 3, 4])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4]))
 
 
-def test_get_range_n_clusters_with_internal_n_clusters_empty():
+def test_get_range_n_clusters_with_internal_n_clusters_none():
     # 100 features
-    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[])
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=None)
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4, 5, 6, 7, 8, 9, 10)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10]))
 
     # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[])
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=None)
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4, 5)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5]))
 
 
-def test_get_range_n_clusters_with_internal_n_clusters_is_tuple():
+def test_get_range_n_clusters_with_internal_n_clusters_has_single_int():
     # 100 features
-    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=(2,))
+    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[2])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
     # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=(2,))
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[3])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
+    np.testing.assert_array_equal(range_n_clusters, np.array([3]))
 
-    # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=(2, 3, 4))
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[1])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4)
-
-
-def test_get_range_n_clusters_with_internal_n_clusters_is_range():
-    # 100 features
-    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=range(2, 3))
-    assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
-
-    # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=range(2, 3))
-    assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
-
-    # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=range(2, 4 + 1))
-    assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4)
-
-
-def test_get_range_n_clusters_with_internal_n_clusters_is_int():
-    # 100 features
-    range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=2)
-    assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
-
-    # 25 features
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=3)
-    assert range_n_clusters is not None
-    assert range_n_clusters == (3,)
-
-    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=1)
-    assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4, 5)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5]))
 
 
 def test_get_range_n_clusters_with_internal_n_clusters_are_less_than_two():
     # 100 features
     range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 3, 4])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4]))
 
     range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 1, 4])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 4)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 4]))
 
     range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 3, 1])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3]))
 
     range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 0, 4])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 4)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 4]))
 
     range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[1, 2, 1, -4, 6])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 6)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 6]))
 
 
 def test_get_range_n_clusters_with_internal_n_clusters_are_repeated():
     # 100 features
     range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[2, 3, 2, 4])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2, 3, 4)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4]))
 
     range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=[2, 2, 2])
     assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
 
 def test_get_range_n_clusters_with_very_few_features():
     # 3 features
     range_n_clusters = _get_range_n_clusters(3)
     assert range_n_clusters is not None
-    assert range_n_clusters == (2,)
+    np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
     # 2 features
     range_n_clusters = _get_range_n_clusters(2)
     assert range_n_clusters is not None
-    assert range_n_clusters == tuple()
+    np.testing.assert_array_equal(range_n_clusters, np.array([]))
 
     # 1 features
     range_n_clusters = _get_range_n_clusters(1)
     assert range_n_clusters is not None
-    assert range_n_clusters == tuple()
+    np.testing.assert_array_equal(range_n_clusters, np.array([]))
 
     # 0 features
     range_n_clusters = _get_range_n_clusters(0)
     assert range_n_clusters is not None
-    assert range_n_clusters == tuple()
+    np.testing.assert_array_equal(range_n_clusters, np.array([]))
+
+
+def test_get_range_n_clusters_with_default_max_k():
+    range_n_clusters = _get_range_n_clusters(200)
+    assert range_n_clusters is not None
+    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10]))
 
 
 def test_cm_basic():
@@ -361,7 +445,7 @@ def test_cm_feature_with_all_same_values():
     cm_value = cm(feature0, feature1)
 
     # Validate
-    assert np.isnan(cm_value)
+    assert np.isnan(cm_value), cm_value
 
 
 def test_cm_all_features_with_all_same_values():
