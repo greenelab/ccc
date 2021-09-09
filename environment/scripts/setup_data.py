@@ -18,24 +18,24 @@ DATA_IN_TESTING_MODE_ONLY = {}
 
 
 def get_file_from_zip(
-    zip_file_url,
-    zip_file_path,
-    zip_file_md5,
-    zip_internal_filename,
-    output_file,
-    output_file_md5,
+    zip_file_url: str,
+    zip_file_path: str,
+    zip_file_md5: str,
+    zip_internal_filename: Path,
+    output_file: Path,
+    output_file_md5: str,
 ):
     """
-    This method downloads a zip file and extracts a particular file inside
-    it.
-    TODO: finish documentation of arguments
+    It downloads a zip file and extracts a particular file inside it to a specified
+    location.
+
     Args:
-        zip_file_url:
-        zip_file_path:
-        zip_file_md5:
-        zip_internal_filename:
-        output_file:
-        output_file_md5:
+        zip_file_url: the URL of the zip file that contains the file of interest.
+        zip_file_path: path where the zip file will be saved.
+        zip_file_md5: MD5 hash of the zip file.
+        zip_internal_filename: filepath inside of the zip file that needs to be extracted.
+        output_file: output filepath where zip_internal_filename will be saved.
+        output_file_md5: MD5 hash of the file inside the zip file.
     """
     from clustermatch.utils import md5_matches
 
@@ -47,8 +47,6 @@ def get_file_from_zip(
         return
 
     # download zip file
-    parent_dir = output_file.parent
-
     curl(
         zip_file_url,
         zip_file_path,
@@ -60,15 +58,13 @@ def get_file_from_zip(
     logger.info(f"Extracting {zip_internal_filename}")
     import zipfile
 
+    parent_dir = output_file.parent
     with zipfile.ZipFile(zip_file_path, "r") as z:
         z.extract(str(zip_internal_filename), path=parent_dir)
 
     # rename file
     Path(parent_dir, zip_internal_filename).rename(output_file)
     Path(parent_dir, zip_internal_filename.parent).rmdir()
-
-    # delete zip file
-    # zip_file_path.unlink()
 
 
 def download_gtex_v8_sample_attributes(**kwargs):
