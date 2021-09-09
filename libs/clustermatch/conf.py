@@ -102,6 +102,13 @@ RECOUNT2["DATA_FILE"] = Path(
     RECOUNT2["DATA_DIR"], "recount_data_prep_PLIER.pkl"
 ).resolve()
 
+# Results
+RECOUNT2["RESULTS_DIR"] = Path(RESULTS_DIR, "recount2").resolve()
+
+RECOUNT2["SIMILARITY_MATRICES_DIR"] = Path(
+    RECOUNT2["RESULTS_DIR"], "similarity_matrices"
+).resolve()
+
 
 if __name__ == "__main__":
     # if this script is run, then it exports the configuration as environment
