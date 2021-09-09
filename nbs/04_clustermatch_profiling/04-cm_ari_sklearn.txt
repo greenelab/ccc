@@ -1,0 +1,26 @@
+         365055656 function calls (362649956 primitive calls) in 431.008 seconds
+
+   Ordered by: cumulative time
+   List reduced from 209 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000  431.008  431.008 {built-in method builtins.exec}
+        1    0.000    0.000  431.008  431.008 <string>:1(<module>)
+        1    0.000    0.000  431.008  431.008 4139949497.py:1(func)
+        1    0.028    0.028  431.008  431.008 coef.py:163(cm)
+     4950    0.022    0.000  430.705    0.087 distance.py:2616(cdist)
+     4950    0.881    0.000  430.677    0.087 distance.py:2606(_cdist_callable)
+   400950    5.395    0.000  429.789    0.001 _supervised.py:302(adjusted_rand_score)
+   400950    6.795    0.000  424.394    0.001 _supervised.py:154(pair_confusion_matrix)
+  1202850    2.658    0.000  201.502    0.000 validation.py:59(inner_f)
+   400950    3.032    0.000  161.605    0.000 _supervised.py:87(contingency_matrix)
+15651000/14047200   17.349    0.000  126.910    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+   400950    1.945    0.000  121.473    0.000 _supervised.py:32(check_clusterings)
+  2005650    1.842    0.000   91.816    0.000 <__array_function__ internals>:2(unique)
+   801900    3.315    0.000   88.057    0.000 compressed.py:588(sum)
+  2005650    3.214    0.000   87.180    0.000 arraysetops.py:138(unique)
+  2005650   30.384    0.000   81.455    0.000 arraysetops.py:320(_unique1d)
+  1202850    7.100    0.000   78.486    0.000 compressed.py:27(__init__)
+   400950    5.167    0.000   71.729    0.000 coo.py:372(tocsr)
+   801900    9.618    0.000   68.168    0.000 multiclass.py:186(type_of_target)
+   400950    2.239    0.000   61.496    0.000 base.py:968(sum)
