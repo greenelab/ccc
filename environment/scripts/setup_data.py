@@ -39,7 +39,7 @@ def get_file_from_zip(
     """
     from clustermatch.utils import md5_matches
 
-    logger.info(f"Checking if output file: {output_file}")
+    logger.info(f"Checking output file: {output_file}")
 
     # do not download file again if it exists and MD5 matches the expected one
     if output_file.exists() and md5_matches(output_file_md5, output_file):
