@@ -21,9 +21,7 @@ def test_rank_no_duplicates():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_one_duplicate_group():
@@ -32,9 +30,7 @@ def test_rank_one_duplicate_group():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_one_duplicate_group_with_more_elements():
@@ -43,9 +39,7 @@ def test_rank_one_duplicate_group_with_more_elements():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_one_duplicate_group_at_beginning():
@@ -54,9 +48,7 @@ def test_rank_one_duplicate_group_at_beginning():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_one_duplicate_group_at_beginning_with_more_elements():
@@ -65,9 +57,7 @@ def test_rank_one_duplicate_group_at_beginning_with_more_elements():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_one_duplicate_group_at_beginning_are_smallest():
@@ -76,9 +66,7 @@ def test_rank_one_duplicate_group_at_beginning_are_smallest():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_one_duplicate_group_at_end():
@@ -87,9 +75,7 @@ def test_rank_one_duplicate_group_at_end():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_one_duplicate_group_at_end_with_more_elements():
@@ -98,9 +84,7 @@ def test_rank_one_duplicate_group_at_end_with_more_elements():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_one_duplicate_group_at_end_is_the_largest():
@@ -109,9 +93,7 @@ def test_rank_one_duplicate_group_at_end_is_the_largest():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_rank_all_are_duplicates():
@@ -120,9 +102,7 @@ def test_rank_all_are_duplicates():
     expected_ranks = stats.rankdata(data, "average")
     observed_ranks = rank(data)
 
-    np.testing.assert_array_equal(
-        observed_ranks, expected_ranks
-    )
+    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_get_perc_from_k_with_k_less_than_two():
@@ -229,7 +209,9 @@ def test_get_range_n_clusters_without_internal_n_clusters():
     # 100 features
     range_n_clusters = _get_range_n_clusters(100)
     assert range_n_clusters is not None
-    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10]))
+    np.testing.assert_array_equal(
+        range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10])
+    )
 
     # 25 features
     range_n_clusters = _get_range_n_clusters(25)
@@ -268,7 +250,9 @@ def test_get_range_n_clusters_with_internal_n_clusters_none():
     # 100 features
     range_n_clusters = _get_range_n_clusters(100, internal_n_clusters=None)
     assert range_n_clusters is not None
-    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10]))
+    np.testing.assert_array_equal(
+        range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10])
+    )
 
     # 25 features
     range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=None)
@@ -351,7 +335,9 @@ def test_get_range_n_clusters_with_very_few_features():
 def test_get_range_n_clusters_with_default_max_k():
     range_n_clusters = _get_range_n_clusters(200)
     assert range_n_clusters is not None
-    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10]))
+    np.testing.assert_array_equal(
+        range_n_clusters, np.array([2, 3, 4, 5, 6, 7, 8, 9, 10])
+    )
 
 
 def test_cm_basic():

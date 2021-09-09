@@ -104,7 +104,9 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
 
 
 @njit(cache=True)
-def _get_range_n_clusters(n_features: int, internal_n_clusters: list = None) -> tuple[int]:
+def _get_range_n_clusters(
+    n_features: int, internal_n_clusters: list = None
+) -> tuple[int]:
     """
     Given the number of features it returns a tuple of k values to cluster those
     features into. By default, it generates a tuple of k values from 2 to
@@ -129,9 +131,7 @@ def _get_range_n_clusters(n_features: int, internal_n_clusters: list = None) -> 
         clusters_range_list = internal_n_clusters
 
     # keep values larger than one only and remove repeated
-    clusters_range_list = list(set([
-        int(x) for x in clusters_range_list if x > 1
-    ]))
+    clusters_range_list = list(set([int(x) for x in clusters_range_list if x > 1]))
 
     # default behavior if no internal_n_clusters is given: return range from
     # 2 to sqrt(n_features)
