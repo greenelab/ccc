@@ -44,7 +44,7 @@ data.shape
 
 
 # %% [markdown] tags=[]
-# # Profile
+# # With defeault `internal_n_clusters`
 
 # %% tags=[]
 def func():
@@ -56,7 +56,24 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 20 -T 07-cm_many_samples.txt
+# %%prun -s cumulative -l 20 -T 07-cm_many_samples-default_internal_n_clusters.txt
+func()
+
+
+# %% [markdown] tags=[]
+# # With defeault `internal_n_clusters`
+
+# %% tags=[]
+def func():
+    return cm(data, internal_n_clusters=range(2, 5 + 1), precompute_parts=True)
+
+
+# %% tags=[]
+# %%timeit func()
+func()
+
+# %% tags=[]
+# %%prun -s cumulative -l 20 -T 07-cm_many_samples-less_internal_n_clusters.txt
 func()
 
 # %% tags=[]
