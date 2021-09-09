@@ -220,7 +220,7 @@ def test_corr_clustermatch_basics():
 
 def test_corr_clustermatch_outputs_same_as_original_clustermatch():
     def cm(data):
-        return corr.clustermatch(data, internal_n_clusters=range(2, 10 + 1))
+        return corr.clustermatch(data, internal_n_clusters=list(range(2, 10 + 1)))
 
     _run_tests_against_clustermatch_original_implementation(cm)
 
@@ -228,7 +228,7 @@ def test_corr_clustermatch_outputs_same_as_original_clustermatch():
 def test_corr_clustermatch_outputs_same_as_original_clustermatch_no_precompute_parts():
     def cm(data):
         return corr.clustermatch(
-            data, internal_n_clusters=range(2, 10 + 1), precompute_parts=False
+            data, internal_n_clusters=list(range(2, 10 + 1)), precompute_parts=False
         )
 
     _run_tests_against_clustermatch_original_implementation(cm)

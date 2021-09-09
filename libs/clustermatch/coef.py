@@ -3,13 +3,14 @@ Contains function that implement the Clustermatch coefficient
 (https://doi.org/10.1093/bioinformatics/bty899).
 """
 import numpy as np
-from scipy import stats
+from numba import njit, types
 from scipy.spatial.distance import cdist
 
 
 from clustermatch.metrics import adjusted_rand_index as ari
 
 
+@njit(cache=True)
 def _get_perc_from_k(k: int) -> list[float]:
     """
     It returns the percentiles (from 0.0 to 1.0) that separate the data into k
@@ -26,6 +27,44 @@ def _get_perc_from_k(k: int) -> list[float]:
     return [(1.0 / k) * i for i in range(1, k)]
 
 
+@njit(cache=True)
+def rank(data):
+    data_sorted_idx = data.argsort()
+    data_sorted = data[data_sorted_idx]
+
+    data_ranks = data_sorted_idx.argsort().astype(np.float64)
+
+    # handle ties with the average
+    first_idx = data_sorted_idx[0]
+    first_rank = data_ranks[first_idx]
+    current_rank_group_idxs = [first_idx]
+    current_rank_group = [first_rank]
+
+    for i in range(1, data.shape[0]):
+        current_idx = data_sorted_idx[i]
+        current_rank = data_ranks[current_idx]
+
+        if data_sorted[i] == data_sorted[i - 1]:
+            current_rank_group_idxs.append(current_idx)
+            current_rank_group.append(current_rank)
+
+            if i < (data.shape[0] - 1):
+                continue
+
+        if len(current_rank_group) > 1:
+            assert len(current_rank_group) == len(set(current_rank_group))
+            assert len(current_rank_group_idxs) == len(set(current_rank_group_idxs))
+
+            avg_rank = np.array(current_rank_group).mean()
+            data_ranks[np.array(current_rank_group_idxs)] = avg_rank
+
+        current_rank_group = [current_rank]
+        current_rank_group_idxs = [current_idx]
+
+    return data_ranks + 1
+
+
+@njit(cache=True)
 def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
     """
     Performs a simple quantile clustering on one dimensional data (1d). Quantile
@@ -42,8 +81,8 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
     Returns:
         A 1d array with the data partition.
     """
-    data_perc = stats.rankdata(data, "average") / len(data)
-    data_perc_sort_idx = np.argsort(data_perc)
+    data_perc = rank(data) / len(data)
+    data_perc_sort_idx = data_perc.argsort()
 
     percentiles = [0.0] + _get_perc_from_k(k) + [1.0]
 
@@ -52,7 +91,7 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
     )
 
     current_cluster = 0
-    part = np.zeros(data.shape, dtype=float) - 1
+    part = np.zeros(data.shape) - 1
 
     for i in range(len(cut_points) - 1):
         lim1 = cut_points[i]
@@ -64,7 +103,8 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
     return part
 
 
-def _get_range_n_clusters(n_features: int, **kwargs) -> tuple[int]:
+@njit(cache=True)
+def _get_range_n_clusters(n_features: int, internal_n_clusters: list = None) -> tuple[int]:
     """
     Given the number of features it returns a tuple of k values to cluster those
     features into. By default, it generates a tuple of k values from 2 to
@@ -75,39 +115,32 @@ def _get_range_n_clusters(n_features: int, **kwargs) -> tuple[int]:
         n_features: a positive number representing the number of features that
             will be clustered into different groups/clusters.
         internal_n_clusters: it allows to force a different list of clusters. It
-            can be a list/tuple of integers (floats will be converted into int) or a
-            range object, or even an integer (in that case, it will return a list
-            with that integer). Invalid or repeated values will be dropped, such
-            as values lesser than 2 (a singleton partition is not allowed).
+            must be a list of integers. Repeated or invalid values will be dropped,
+            such as values lesser than 2 (a singleton partition is not allowed).
 
     Returns:
-        A tuple with integer values representing number of clusters.
+        A numpy array with integer values representing numbers of clusters.
     """
-    internal_n_clusters = kwargs.get("internal_n_clusters")
 
-    if isinstance(internal_n_clusters, (tuple, list, range)):
+    # the one in the list is needed for numba to infer the type
+    clusters_range_list = [1]
+
+    if internal_n_clusters is not None:
         clusters_range_list = internal_n_clusters
-    elif isinstance(internal_n_clusters, int):
-        clusters_range_list = [internal_n_clusters]
-    else:
-        clusters_range_list = []
 
     # keep values larger than one only and remove repeated
-    # code to remove repeated values taken from: https://stackoverflow.com/a/480227
-    seen = set()
-    seen_add = seen.add
+    clusters_range_list = list(set([
+        int(x) for x in clusters_range_list if x > 1
+    ]))
 
-    clusters_range_list = [
-        int(x) for x in clusters_range_list if x > 1 and not (x in seen or seen_add(x))
-    ]
-
+    # default behavior if no internal_n_clusters is given: return range from
+    # 2 to sqrt(n_features)
     if len(clusters_range_list) == 0:
         n_sqrt = int(np.round(np.sqrt(n_features)))
-        n_sqrt = np.min((n_sqrt, 10))
-        # FIXME: add test with maximium k by default (it's 10 in orig implementation)
-        clusters_range_list = range(2, n_sqrt + 1)
+        n_sqrt = min((n_sqrt, 10))
+        clusters_range_list = list(range(2, n_sqrt + 1))
 
-    return tuple(clusters_range_list)
+    return np.array(clusters_range_list, dtype="uint")
 
 
 def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
