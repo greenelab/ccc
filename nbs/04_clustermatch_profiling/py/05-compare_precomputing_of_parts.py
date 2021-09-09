@@ -32,23 +32,6 @@ data.shape
 
 
 # %% [markdown] tags=[]
-# # Original implementation (`precompute_parts=False`)
-
-# %% tags=[]
-def func():
-    return cm(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=False)
-
-
-# %% tags=[]
-# %%timeit func()
-func()
-
-# %% tags=[]
-# %%prun -s cumulative -l 20
-func()
-
-
-# %% [markdown] tags=[]
 # # Improved implementation (`precompute_parts=True`)
 
 # %% tags=[]
@@ -61,7 +44,24 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 20
+# %%prun -s cumulative -l 20 -T 05-cm_precompute_parts_true.txt
+func()
+
+
+# %% [markdown] tags=[]
+# # Original implementation (`precompute_parts=False`)
+
+# %% tags=[]
+def func():
+    return cm(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=False)
+
+
+# %% tags=[]
+# %%timeit func()
 func()
 
 # %% tags=[]
+# %%prun -s cumulative -l 20 -T 05-cm_precompute_parts_false.txt
+func()
+
+# %%
