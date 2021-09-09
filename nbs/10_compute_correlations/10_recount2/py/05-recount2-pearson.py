@@ -108,12 +108,12 @@ display(_tmp)
 # compute correlations
 data_corrs = CORRELATION_METHOD(data)
 
-# %%
+# %% tags=[]
 display(data_corrs.shape)
 
 assert data.shape[0] == data_corrs.shape[0]
 
-# %%
+# %% tags=[]
 data_corrs.head()
 
 # %% tags=[]
