@@ -12,7 +12,7 @@ from clustermatch.coef import (
     _get_perc_from_k,
     _get_parts,
     rank,
-    cdist_parts,
+    cdist_parts, get_coords_from_index,
 )
 
 
@@ -642,6 +642,99 @@ def test_cdist_parts_two_vs_two():
     observed_cdist = cdist_parts(parts0, parts1)
 
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
+
+
+def test_get_coords_from_index():
+    # data is an example with n_obj = 5, not used in fact
+    data = np.array(
+        [
+            [10, 11],
+            [23, 22],
+            [27, 26],
+            [37, 36],
+            [47, 46],
+        ]
+    )
+    n_obj = 5
+    assert n_obj == data.shape[0]
+
+    # index: 0 -> (0, 1) (row_idx, col_idx)
+    res = get_coords_from_index(n_obj, 0)
+    assert res == (0, 1)
+
+    res = get_coords_from_index(n_obj, 1)
+    assert res == (0, 2)
+
+    res = get_coords_from_index(n_obj, 3)
+    assert res == (0, 4)
+
+    res = get_coords_from_index(n_obj, 4)
+    assert res == (1, 2)
+
+    # index: 9, the last one
+    res = get_coords_from_index(n_obj, 9)
+    assert res == (3, 4)
+
+
+def test_get_coords_from_index_smaller():
+    data = np.array(
+        [
+            [10, 11],
+            [23, 22],
+            [27, 26],
+            [37, 36],
+        ]
+    )
+    n_obj = 4
+    assert n_obj == data.shape[0]
+
+    # index: 0 -> (0, 1) (row_idx, col_idx)
+    res = get_coords_from_index(n_obj, 0)
+    assert res == (0, 1)
+
+    res = get_coords_from_index(n_obj, 1)
+    assert res == (0, 2)
+
+    res = get_coords_from_index(n_obj, 2)
+    assert res == (0, 3)
+
+    res = get_coords_from_index(n_obj, 3)
+    assert res == (1, 2)
+
+    # index: 5, the last one
+    res = get_coords_from_index(n_obj, 5)
+    assert res == (2, 3)
+
+
+def test_cm_values_equal_to_original_implementation():
+    # compare with results obtained from the original clustermatch
+    # implementation (https://github.com/sinc-lab/clustermatch) plus some
+    # patches (see tests/data/README.md about clustermatch data).
+    from pathlib import Path
+    import pandas as pd
+    # from pandas.testing import assert_frame_equal
+
+    input_data_dir = Path(__file__).parent / "data"
+
+    # load data
+    data = pd.read_pickle(input_data_dir / "clustermatch-random_data-data.pkl")
+    data = data.to_numpy()
+
+    # run new clustermatch implementation.
+    # Here, I fixed the internal number of clusters, since that slightly changed
+    # in the new implementation compared with the original one.
+    corr_mat = cm(data, internal_n_clusters=list(range(2, 10 + 1)))
+
+    expected_corr_matrix = pd.read_pickle(
+        input_data_dir / "clustermatch-random_data-coef.pkl"
+    )
+    expected_corr_matrix = expected_corr_matrix.to_numpy()
+    expected_corr_matrix = expected_corr_matrix[np.triu_indices(expected_corr_matrix.shape[0], 1)]
+
+    np.testing.assert_almost_equal(
+        expected_corr_matrix,
+        corr_mat,
+    )
 
 
 # TODO: add stats options to get the partitions or number of clusters that
