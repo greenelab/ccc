@@ -3,7 +3,7 @@ Contains function that implement the Clustermatch coefficient
 (https://doi.org/10.1093/bioinformatics/bty899).
 """
 import numpy as np
-from numba import njit
+from numba import njit, prange
 from numba.typed import List
 
 from clustermatch.metrics import adjusted_rand_index as ari
@@ -195,6 +195,17 @@ def cdist_parts(x, y):
 
 
 @njit(cache=True)
+def get_coords_from_index(n_obj, idx):
+    """
+    TODO: finish
+    """
+    b = 1 -2*n_obj
+    x = np.floor((-b - np.sqrt(b**2 - 8*idx))/2)
+    y = idx + x*(b + x + 2)/2 + 1
+    return int(x), int(y)
+
+
+@njit(cache=True, parallel=True)
 def _cm(x, y=None, internal_n_clusters: list = None):
     """
     This is the main function that computes the Clustermatch coefficient between
@@ -229,9 +240,6 @@ def _cm(x, y=None, internal_n_clusters: list = None):
         range_n_clusters = _get_range_n_clusters(row.shape[0], internal_n_clusters)
         row_parts = _get_parts(row, range_n_clusters)
 
-        # if row_parts.shape[0] == 0:
-        #     continue
-
         parts.append(row_parts)
 
     n = X.shape[0]
@@ -239,32 +247,28 @@ def _cm(x, y=None, internal_n_clusters: list = None):
     cm_values = np.empty(out_size)
     cm_values[:] = np.nan
 
-    idx = 0
-    for i in range(n - 1):
-        for j in range(i + 1, n):
-            # get partitions for the pair of objects
-            obji_parts, objj_parts = parts[i], parts[j]
+    for idx in prange(cm_values.shape[0]):
+        i, j = get_coords_from_index(n, idx)
 
-            if obji_parts.shape[0] == 0 or objj_parts.shape[0] == 0:
-                max_ari = np.nan
-            else:
-                comp_values = cdist_parts(obji_parts, objj_parts)
+        # get partitions for the pair of objects
+        obji_parts, objj_parts = parts[i], parts[j]
 
-                # max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
-                max_ari = np.amax(comp_values)
-                # max_pos = np.where(comp_values == max_ari)
-                # max_ari = comp_values[max_pos]
+        if obji_parts.shape[0] == 0 or objj_parts.shape[0] == 0:
+            max_ari = np.nan
+        else:
+            comp_values = cdist_parts(obji_parts, objj_parts)
 
-                # TODO: use this to return stats
-                # get the partition in obj1 and the partition in obj2 that maximized ari
-                # obj1_max_part = obji_parts[max_pos[0]]
-                # obj2_max_part = objj_parts[max_pos[1]]
+            # max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
+            max_ari = np.amax(comp_values)
+            # max_pos = np.where(comp_values == max_ari)
+            # max_ari = comp_values[max_pos]
 
-            cm_values[idx] = max_ari
-            idx += 1
-    #
-    # if cm_values.shape[0] == 1:
-    #     return cm_values[0]
+            # TODO: use this to return stats
+            # get the partition in obj1 and the partition in obj2 that maximized ari
+            # obj1_max_part = obji_parts[max_pos[0]]
+            # obj2_max_part = objj_parts[max_pos[1]]
+
+        cm_values[idx] = max_ari
 
     return cm_values
 
