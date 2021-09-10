@@ -11,7 +11,7 @@ from clustermatch.coef import (
     run_quantile_clustering,
     _get_perc_from_k,
     _get_parts,
-    rank,
+    rank, cdist_parts,
 )
 
 
@@ -476,7 +476,7 @@ def test_cm_single_argument_is_matrix():
     assert cm_value[2] < 0.03
 
 
-def test_cm_single_argument_is_matrix_with_precomputing_of_parts():
+def test_cm_single_argument_is_matrix():
     np.random.seed(0)
 
     # two features on 100 objects with a linear relationship
@@ -487,7 +487,7 @@ def test_cm_single_argument_is_matrix_with_precomputing_of_parts():
     input_data = np.array([feature0, feature1, feature2])
 
     # Run
-    cm_value = cm(input_data, precompute_parts=True)
+    cm_value = cm(input_data)
 
     # Validate
     assert cm_value is not None
@@ -498,18 +498,6 @@ def test_cm_single_argument_is_matrix_with_precomputing_of_parts():
     assert cm_value[0] == 1.0
     assert cm_value[1] < 0.03
     assert cm_value[2] < 0.03
-
-
-# TODO: test data has two features with different shape
-
-# TODO: test data with some nan in feature0
-# TODO: test data with some nan in feature1
-# TODO: test data with all nan in feature0
-# TODO: test data with all nan in feature1
-
-# TODO: add stats options to get the partitions or number of clusters that
-#  generated each cm value (this will be useful to debug the method as we
-#  talked with Diego)
 
 
 def test_get_parts_simple():
@@ -543,3 +531,100 @@ def test_get_parts_k_is_greater_or_equal_than_n_objects():
     parts = _get_parts(feature0, (20,))
     assert parts is not None
     assert len(parts) == 0
+
+
+def test_cdist_parts_one_vs_one():
+    from scipy.spatial.distance import cdist
+    from sklearn.metrics import adjusted_rand_score as ari
+
+    parts0 = np.array([
+        [1, 1, 2, 2, 3, 3],
+    ])
+    parts1 = np.array([
+        [3, 3, 1, 1, 2, 2],
+    ])
+
+    expected_cdist = cdist(parts0, parts1, metric=ari)
+    np.testing.assert_array_equal(expected_cdist, np.array([[1.]]))
+
+    observed_cdist = cdist_parts(parts0, parts1)
+
+    np.testing.assert_array_equal(observed_cdist, expected_cdist)
+
+
+def test_cdist_parts_one_vs_one_dissimilar():
+    from scipy.spatial.distance import cdist
+    from sklearn.metrics import adjusted_rand_score as ari
+
+    parts0 = np.array([
+        [1, 1, 2, 1, 3, 3],
+    ])
+    parts1 = np.array([
+        [3, 3, 1, 1, 2, 3],
+    ])
+
+    expected_cdist = cdist(parts0, parts1, metric=ari)
+    np.testing.assert_array_equal(
+        expected_cdist, np.array([[-0.022727272727272728]])
+    )
+
+    observed_cdist = cdist_parts(parts0, parts1)
+
+    np.testing.assert_array_equal(observed_cdist, expected_cdist)
+
+
+def test_cdist_parts_one_vs_two():
+    from scipy.spatial.distance import cdist
+    from sklearn.metrics import adjusted_rand_score as ari
+
+    parts0 = np.array([
+        [1, 1, 2, 1, 3, 3],
+    ])
+    parts1 = np.array([
+        [3, 3, 1, 1, 2, 3],
+        [3, 3, 1, 1, 2, 2],
+    ])
+
+    expected_cdist = cdist(parts0, parts1, metric=ari)
+    np.testing.assert_array_equal(
+        expected_cdist,
+        np.array([
+            [-0.022727272727272728, 0.4444444444444444],
+        ])
+    )
+
+    observed_cdist = cdist_parts(parts0, parts1)
+
+    np.testing.assert_array_equal(observed_cdist, expected_cdist)
+
+
+def test_cdist_parts_two_vs_two():
+    from scipy.spatial.distance import cdist
+    from sklearn.metrics import adjusted_rand_score as ari
+
+    parts0 = np.array([
+        [1, 1, 2, 2, 3, 3],
+        [1, 1, 2, 1, 3, 3],
+    ])
+    parts1 = np.array([
+        [3, 3, 1, 1, 2, 3],
+        [3, 3, 1, 1, 2, 2],
+    ])
+
+    expected_cdist = cdist(parts0, parts1, metric=ari)
+    np.testing.assert_array_equal(
+        expected_cdist,
+        np.array([
+            [0.4444444444444444, 1.0],
+            [-0.022727272727272728, 0.4444444444444444],
+        ])
+    )
+
+    observed_cdist = cdist_parts(parts0, parts1)
+
+    np.testing.assert_array_equal(observed_cdist, expected_cdist)
+
+
+# TODO: add stats options to get the partitions or number of clusters that
+#  generated each cm value (this will be useful to debug the method as we
+#  talked with Diego)
