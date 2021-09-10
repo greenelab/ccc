@@ -3,9 +3,7 @@ Contains function that implement the Clustermatch coefficient
 (https://doi.org/10.1093/bioinformatics/bty899).
 """
 import numpy as np
-from numba import njit, types
-from scipy.spatial.distance import cdist
-
+from numba import njit
 
 from clustermatch.metrics import adjusted_rand_index as ari
 
@@ -100,7 +98,7 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
         part[data_perc_sort_idx[lim1:lim2]] = current_cluster
         current_cluster += 1
 
-    return part
+    return part.astype(np.uint8)
 
 
 @njit(cache=True)
@@ -140,9 +138,10 @@ def _get_range_n_clusters(
         n_sqrt = min((n_sqrt, 10))
         clusters_range_list = list(range(2, n_sqrt + 1))
 
-    return np.array(clusters_range_list, dtype="uint")
+    return np.array(clusters_range_list)
 
 
+@njit(cache=True)
 def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
     """
     Given a 1d data array, it computes a partition for each k value in the given
@@ -160,8 +159,6 @@ def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
     partitions = []
 
     for k in range_n_clusters:
-        # TODO: the commented out code below, I think, it's useful for
-        #  pd.Series/DataFrames, not np.arrays
         # it doesn't make sense to put each object in its own singleton cluster
         # or create more clusters than number of objects
         if len(data) <= k:
@@ -173,27 +170,29 @@ def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
         if len(np.unique(part)) == 1:
             continue
 
-        partitions.append(part)
+        partitions.append(list(part))
 
-    # TODO: use np.int8 or something like that as dtype
-    return np.array(partitions)
+    # This is a hack to get numba compile this function
+    if len(partitions) == 0:
+        tmp = np.array([[1, 2], [2, 3]], dtype=np.uint8)
+        return tmp[np.array([False, False])]
 
-
-def _isempty(row):
-    return np.array([x is None or (np.isreal(x) and np.isnan(x)) for x in row])
-
-
-def _get_common_features(obj1, obj2):
-    obj1_notnan = np.logical_not(_isempty(obj1))
-    obj2_notnan = np.logical_not(_isempty(obj2))
-
-    common_features = np.logical_and(obj1_notnan, obj2_notnan)
-    n_common_features = common_features.sum()
-
-    return common_features, n_common_features
+    return np.array(partitions, dtype=np.uint8)
 
 
-def cm(x, y=None, precompute_parts=False, **kwargs):
+@njit(cache=True)
+def cdist_parts(x, y):
+    res = np.zeros((x.shape[0], y.shape[0]))
+
+    for i in range(res.shape[0]):
+        for j in range(res.shape[1]):
+            res[i, j] = ari(x[i], y[j])
+
+    return res
+
+
+@njit(cache=True)
+def _cm(x, y=None, internal_n_clusters: list = None):
     """
     This is the main function that computes the Clustermatch coefficient between
     two arrays. This implementation only supports numerical data for
@@ -203,70 +202,55 @@ def cm(x, y=None, precompute_parts=False, **kwargs):
     Args:
         x:
         y:
-        precompute_parts: this parameter should be set to True only in the case
-            where there are no missing data in the input matrix. Otherwise, it
-            will generate different results than running it this parameter set
-            to False.
+        internal_n_clusters:
 
     TODO: finish
     """
     if x.ndim == 1 and y is not None:
         assert x.shape == y.shape
-        x = np.array([x, y])
+        X = np.zeros((2, x.shape[0]))
+        X[0, :] = x
+        X[1, :] = y
+    elif x.ndim == 2:
+        X = x
+    else:
+        raise ValueError("Wrong combination of parameters x and y")
 
     # TODO: (future) if x is matrix and y a vector, then
     #  we can do all rows in x against the vector in y?
 
     # get matrix of partitions for each object pair
-    if precompute_parts:
-        parts = []
+    parts = []
 
-        for row in x:
-            range_n_clusters = _get_range_n_clusters(row.shape[0], **kwargs)
-            row_parts = _get_parts(row, range_n_clusters)
-            parts.append(row_parts)
+    for row in X:
+        range_n_clusters = _get_range_n_clusters(row.shape[0], internal_n_clusters)
+        row_parts = _get_parts(row, range_n_clusters)
 
-    # TODO: split parts with chunker for the support of multiple cores
+        # if row_parts.shape[0] == 0:
+        #     continue
 
-    # parts is a dictionary?
-    # key: (obj_i, obj_j)
-    # value: (shared_idx, obj_i_parts, obj_j_parts)
-    #
-    # OR
-    # parts is a list of matrices (several partitions per object): np.array(...)
-    #  !!! none of the parts should contain only one cluster
+        parts.append(row_parts)
 
-    n = x.shape[0]
+    n = X.shape[0]
     out_size = (n * (n - 1)) // 2
     cm_values = np.empty(out_size)
     cm_values[:] = np.nan
 
     idx = 0
-    for i in range(x.shape[0] - 1):
-        for j in range(i + 1, x.shape[0]):
+    for i in range(n - 1):
+        for j in range(i + 1, n):
             # get partitions for the pair of objects
-            if precompute_parts:
-                obji_parts, objj_parts = parts[i], parts[j]
-            else:
-                obji, objj = x[i], x[j]
-
-                common_features, n_common_features = _get_common_features(obji, objj)
-
-                obji = obji[common_features]
-                objj = objj[common_features]
-
-                range_n_clusters = _get_range_n_clusters(n_common_features, **kwargs)
-                obji_parts = _get_parts(obji, range_n_clusters)
-                objj_parts = _get_parts(objj, range_n_clusters)
+            obji_parts, objj_parts = parts[i], parts[j]
 
             if obji_parts.shape[0] == 0 or objj_parts.shape[0] == 0:
                 max_ari = np.nan
             else:
+                comp_values = cdist_parts(obji_parts, objj_parts)
 
-                comp_values = cdist(obji_parts, objj_parts, metric=ari)
-
-                max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
-                max_ari = comp_values[max_pos]
+                # max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
+                max_ari = np.amax(comp_values)
+                # max_pos = np.where(comp_values == max_ari)
+                # max_ari = comp_values[max_pos]
 
                 # TODO: use this to return stats
                 # get the partition in obj1 and the partition in obj2 that maximized ari
@@ -275,34 +259,23 @@ def cm(x, y=None, precompute_parts=False, **kwargs):
 
             cm_values[idx] = max_ari
             idx += 1
+    #
+    # if cm_values.shape[0] == 1:
+    #     return cm_values[0]
+
+    return cm_values
+
+
+def cm(x, y=None, internal_n_clusters: list = None):
+    """
+    This function is a not-jitted function that can return different value types
+    according to the input given.
+
+    TODO: finish
+    """
+    cm_values = _cm(x, y, internal_n_clusters)
 
     if cm_values.shape[0] == 1:
         return cm_values[0]
 
     return cm_values
-
-    # common_features, n_common_features = _get_common_features(obj1, obj2)
-    #
-    # obj1 = obj1[common_features]
-    # obj2 = obj2[common_features]
-    # range_n_clusters = _get_range_n_clusters(n_common_features, **kwargs)
-    #
-    # obj1_parts = _get_internal_parts(obj1, range_n_clusters, **kwargs)
-    # obj2_parts = _get_internal_parts(obj2, range_n_clusters, **kwargs)
-    #
-    # comp_values = cdist(obj1_parts, obj2_parts, metric=_compute_ari)
-    #
-    # max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
-    # max_ari = comp_values[max_pos]
-    #
-    # # get the partition in obj1 and the partition in obj2 that maximized ari
-    # obj1_max_part = obj1_parts[max_pos[0]]
-    # obj2_max_part = obj2_parts[max_pos[1]]
-    #
-    # # if the partition that maximizes the ARI in either of the two input vectors
-    # # has only one cluster (for example, all the values are the same), then the
-    # # coefficient is zero
-    # if len(np.unique(obj1_max_part)) == 1 or len(np.unique(obj2_max_part)) == 1:
-    #     return 0.0
-    #
-    # return max_ari
