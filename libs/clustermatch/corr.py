@@ -50,9 +50,7 @@ def spearman(data: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def clustermatch(
-    data: pd.DataFrame, internal_n_clusters=None
-) -> pd.DataFrame:
+def clustermatch(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
     from scipy.spatial.distance import squareform
     from clustermatch.coef import cm
 
