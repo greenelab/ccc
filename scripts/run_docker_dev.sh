@@ -44,10 +44,14 @@ COMMAND="$@"
 
 docker run --rm \
   -e CM_N_JOBS=${CM_N_JOBS} \
+  -e NUMBA_NUM_THREADS=${CM_N_JOBS} \
+  -e MKL_NUM_THREADS=${CM_N_JOBS} \
+  -e OPEN_BLAS_NUM_THREADS=${CM_N_JOBS} \
+  -e NUMEXPR_NUM_THREADS=${CM_N_JOBS} \
+  -e OMP_NUM_THREADS=${CM_N_JOBS} \
   -v "${CODE_DIR}:/opt/code" \
   -v "${ROOT_DIR}:/opt/data" \
   -v "${CM_MANUSCRIPT_DIR}:/opt/manuscript" \
   --user "$(id -u):$(id -g)" \
   miltondp/clustermatch_gene_expr \
   /bin/bash -c "${COMMAND}"
-
