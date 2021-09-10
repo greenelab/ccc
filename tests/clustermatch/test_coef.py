@@ -11,7 +11,8 @@ from clustermatch.coef import (
     run_quantile_clustering,
     _get_perc_from_k,
     _get_parts,
-    rank, cdist_parts,
+    rank,
+    cdist_parts,
 )
 
 
@@ -537,15 +538,19 @@ def test_cdist_parts_one_vs_one():
     from scipy.spatial.distance import cdist
     from sklearn.metrics import adjusted_rand_score as ari
 
-    parts0 = np.array([
-        [1, 1, 2, 2, 3, 3],
-    ])
-    parts1 = np.array([
-        [3, 3, 1, 1, 2, 2],
-    ])
+    parts0 = np.array(
+        [
+            [1, 1, 2, 2, 3, 3],
+        ]
+    )
+    parts1 = np.array(
+        [
+            [3, 3, 1, 1, 2, 2],
+        ]
+    )
 
     expected_cdist = cdist(parts0, parts1, metric=ari)
-    np.testing.assert_array_equal(expected_cdist, np.array([[1.]]))
+    np.testing.assert_array_equal(expected_cdist, np.array([[1.0]]))
 
     observed_cdist = cdist_parts(parts0, parts1)
 
@@ -556,17 +561,19 @@ def test_cdist_parts_one_vs_one_dissimilar():
     from scipy.spatial.distance import cdist
     from sklearn.metrics import adjusted_rand_score as ari
 
-    parts0 = np.array([
-        [1, 1, 2, 1, 3, 3],
-    ])
-    parts1 = np.array([
-        [3, 3, 1, 1, 2, 3],
-    ])
+    parts0 = np.array(
+        [
+            [1, 1, 2, 1, 3, 3],
+        ]
+    )
+    parts1 = np.array(
+        [
+            [3, 3, 1, 1, 2, 3],
+        ]
+    )
 
     expected_cdist = cdist(parts0, parts1, metric=ari)
-    np.testing.assert_array_equal(
-        expected_cdist, np.array([[-0.022727272727272728]])
-    )
+    np.testing.assert_array_equal(expected_cdist, np.array([[-0.022727272727272728]]))
 
     observed_cdist = cdist_parts(parts0, parts1)
 
@@ -577,20 +584,26 @@ def test_cdist_parts_one_vs_two():
     from scipy.spatial.distance import cdist
     from sklearn.metrics import adjusted_rand_score as ari
 
-    parts0 = np.array([
-        [1, 1, 2, 1, 3, 3],
-    ])
-    parts1 = np.array([
-        [3, 3, 1, 1, 2, 3],
-        [3, 3, 1, 1, 2, 2],
-    ])
+    parts0 = np.array(
+        [
+            [1, 1, 2, 1, 3, 3],
+        ]
+    )
+    parts1 = np.array(
+        [
+            [3, 3, 1, 1, 2, 3],
+            [3, 3, 1, 1, 2, 2],
+        ]
+    )
 
     expected_cdist = cdist(parts0, parts1, metric=ari)
     np.testing.assert_array_equal(
         expected_cdist,
-        np.array([
-            [-0.022727272727272728, 0.4444444444444444],
-        ])
+        np.array(
+            [
+                [-0.022727272727272728, 0.4444444444444444],
+            ]
+        ),
     )
 
     observed_cdist = cdist_parts(parts0, parts1)
@@ -602,22 +615,28 @@ def test_cdist_parts_two_vs_two():
     from scipy.spatial.distance import cdist
     from sklearn.metrics import adjusted_rand_score as ari
 
-    parts0 = np.array([
-        [1, 1, 2, 2, 3, 3],
-        [1, 1, 2, 1, 3, 3],
-    ])
-    parts1 = np.array([
-        [3, 3, 1, 1, 2, 3],
-        [3, 3, 1, 1, 2, 2],
-    ])
+    parts0 = np.array(
+        [
+            [1, 1, 2, 2, 3, 3],
+            [1, 1, 2, 1, 3, 3],
+        ]
+    )
+    parts1 = np.array(
+        [
+            [3, 3, 1, 1, 2, 3],
+            [3, 3, 1, 1, 2, 2],
+        ]
+    )
 
     expected_cdist = cdist(parts0, parts1, metric=ari)
     np.testing.assert_array_equal(
         expected_cdist,
-        np.array([
-            [0.4444444444444444, 1.0],
-            [-0.022727272727272728, 0.4444444444444444],
-        ])
+        np.array(
+            [
+                [0.4444444444444444, 1.0],
+                [-0.022727272727272728, 0.4444444444444444],
+            ]
+        ),
     )
 
     observed_cdist = cdist_parts(parts0, parts1)
