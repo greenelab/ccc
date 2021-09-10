@@ -4,6 +4,7 @@ Contains function that implement the Clustermatch coefficient
 """
 import numpy as np
 from numba import njit
+from numba.typed import List
 
 from clustermatch.metrics import adjusted_rand_index as ari
 
@@ -123,10 +124,12 @@ def _get_range_n_clusters(
     """
 
     # the one in the list is needed for numba to infer the type
-    clusters_range_list = [1]
+    clusters_range_list = List([1])
 
     if internal_n_clusters is not None:
-        clusters_range_list = internal_n_clusters
+        clusters_range_list = List()
+        for x in internal_n_clusters:
+            clusters_range_list.append(x)
 
     # keep values larger than one only and remove repeated
     clusters_range_list = list(set([int(x) for x in clusters_range_list if x > 1]))
@@ -273,8 +276,21 @@ def cm(x, y=None, internal_n_clusters: list = None):
 
     TODO: finish
     """
-    cm_values = _cm(x, y, internal_n_clusters)
 
+    # convert list to numba.types.List, since reflection is deprecated:
+    # https://numba.pydata.org/numba-doc/latest/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
+    n_clusters = None
+
+    if internal_n_clusters is not None:
+        n_clusters = List()
+        for k in internal_n_clusters:
+            n_clusters.append(k)
+
+    # run optimized _cm function
+    cm_values = _cm(x, y, n_clusters)
+
+    # return an array of values or a single scalar, which depends on the input
+    # data shape
     if cm_values.shape[0] == 1:
         return cm_values[0]
 
