@@ -12,7 +12,8 @@ from clustermatch.coef import (
     _get_perc_from_k,
     _get_parts,
     rank,
-    cdist_parts, get_coords_from_index,
+    cdist_parts,
+    get_coords_from_index,
 )
 
 
@@ -712,6 +713,7 @@ def test_cm_values_equal_to_original_implementation():
     # patches (see tests/data/README.md about clustermatch data).
     from pathlib import Path
     import pandas as pd
+
     # from pandas.testing import assert_frame_equal
 
     input_data_dir = Path(__file__).parent / "data"
@@ -729,7 +731,9 @@ def test_cm_values_equal_to_original_implementation():
         input_data_dir / "clustermatch-random_data-coef.pkl"
     )
     expected_corr_matrix = expected_corr_matrix.to_numpy()
-    expected_corr_matrix = expected_corr_matrix[np.triu_indices(expected_corr_matrix.shape[0], 1)]
+    expected_corr_matrix = expected_corr_matrix[
+        np.triu_indices(expected_corr_matrix.shape[0], 1)
+    ]
 
     np.testing.assert_almost_equal(
         expected_corr_matrix,

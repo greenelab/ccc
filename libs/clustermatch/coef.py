@@ -199,9 +199,9 @@ def get_coords_from_index(n_obj, idx):
     """
     TODO: finish
     """
-    b = 1 -2*n_obj
-    x = np.floor((-b - np.sqrt(b**2 - 8*idx))/2)
-    y = idx + x*(b + x + 2)/2 + 1
+    b = 1 - 2 * n_obj
+    x = np.floor((-b - np.sqrt(b ** 2 - 8 * idx)) / 2)
+    y = idx + x * (b + x + 2) / 2 + 1
     return int(x), int(y)
 
 
