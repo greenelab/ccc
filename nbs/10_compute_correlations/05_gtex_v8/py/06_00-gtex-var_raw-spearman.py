@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.4
+#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -79,7 +79,7 @@ display(input_files[:5])
 
 # %% tags=[]
 display(input_files[0])
-test_data = pd.read_pickle(input_files[0])
+test_data = pd.read_pickle(input_files[0]).iloc[:PERFORMANCE_TEST_N_TOP_GENES]
 
 # %% tags=[]
 test_data.shape
@@ -97,7 +97,7 @@ display(_tmp.shape)
 display(_tmp)
 
 # %% tags=[]
-# %timeit CORRELATION_METHOD(test_data.iloc[:PERFORMANCE_TEST_N_TOP_GENES])
+# %timeit CORRELATION_METHOD(test_data)
 
 # %% [markdown] tags=[]
 # ## Run
