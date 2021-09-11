@@ -101,19 +101,23 @@ def _get_range_n_clusters(n_features: int, **kwargs) -> tuple[int]:
 
     if len(clusters_range_list) == 0:
         n_sqrt = int(np.round(np.sqrt(n_features)))
+        n_sqrt = np.min((n_sqrt, 10))
+        # FIXME: add test with maximium k by default (it's 10 in orig implementation)
         clusters_range_list = range(2, n_sqrt + 1)
 
     return tuple(clusters_range_list)
 
 
-def _get_internal_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
+def _get_parts(
+    data: np.ndarray, range_n_clusters: tuple[int]
+) -> np.ndarray:
     """
     Given a 1d data array, it computes a partition for each k value in the given
     range of clusters. This function only supports numerical data, and it
     always runs run_run_quantile_clustering with the different k values.
 
     Args:
-        data: a 1d data vector.
+        data: a 1d data vector. It is assumed that there are no nans.
         range_n_clusters: a tuple with the number of clusters.
 
     Returns:
@@ -125,10 +129,16 @@ def _get_internal_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.nd
     for k in range_n_clusters:
         # TODO: the commented out code below, I think, it's useful for
         #  pd.Series/DataFrames, not np.arrays
-        # if len(data_obj) <= k:
-        #     part = np.array([np.nan] * len(data_obj))
-        # else:
+        # it doesn't make sense to put each object in its own singleton cluster
+        # or create more clusters than number of objects
+        if len(data) <= k:
+            continue
+
         part = run_quantile_clustering(data, k)
+
+        # we do not include singleton partitions (only one cluster)
+        if len(np.unique(part)) == 1:
+            continue
 
         partitions.append(part)
 
@@ -138,45 +148,138 @@ def _get_internal_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.nd
 
 def _compute_ari(part1, part2):
     # TODO: not sure why I have this here, test it!
-    # if np.isnan(part1).any() or len(part1) == 0:
-    #     return 0.0
+    if np.isnan(part1).any() or np.isnan(part2).any() or len(part1) == 0 or len(part2) == 0:
+        return 0.0
 
     # TODO: maybe replace with my own ari implementation, which also fixes some issues.
     #  this will also be necessary for numba.
     return ari(part1, part2)
 
 
-def cm(obj1, obj2, **kwargs):
+def _isempty(row):
+    return np.array([x is None or (np.isreal(x) and np.isnan(x)) for x in row])
+
+
+def _get_common_features(obj1, obj2):
+    obj1_notnan = np.logical_not(_isempty(obj1))
+    obj2_notnan = np.logical_not(_isempty(obj2))
+
+    common_features = np.logical_and(obj1_notnan, obj2_notnan)
+    n_common_features = common_features.sum()
+
+    return common_features, n_common_features
+
+
+def cm(x, y=None, precompute_parts=False, **kwargs):
     """
     This is the main function that computes the Clustermatch coefficient between
     two arrays. This implementation only supports numerical data for
     optimization purposes, but it can also work with categorical data in the
     original implementation (https://github.com/sinc-lab/clustermatch).
 
-    TODO: this function might check whether obj1 (which should probably by x, and obj2 be y)
-     is one or two dimensional, and if y is given; if 2d, use optimized approach to compute
-     cm on all column pairs
+    Args:
+        x:
+        y:
+        precompute_parts: this parameter should be set to True only in the case
+            where there are no missing data in the input matrix. Otherwise, it
+            will generate different results than running it this parameter set
+            to False.
 
     TODO: finish
     """
-    range_n_clusters = _get_range_n_clusters(len(obj1), **kwargs)
+    if x.ndim == 1 and y is not None:
+        assert x.shape == y.shape
+        x = np.array([x, y])
 
-    obj1_parts = _get_internal_parts(obj1, range_n_clusters, **kwargs)
-    obj2_parts = _get_internal_parts(obj2, range_n_clusters, **kwargs)
+    # TODO: (future) if x is matrix and y a vector, then
+    #  we can do all rows in x against the vector in y?
 
-    comp_values = cdist(obj1_parts, obj2_parts, metric=_compute_ari)
+    # get matrix of partitions for each object pair
+    if precompute_parts:
+        parts = []
 
-    max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
-    max_ari = comp_values[max_pos]
+        for row in x:
+            range_n_clusters = _get_range_n_clusters(row.shape[0], **kwargs)
+            row_parts = _get_parts(row, range_n_clusters)
+            parts.append(row_parts)
 
-    # get the partition in obj1 and the partition in obj2 that maximized ari
-    obj1_max_part = obj1_parts[max_pos[0]]
-    obj2_max_part = obj2_parts[max_pos[1]]
+    # TODO: split parts with chunker for the support of multiple cores
 
-    # if the partition that maximizes the ARI in either of the two input vectors
-    # has only one cluster (for example, all the values are the same), then the
-    # coefficient is zero
-    if len(np.unique(obj1_max_part)) == 1 or len(np.unique(obj2_max_part)) == 1:
-        return 0.0
+    # parts is a dictionary?
+    # key: (obj_i, obj_j)
+    # value: (shared_idx, obj_i_parts, obj_j_parts)
+    #
+    # OR
+    # parts is a list of matrices (several partitions per object): np.array(...)
+    #  !!! none of the parts should contain only one cluster
 
-    return max_ari
+    n = x.shape[0]
+    out_size = (n * (n - 1)) // 2
+    cm_values = np.empty(out_size)
+    cm_values[:] = np.nan
+
+    idx = 0
+    for i in range(x.shape[0] - 1):
+        for j in range(i + 1, x.shape[0]):
+            # get partitions for the pair of objects
+            if precompute_parts:
+                obji_parts, objj_parts = parts[i], parts[j]
+            else:
+                obji, objj = x[i], x[j]
+
+                common_features, n_common_features = _get_common_features(obji, objj)
+
+                obji = obji[common_features]
+                objj = objj[common_features]
+
+                range_n_clusters = _get_range_n_clusters(n_common_features, **kwargs)
+                obji_parts = _get_parts(obji, range_n_clusters)
+                objj_parts = _get_parts(objj, range_n_clusters)
+
+            if obji_parts.shape[0] == 0 or objj_parts.shape[0] == 0:
+                max_ari = np.nan
+            else:
+
+                comp_values = cdist(obji_parts, objj_parts, metric=_compute_ari)
+
+                max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
+                max_ari = comp_values[max_pos]
+
+                # TODO: use this to return stats
+                # get the partition in obj1 and the partition in obj2 that maximized ari
+                # obj1_max_part = obji_parts[max_pos[0]]
+                # obj2_max_part = objj_parts[max_pos[1]]
+
+            cm_values[idx] = max_ari
+            idx += 1
+
+    if cm_values.shape[0] == 1:
+        return cm_values[0]
+
+    return cm_values
+
+    # common_features, n_common_features = _get_common_features(obj1, obj2)
+    #
+    # obj1 = obj1[common_features]
+    # obj2 = obj2[common_features]
+    # range_n_clusters = _get_range_n_clusters(n_common_features, **kwargs)
+    #
+    # obj1_parts = _get_internal_parts(obj1, range_n_clusters, **kwargs)
+    # obj2_parts = _get_internal_parts(obj2, range_n_clusters, **kwargs)
+    #
+    # comp_values = cdist(obj1_parts, obj2_parts, metric=_compute_ari)
+    #
+    # max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
+    # max_ari = comp_values[max_pos]
+    #
+    # # get the partition in obj1 and the partition in obj2 that maximized ari
+    # obj1_max_part = obj1_parts[max_pos[0]]
+    # obj2_max_part = obj2_parts[max_pos[1]]
+    #
+    # # if the partition that maximizes the ARI in either of the two input vectors
+    # # has only one cluster (for example, all the values are the same), then the
+    # # coefficient is zero
+    # if len(np.unique(obj1_max_part)) == 1 or len(np.unique(obj2_max_part)) == 1:
+    #     return 0.0
+    #
+    # return max_ari

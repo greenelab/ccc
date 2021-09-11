@@ -48,3 +48,28 @@ def spearman(data: pd.DataFrame) -> pd.DataFrame:
         index=data.index.copy(),
         columns=data.index.copy(),
     )
+
+
+def clustermatch_naive(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    TODO: it would be good to have this one to compare performance with optmized version
+
+    - do not use this; use instead clustermatch
+    """
+    from clustermatch.coef import cm
+
+    corr_mat = pairwise_distances(
+        data.to_numpy(), metric=cm, n_jobs=1, force_all_finite="allow-nan"
+    )
+
+    np.fill_diagonal(corr_mat, 1.0)
+
+    return pd.DataFrame(
+        corr_mat,
+        index=data.index.copy(),
+        columns=data.index.copy(),
+    )
+
+
+def clustermatch(data: pd.DataFrame) -> pd.DataFrame:
+    pass
