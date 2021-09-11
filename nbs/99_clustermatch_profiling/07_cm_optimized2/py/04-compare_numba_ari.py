@@ -16,7 +16,7 @@
 # %% [markdown] tags=[]
 # # Description
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # This file actually does not compare different ari implementations. The name is kept to ease comparison with the previous runs from `05_cm_optimized0`
 
 # %% [markdown] tags=[]
