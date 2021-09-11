@@ -8,7 +8,7 @@ from clustermatch.coef import (
     cm,
     _get_range_n_clusters,
     run_quantile_clustering,
-    _get_perc_from_k,
+    _get_perc_from_k, _get_parts,
 )
 
 
@@ -360,14 +360,17 @@ def test_cm_feature_with_all_same_values():
     cm_value = cm(feature0, feature1)
 
     ## Validate
-    assert cm_value == 0.0
+    assert np.isnan(cm_value)
 
 
 def test_cm_all_features_with_all_same_values():
+    # this test generates internal partitions with only one cluster. In this case,
+    # clustermatch returns NaN
+
     ## Prepare
     np.random.seed(0)
 
-    # two features on 100 objects with a linear relationship
+    # two features with constant values
     feature0 = np.array([0] * 100)
     feature1 = np.array([5] * feature0.shape[0])
 
@@ -375,7 +378,31 @@ def test_cm_all_features_with_all_same_values():
     cm_value = cm(feature0, feature1)
 
     ## Validate
-    assert cm_value == 0.0
+    assert np.isnan(cm_value)
+
+
+def test_cm_single_argument_is_matrix():
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+    feature2 = np.random.rand(feature0.shape[0])
+
+    input_data = np.array([feature0, feature1, feature2])
+
+    # Run
+    cm_value = cm(input_data)
+
+    # Validate
+    assert cm_value is not None
+    assert hasattr(cm_value, "shape")
+    assert cm_value.shape == (3,)
+    # assert np.array_equal(np.diag(cm_value), np.ones(cm_value.shape[0]))
+
+    assert cm_value[0] == 1.0
+    assert cm_value[1] < 0.03
+    assert cm_value[2] < 0.03
 
 
 # TODO: test data has two features with different shape
@@ -390,5 +417,35 @@ def test_cm_all_features_with_all_same_values():
 #  talked with Diego)
 
 
-# TODO: add a tsv file with numerical data and clustermatch computed using the original implementation;
-#  this will make sure that we are not making a mistake in the implementation here
+def test_get_parts_simple():
+    np.random.seed(0)
+
+    feature0 = np.random.rand(100)
+
+    # run
+    parts = _get_parts(feature0, (2,))
+    assert parts is not None
+    assert len(parts) == 1
+    assert len(np.unique(parts[0])) == 2
+
+    parts = _get_parts(feature0, (2, 3))
+    assert parts is not None
+    assert len(parts) == 2
+    assert len(np.unique(parts[0])) == 2
+    assert len(np.unique(parts[1])) == 3
+
+
+def test_get_parts_k_is_greater_or_equal_than_n_objects():
+    np.random.seed(0)
+
+    feature0 = np.random.rand(10)
+
+    # run
+    parts = _get_parts(feature0, (10,))
+    assert parts is not None
+    assert len(parts) == 0
+
+    parts = _get_parts(feature0, (20,))
+    assert parts is not None
+    assert len(parts) == 0
+

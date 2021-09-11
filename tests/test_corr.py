@@ -131,7 +131,7 @@ def test_corr_spearman():
     assert corr_values.min() >= -1.0
     assert np.sign(corr_values.max()) != np.sign(corr_values.min())
 
-    # calculate pearson with a different method and check if it is the same
+    # calculate spearman with a different method and check if it is the same
     from scipy.stats import spearmanr
 
     scipy_spearman_mat = spearmanr(data.to_numpy(), axis=1)[0]
@@ -165,3 +165,99 @@ def test_corr_spearman_manual():
     assert test_result.iloc[0, 1].round(5) == expected_corr
     assert test_result.iloc[1, 0].round(5) == expected_corr
     assert test_result.iloc[1, 1] == 1.0
+
+
+def test_corr_clustermatch_naive_basics():
+    # run basic tests first
+    data, corr_mat = _run_basic_checks(corr.clustermatch_naive)
+
+    corr_values = pd.Series(corr_mat.to_numpy().flatten())
+
+    # check ranges
+    assert corr_values.max() <= 1.0
+    assert corr_values.min() >= 0.0
+    assert np.sign(corr_values.max()) == np.sign(corr_values.min())
+
+
+def test_corr_clustermatch_naive_outputs_same_as_original_clustermatch():
+    # TODO: this test takes a lot of time; remove it once finished implementing
+    #  the more efficient clustermatch
+
+    # compare with results obtained from the original clustermatch
+    # implementation (https://github.com/sinc-lab/clustermatch)
+    from pathlib import Path
+    from pandas.testing import assert_frame_equal
+
+    input_data_dir = Path(__file__).parent / "data"
+
+    data = pd.read_pickle(input_data_dir / "clustermatch-example-data.pkl")
+    data = data.iloc[:5]
+    corr_mat = corr.clustermatch_naive(data)
+
+    expected_corr_matrix = pd.read_pickle(
+        input_data_dir / "clustermatch-example-coef.pkl"
+    )
+    expected_corr_matrix = expected_corr_matrix.loc[data.index, data.index]
+
+    # # TODO: remove
+    # _one, _two = "Weight", "Firmness"
+    # expected_corr_matrix.loc[_one, _two] = corr_mat.loc[_one, _two]
+    # expected_corr_matrix.loc[_two, _one] = expected_corr_matrix.loc[_one, _two]
+
+    assert corr_mat.shape == expected_corr_matrix.shape
+    assert corr_mat.index.tolist() == expected_corr_matrix.index.tolist()
+    assert corr_mat.columns.tolist() == expected_corr_matrix.columns.tolist()
+    # assert observed_corr_matrix.equals(expected_corr_matrix)
+
+    assert_frame_equal(
+        expected_corr_matrix,
+        corr_mat,
+    )
+
+
+def test_corr_clustermatch_basics():
+    # run basic tests first
+    data, corr_mat = _run_basic_checks(corr.clustermatch)
+
+    corr_values = pd.Series(corr_mat.to_numpy().flatten())
+
+    # check ranges
+    assert corr_values.max() <= 1.0
+    assert corr_values.min() >= 0.0
+    assert np.sign(corr_values.max()) == np.sign(corr_values.min())
+
+
+def test_corr_clustermatch_outputs_same_as_original_clustermatch():
+    # TODO: this test takes a lot of time; remove it once finished implementing
+    #  the more efficient clustermatch
+
+    # compare with results obtained from the original clustermatch
+    # implementation (https://github.com/sinc-lab/clustermatch)
+    from pathlib import Path
+    from pandas.testing import assert_frame_equal
+
+    input_data_dir = Path(__file__).parent / "data"
+
+    data = pd.read_pickle(input_data_dir / "clustermatch-example-data.pkl")
+    data = data.iloc[:5]
+    corr_mat = corr.clustermatch(data)
+
+    expected_corr_matrix = pd.read_pickle(
+        input_data_dir / "clustermatch-example-coef.pkl"
+    )
+    expected_corr_matrix = expected_corr_matrix.loc[data.index, data.index]
+
+    # # TODO: remove
+    # _one, _two = "Weight", "Firmness"
+    # expected_corr_matrix.loc[_one, _two] = corr_mat.loc[_one, _two]
+    # expected_corr_matrix.loc[_two, _one] = expected_corr_matrix.loc[_one, _two]
+
+    assert corr_mat.shape == expected_corr_matrix.shape
+    assert corr_mat.index.tolist() == expected_corr_matrix.index.tolist()
+    assert corr_mat.columns.tolist() == expected_corr_matrix.columns.tolist()
+    # assert observed_corr_matrix.equals(expected_corr_matrix)
+
+    assert assert_frame_equal(
+        expected_corr_matrix,
+        corr_mat,
+    )
