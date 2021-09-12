@@ -68,34 +68,36 @@ assert len(all_files) == int(2 * 126)
 all_results = []
 
 for f_full in all_files:
-#     print(f)
-    
+    #     print(f)
+
     f = f_full.name
-    
+
     fsplit = str(f).split("-")
     k = int(fsplit[0].split("_")[1])
     method = fsplit[1]
     gene_sets = fsplit[2]
     gene_sets_ont = fsplit[3]
     results_type = fsplit[4].split(".")[0]
-    
+
     data = pd.read_pickle(f_full)
-    
-    data = data.assign(**{
-        "k": k,
-        "method": method,
-        "gene_sets": gene_sets,
-        "ont": gene_sets_ont,
-        "results_type": results_type,
-    })
-    
+
+    data = data.assign(
+        **{
+            "k": k,
+            "method": method,
+            "gene_sets": gene_sets,
+            "ont": gene_sets_ont,
+            "results_type": results_type,
+        }
+    )
+
     data["Cluster"] = data["Cluster"].astype("category")
     data["k"] = data["k"].astype("category")
     data["method"] = data["method"].astype("category")
     data["gene_sets"] = data["gene_sets"].astype("category")
     data["ont"] = data["ont"].astype("category")
     data["results_type"] = data["results_type"].astype("category")
-    
+
     all_results.append(data)
 
 # %%
@@ -256,8 +258,7 @@ ax.set_title("Gene Ontology (simplified)")
 
 # %%
 _df_common = all_results_df[
-    (all_results_df["results_type"] == "simplified")
-    & (all_results_df["ont"] == "BP")
+    (all_results_df["results_type"] == "simplified") & (all_results_df["ont"] == "BP")
 ]
 _clustermatch_values = _df_common[_df_common["method"] == "clustermatch"]["p.adjust"]
 _pearson_values = _df_common[_df_common["method"] == "pearson"]["p.adjust"]
@@ -305,8 +306,7 @@ ax.set_title("Gene Ontology (simplified + BP)")
 
 # %%
 _df_common = all_results_df[
-    (all_results_df["results_type"] == "simplified")
-    & (all_results_df["ont"] == "CC")
+    (all_results_df["results_type"] == "simplified") & (all_results_df["ont"] == "CC")
 ]
 _clustermatch_values = _df_common[_df_common["method"] == "clustermatch"]["p.adjust"]
 _pearson_values = _df_common[_df_common["method"] == "pearson"]["p.adjust"]
@@ -354,8 +354,7 @@ ax.set_title("Gene Ontology (simplified + CC)")
 
 # %%
 _df_common = all_results_df[
-    (all_results_df["results_type"] == "simplified")
-    & (all_results_df["ont"] == "MF")
+    (all_results_df["results_type"] == "simplified") & (all_results_df["ont"] == "MF")
 ]
 _clustermatch_values = _df_common[_df_common["method"] == "clustermatch"]["p.adjust"]
 _pearson_values = _df_common[_df_common["method"] == "pearson"]["p.adjust"]
@@ -402,7 +401,12 @@ ax.set_title("Gene Ontology (simplified + MF)")
 # # Plot unique GO terms
 
 # %%
-plot_df = all_results_df.groupby(["method", "k", "results_type"])['ID'].nunique().rename("count").reset_index()
+plot_df = (
+    all_results_df.groupby(["method", "k", "results_type"])["ID"]
+    .nunique()
+    .rename("count")
+    .reset_index()
+)
 
 # %%
 plot_df.shape
@@ -419,7 +423,7 @@ sns.catplot(
     y="count",
     hue="method",
     col="results_type",
-#     ax=ax,
+    #     ax=ax,
 )
 
 # ax.set_xlabel(None)
@@ -441,15 +445,15 @@ from upsetplot import UpSet
 # UpSet?
 
 # %%
-_df_common = all_results_df[
-    (all_results_df["results_type"] == "simplified")
-]
+_df_common = all_results_df[(all_results_df["results_type"] == "simplified")]
 
 # %%
-plot_df = pd.DataFrame({
-    "clustermatch": _df_common["method"] == "clustermatch",
-    "clustermatch": _df_common["method"] == "pearson",
-})
+plot_df = pd.DataFrame(
+    {
+        "clustermatch": _df_common["method"] == "clustermatch",
+        "clustermatch": _df_common["method"] == "pearson",
+    }
+)
 
 # %%
 plot_df

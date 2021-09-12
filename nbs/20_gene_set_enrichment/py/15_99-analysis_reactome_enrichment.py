@@ -68,31 +68,33 @@ display(len(all_files))
 all_results = []
 
 for f_full in all_files:
-#     print(f)
-    
+    #     print(f)
+
     f = f_full.name
-    
+
     fsplit = str(f).split("-")
     k = int(fsplit[0].split("_")[1])
     method = fsplit[1]
     gene_sets = fsplit[2]
     results_type = fsplit[3].split(".")[0]
-    
+
     data = pd.read_pickle(f_full)
-    
-    data = data.assign(**{
-        "k": k,
-        "method": method,
-        "gene_sets": gene_sets,
-        "results_type": results_type,
-    })
-    
+
+    data = data.assign(
+        **{
+            "k": k,
+            "method": method,
+            "gene_sets": gene_sets,
+            "results_type": results_type,
+        }
+    )
+
     data["Cluster"] = data["Cluster"].astype("category")
     data["k"] = data["k"].astype("category")
     data["method"] = data["method"].astype("category")
     data["gene_sets"] = data["gene_sets"].astype("category")
     data["results_type"] = data["results_type"].astype("category")
-    
+
     all_results.append(data)
 
 # %%
@@ -114,7 +116,7 @@ assert all_results_df["results_type"].unique().shape[0] == 1
 # # QQ-plot of $p$-values
 
 # %%
-_df_common = all_results_df#[all_results_df["results_type"] == "full"]
+_df_common = all_results_df  # [all_results_df["results_type"] == "full"]
 _clustermatch_values = _df_common[_df_common["method"] == "clustermatch"]["p.adjust"]
 _pearson_values = _df_common[_df_common["method"] == "pearson"]["p.adjust"]
 
@@ -165,7 +167,12 @@ ax.set_title("Reactome")
 # # Plot unique Reactome terms
 
 # %%
-plot_df = all_results_df.groupby(["method", "k", "results_type"])['ID'].nunique().rename("count").reset_index()
+plot_df = (
+    all_results_df.groupby(["method", "k", "results_type"])["ID"]
+    .nunique()
+    .rename("count")
+    .reset_index()
+)
 
 # %%
 plot_df.shape
@@ -181,7 +188,7 @@ sns.catplot(
     x="k",
     y="count",
     hue="method",
-#     ax=ax,
+    #     ax=ax,
 )
 
 # ax.set_xlabel(None)
@@ -203,15 +210,15 @@ from upsetplot import UpSet
 # UpSet?
 
 # %%
-_df_common = all_results_df[
-    (all_results_df["results_type"] == "simplified")
-]
+_df_common = all_results_df[(all_results_df["results_type"] == "simplified")]
 
 # %%
-plot_df = pd.DataFrame({
-    "clustermatch": _df_common["method"] == "clustermatch",
-    "clustermatch": _df_common["method"] == "pearson",
-})
+plot_df = pd.DataFrame(
+    {
+        "clustermatch": _df_common["method"] == "clustermatch",
+        "clustermatch": _df_common["method"] == "pearson",
+    }
+)
 
 # %%
 plot_df
