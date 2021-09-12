@@ -18,16 +18,13 @@
 
 # %% [markdown] tags=[]
 # TODO
-#
-# Old:
-# This notebook runs some pre-analyses using spectral clustering to explore the best set of parameters to cluster `z_score_std` data version.
 
 # %% [markdown] tags=[]
 # # Environment variables
 
 # %% tags=[]
-# %load_ext autoreload
-# %autoreload 2
+# # %load_ext autoreload
+# # %autoreload 2
 
 # %% tags=[]
 from IPython.display import display
@@ -49,76 +46,105 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.cluster import SpectralClustering
+from tqdm import tqdm
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+
+from clustermatch import conf
+from clustermatch.utils import simplify_string
 
 # %% [markdown] tags=[]
 # # Settings
 
 # %% tags=[]
-INITIAL_RANDOM_STATE = 12345
+CORRELATION_METHOD_NAME = "clustermatch"
 
 # %% tags=[]
-METHOD_NAME = "clustermatch"
+GENE_SELECTION_STRATEGY = "var_pc_log2"
+
+# %%
+# Tissues with largest sample size from GTEx (see nbs/05_preprocessing/00-gtex_v8-split_by_tissue.ipynb)
+TISSUES = [
+    "Muscle - Skeletal",
+    "Whole Blood",
+    "Skin - Sun Exposed (Lower leg)",
+    "Adipose - Subcutaneous",
+    "Artery - Tibial",
+]
+
+# %%
+K_RANGE = [2] + np.arange(5, 100 + 1, 5).tolist() + [125, 150, 175, 200]
+
+# %%
+N_INIT = 50
+
+# %% tags=[]
+INITIAL_RANDOM_STATE = 12345
+
+
+# %%
+def process_similarity_matrix(similarity_matrix):
+    # for clustermatch, negative values are meaningless, so we replace them by zero
+    similarity_matrix[similarity_matrix < 0.0] = 0.0
+    return similarity_matrix
+
+
+# %%
+def get_distance_matrix(similarity_matrix):
+    """
+    Converts the processed similarity matrix into a distance matrix.
+    """
+    return 1.0 - similarity_matrix
+
+
+# %% [markdown]
+# # Paths
+
+# %%
+INPUT_DIR = conf.GTEX["SIMILARITY_MATRICES_DIR"]
+display(INPUT_DIR)
+assert INPUT_DIR.exists()
+
+# %%
+OUTPUT_DIR = conf.GTEX["CLUSTERING_DIR"]
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+display(INPUT_DIR)
+
+# %% [markdown]
+# # Setup clustering options
 
 # %% tags=[]
 CLUSTERING_OPTIONS = {}
 
-CLUSTERING_OPTIONS["K_RANGE"] = [
-    2,
-    5,
-    10,
-    15,
-    20,
-    25,
-    30,
-    35,
-    40,
-    45,
-    50,
-    55,
-    60,
-    65,
-    70,
-    75,
-    80,
-    90,
-    95,
-    100,
-    200,
-]
-# CLUSTERING_OPTIONS["N_REPS_PER_K"] = 5
-CLUSTERING_OPTIONS["KMEANS_N_INIT"] = 50
-CLUSTERING_OPTIONS["DELTA"] = 0.25
+CLUSTERING_OPTIONS["K_RANGE"] = K_RANGE
+CLUSTERING_OPTIONS["KMEANS_N_INIT"] = N_INIT
 
 display(CLUSTERING_OPTIONS)
 
-# %% tags=[]
-# BASE_FOLDER = Path("..", "base").resolve()
-BASE_FOLDER = Path("base").resolve()
-assert BASE_FOLDER.exists()
-
-display(BASE_FOLDER)
-
 # %% [markdown] tags=[]
-# # Load Clustermatch correlations
+# # Get data files
+
+# %%
+tissue_names = [simplify_string(t.lower()) for t in TISSUES]
+display(tissue_names)
 
 # %% tags=[]
-input_filepath = Path(
-    BASE_FOLDER,
-    "results",
-    "sim_mat",
-    "wb_data_gene_cm.pkl",
-).resolve()
-display(input_filepath)
+input_files = sorted(list(INPUT_DIR.glob(f"*-{GENE_SELECTION_STRATEGY}-{CORRELATION_METHOD_NAME}.pkl")))
+input_files = [
+    f for f in input_files if any(f"gtex_v8_data_{tn}-" in f.name for tn in tissue_names)
+]
+display(len(input_files))
+display(input_files)
 
-assert input_filepath.exists(), "Input file does not exist"
+assert len(input_files) == len(TISSUES), len(TISSUES)
+display(input_files[:5])
 
-input_filepath_stem = input_filepath.stem
-display(input_filepath_stem)
+# %% [markdown]
+# ## Show the content of one similarity matrix
 
 # %% tags=[]
-sim_matrix = pd.read_pickle(input_filepath)
+sim_matrix = pd.read_pickle(input_files[0])
 
 # %% tags=[]
 sim_matrix.shape
@@ -127,26 +153,20 @@ sim_matrix.shape
 sim_matrix.head()
 
 # %% [markdown] tags=[]
-# ## Get distance matrix
-
-# %% tags=[]
-dist_matrix = 1.0 - sim_matrix
-
-# %% [markdown] tags=[]
 # # Clustering
 
 # %% tags=[]
-from clustering.methods import DeltaSpectralClustering
-from sklearn.metrics import silhouette_score
+# from clustering.methods import DeltaSpectralClustering
+# from sklearn.metrics import silhouette_score
 
 # %% [markdown] tags=[]
 # ## Clusterers
 
 # %% tags=[]
-np.sqrt(sim_matrix.shape[0])
+# np.sqrt(sim_matrix.shape[0])
 
 # %% tags=[]
-from clustering.methods import DeltaSpectralClustering
+# from clustering.methods import DeltaSpectralClustering
 
 # %% tags=[]
 CLUSTERERS = {}
@@ -157,11 +177,11 @@ random_state = INITIAL_RANDOM_STATE
 for k in CLUSTERING_OPTIONS["K_RANGE"]:
     #     for delta_value in CLUSTERING_OPTIONS["DELTAS"]:
     #         for i in range(CLUSTERING_OPTIONS["N_REPS_PER_K"]):
-    clus = DeltaSpectralClustering(
+    clus = SpectralClustering(
         eigen_solver="arpack",
         n_clusters=k,
         n_init=CLUSTERING_OPTIONS["KMEANS_N_INIT"],
-        delta=CLUSTERING_OPTIONS["DELTA"],
+        affinity="precomputed",
         random_state=random_state,
     )
 
@@ -187,130 +207,94 @@ display(clustering_method_name)
 # ## Generate ensemble
 
 # %% tags=[]
-import tempfile
-from clustering.ensembles.utils import generate_ensemble
-from utils import generate_result_set_name
+from sklearn.metrics import silhouette_score
+from clustermatch.clustering import generate_ensemble
+# from utils import generate_result_set_name
 
 # %% tags=[]
-# generate a temporary folder where to store the ensemble and avoid computing it again
-ensemble_folder = Path(
-    BASE_FOLDER,
-    "results",
-    METHOD_NAME,
-).resolve()
-display(ensemble_folder)
+# # generate a temporary folder where to store the ensemble and avoid computing it again
+# ensemble_folder = Path(
+#     BASE_FOLDER,
+#     "results",
+#     METHOD_NAME,
+# ).resolve()
+# display(ensemble_folder)
 
-ensemble_folder.mkdir(parents=True, exist_ok=True)
+# ensemble_folder.mkdir(parents=True, exist_ok=True)
 
-# %% tags=[]
-ensemble_file = Path(
-    ensemble_folder,
-    generate_result_set_name(CLUSTERING_OPTIONS, prefix="ensemble-", suffix=".pkl"),
-)
-display(ensemble_file)
+# %%
+pbar = tqdm(input_files, ncols=100)
 
-# %% tags=[]
-if ensemble_file.exists():
-    display("Ensemble file exists")
-    ensemble = pd.read_pickle(ensemble_file)
-else:
+for tissue_data_file in pbar:
+    pbar.set_description(tissue_data_file.stem)
+
+    # read
+    sim_matrix = pd.read_pickle(tissue_data_file)
+    sim_matrix = process_similarity_matrix(sim_matrix)
+
     ensemble = generate_ensemble(
-        dist_matrix,
+        sim_matrix,
         CLUSTERERS,
-        attributes=["n_clusters", "delta"],
+        attributes=["n_clusters"],
+        tqdm_args={"leave": False, "ncols": 100},
+    )
+    
+    _tmp = ensemble["n_clusters"].value_counts().unique()
+    assert _tmp.shape[0] == 1
+    assert _tmp[0] == 1
+    
+    assert not ensemble["n_clusters"].isna().any()
+    
+    assert ensemble.shape[0] == len(CLUSTERERS)
+    
+    assert np.all(
+        [
+            part["partition"].shape[0] == sim_matrix.shape[0]
+            for idx, part in ensemble.iterrows()
+        ]
+    )
+    
+    # no partition has negative labels or nan
+    assert not np.any([np.isnan(part["partition"]).any() for idx, part in ensemble.iterrows()])
+    assert not np.any([(part["partition"] < 0).any() for idx, part in ensemble.iterrows()])
+    
+    _real_k_values = ensemble["partition"].apply(lambda x: np.unique(x).shape[0])
+    display(_real_k_values)
+    assert np.all(ensemble["n_clusters"].values == _real_k_values.values)
+    
+    # add clustering quality measures
+    dist_matrix = get_distance_matrix(sim_matrix)
+    ensemble = ensemble.assign(
+        si_score=ensemble["partition"].apply(
+            lambda x: silhouette_score(dist_matrix, x, metric="precomputed")
+        ),
     )
 
-    ensemble["delta"] = ensemble["delta"].apply(lambda x: f"{x:.2f}")
-
-# %% tags=[]
-ensemble.shape
-
-# %% tags=[]
-ensemble.head()
-
-# %% tags=[]
-ensemble["n_clusters"].value_counts()
-
-# %% tags=[]
-_tmp = ensemble["n_clusters"].value_counts().unique()
-assert _tmp.shape[0] == 1
-assert _tmp[0] == 1
-
-# %% tags=[]
-ensemble_stats = ensemble["n_clusters"].describe()
-display(ensemble_stats)
-
-# %% [markdown] tags=[]
-# ## Testing
-
-# %% tags=[]
-assert ensemble_stats["min"] > 1
-
-# %% tags=[]
-assert not ensemble["n_clusters"].isna().any()
-
-# %% tags=[]
-assert ensemble.shape[0] == len(CLUSTERERS)
-
-# %% tags=[]
-# all partitions have the right size
-assert np.all(
-    [
-        part["partition"].shape[0] == sim_matrix.shape[0]
-        for idx, part in ensemble.iterrows()
-    ]
-)
-
-# %% tags=[]
-# no partition has negative clusters (noisy points)
-assert not np.any([(part["partition"] < 0).any() for idx, part in ensemble.iterrows()])
-
-# %% tags=[]
-# check that the number of clusters in the partitions are the expected ones
-_real_k_values = ensemble["partition"].apply(lambda x: np.unique(x).shape[0])
-display(_real_k_values)
-assert np.all(ensemble["n_clusters"].values == _real_k_values.values)
-
-# %% [markdown] tags=[]
-# ## Add clustering quality measures
-
-# %% tags=[]
-ensemble = ensemble.assign(
-    si_score=ensemble["partition"].apply(
-        lambda x: silhouette_score(dist_matrix, x, metric="precomputed")
-    ),
-)
-
-# %% tags=[]
-ensemble.shape
-
-# %% tags=[]
-ensemble.head()
-
-# %% [markdown] tags=[]
-# ## Save
-
-# %% tags=[]
-ensemble.to_pickle(ensemble_file)
+    # save
+    output_filename = f"{tissue_data_file.stem}-{CORRELATION_METHOD_NAME}.pkl"
+    ensemble.to_pickle(path=OUTPUT_DIR / output_filename)
 
 # %% [markdown] tags=[]
 # # Cluster quality
 
-# %% tags=[]
-with pd.option_context("display.max_rows", None, "display.max_columns", None):
-    _df = ensemble.groupby(["n_clusters", "delta"]).mean()
-    display(_df)
+# %% [markdown] tags=[]
+# **TODO**: move this to another notebook
 
 # %% tags=[]
-with sns.plotting_context("talk", font_scale=0.75), sns.axes_style(
-    "whitegrid", {"grid.linestyle": "--"}
-):
-    fig = plt.figure(figsize=(14, 6))
-    ax = sns.pointplot(data=ensemble, x="n_clusters", y="si_score", hue="delta")
-    ax.set_ylabel("Silhouette index\n(higher is better)")
-    ax.set_xlabel("Number of clusters ($k$)")
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    plt.grid(True)
-    plt.tight_layout()
+# with pd.option_context("display.max_rows", None, "display.max_columns", None):
+#     _df = ensemble.groupby(["n_clusters", "delta"]).mean()
+#     display(_df)
+
+# %% tags=[]
+# with sns.plotting_context("talk", font_scale=0.75), sns.axes_style(
+#     "whitegrid", {"grid.linestyle": "--"}
+# ):
+#     fig = plt.figure(figsize=(14, 6))
+#     ax = sns.pointplot(data=ensemble, x="n_clusters", y="si_score", hue="delta")
+#     ax.set_ylabel("Silhouette index\n(higher is better)")
+#     ax.set_xlabel("Number of clusters ($k$)")
+#     ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+#     plt.grid(True)
+#     plt.tight_layout()
 
 # %% tags=[]

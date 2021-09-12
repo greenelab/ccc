@@ -84,6 +84,7 @@ GTEX["GENE_SELECTION_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_selection").resolve
 GTEX["SIMILARITY_MATRICES_DIR"] = Path(
     GTEX["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
+GTEX["CLUSTERING_DIR"] = Path(GTEX["RESULTS_DIR"], "clustering").resolve()
 
 
 #
