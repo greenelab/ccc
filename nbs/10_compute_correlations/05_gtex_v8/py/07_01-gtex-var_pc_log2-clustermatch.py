@@ -39,7 +39,7 @@ from clustermatch.corr import clustermatch
 # %% tags=[]
 GENE_SELECTION_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # for clustermatch, I select the top 5 tissues (according to sample size, see nbs/05_preprocessing/00-gtex_v8-split_by_tissue.ipynb)
 TISSUES = [
     "Muscle - Skeletal",
@@ -75,7 +75,7 @@ display(OUTPUT_DIR)
 # %% [markdown] tags=[]
 # # Data loading
 
-# %%
+# %% tags=[]
 tissue_in_file_names = [f"_data_{simplify_string(t.lower())}-" for t in TISSUES]
 
 # %% tags=[]
