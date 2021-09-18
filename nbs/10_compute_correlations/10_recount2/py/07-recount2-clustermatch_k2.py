@@ -45,7 +45,7 @@ def clustermatch_k2(data):
     return clustermatch(data, internal_n_clusters=n_clusters)
 
 
-CORRELATION_METHOD = clustermatch_k2to5
+CORRELATION_METHOD = clustermatch_k2
 
 method_name = CORRELATION_METHOD.__name__
 display(method_name)
