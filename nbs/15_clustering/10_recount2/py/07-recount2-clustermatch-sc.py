@@ -108,9 +108,7 @@ display(CLUSTERING_OPTIONS)
 
 # %% tags=[]
 # get input data files according to Settings
-input_files = list(
-    INPUT_DIR.glob(f"*-{CORRELATION_METHOD_NAME}.pkl")
-)
+input_files = list(INPUT_DIR.glob(f"*-{CORRELATION_METHOD_NAME}.pkl"))
 display(len(input_files))
 display(input_files)
 
@@ -204,9 +202,7 @@ assert ensemble.shape[0] == len(clusterers)
 assert not np.any(
     [np.isnan(part["partition"]).any() for idx, part in ensemble.iterrows()]
 )
-assert not np.any(
-    [(part["partition"] < 0).any() for idx, part in ensemble.iterrows()]
-)
+assert not np.any([(part["partition"] < 0).any() for idx, part in ensemble.iterrows()])
 
 # all partitions must have the size of the data
 assert np.all(
