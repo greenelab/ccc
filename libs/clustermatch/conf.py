@@ -108,6 +108,7 @@ RECOUNT2["RESULTS_DIR"] = Path(RESULTS_DIR, "recount2").resolve()
 RECOUNT2["SIMILARITY_MATRICES_DIR"] = Path(
     RECOUNT2["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
+RECOUNT2["CLUSTERING_DIR"] = Path(RECOUNT2["RESULTS_DIR"], "clustering").resolve()
 
 
 if __name__ == "__main__":
