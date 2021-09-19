@@ -254,7 +254,7 @@ with sns.plotting_context("talk", font_scale=0.75), sns.axes_style(
 ):
     fig = plt.figure(figsize=(14, 6))
 
-    ax = sns.pointplot(data=ensemble, x="n_clusters", y="si_score", hue="tissue")
+    ax = sns.pointplot(data=ensemble, x="n_clusters", y="si_score")
 
     ax.set_ylabel("Silhouette index\n(higher is better)")
     ax.set_xlabel("Number of clusters ($k$)")
