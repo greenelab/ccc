@@ -27,7 +27,6 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_score
-from IPython.display import HTML
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
