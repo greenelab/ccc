@@ -89,14 +89,14 @@ def get_distance_matrix(similarity_matrix):
 
 
 # %%
-assert process_similarity_matrix(pd.Series(1.)).squeeze() == 1
-assert process_similarity_matrix(pd.Series(0.)).squeeze() == 0
-assert process_similarity_matrix(pd.Series(-1.)).squeeze() == 1
+assert process_similarity_matrix(pd.Series(1.0)).squeeze() == 1
+assert process_similarity_matrix(pd.Series(0.0)).squeeze() == 0
+assert process_similarity_matrix(pd.Series(-1.0)).squeeze() == 1
 
 # %%
-assert get_distance_matrix(process_similarity_matrix(pd.Series(1.))).squeeze() == 0
-assert get_distance_matrix(process_similarity_matrix(pd.Series(0.))).squeeze() == 1
-assert get_distance_matrix(process_similarity_matrix(pd.Series(-1.))).squeeze() == 0
+assert get_distance_matrix(process_similarity_matrix(pd.Series(1.0))).squeeze() == 0
+assert get_distance_matrix(process_similarity_matrix(pd.Series(0.0))).squeeze() == 1
+assert get_distance_matrix(process_similarity_matrix(pd.Series(-1.0))).squeeze() == 0
 
 # %% [markdown]
 # # Paths
