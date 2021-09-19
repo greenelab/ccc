@@ -74,8 +74,9 @@ def process_similarity_matrix(similarity_matrix):
     """
     It process the similarity matrix to perform any needed adjustment before performing cluster analysis on it.
     """
-    # no adjustments are needed for pearson
-    return similarity_matrix
+    # for this run of pearson, we use the absolute value of the coefficient to make it comparable to clustermatch (which does not
+    # distinguish between negatively/positively correlated
+    return similarity_matrix.abs()
 
 
 # %%
@@ -83,10 +84,19 @@ def get_distance_matrix(similarity_matrix):
     """
     It converts the processed similarity matrix into a distance matrix. This is needed to compute some clustering quality measures.
     """
-    # for pearson we follow the same definition of distance given in: https://doi.org/10.1038/s41467-018-03424-4
-    # "... we subtracted the absolute Pearson’s correlation from one"
-    return 1.0 - similarity_matrix.abs()
+    # the processed similarity matrix (see function above) returns the abs, so here we substract that from 1.0
+    return 1.0 - similarity_matrix
 
+
+# %%
+assert process_similarity_matrix(pd.Series(1.)).squeeze() == 1
+assert process_similarity_matrix(pd.Series(0.)).squeeze() == 0
+assert process_similarity_matrix(pd.Series(-1.)).squeeze() == 1
+
+# %%
+assert get_distance_matrix(process_similarity_matrix(pd.Series(1.))).squeeze() == 0
+assert get_distance_matrix(process_similarity_matrix(pd.Series(0.))).squeeze() == 1
+assert get_distance_matrix(process_similarity_matrix(pd.Series(-1.))).squeeze() == 0
 
 # %% [markdown]
 # # Paths
