@@ -41,6 +41,7 @@ from clustermatch.clustering import generate_ensemble
 
 # %% tags=[]
 CORRELATION_METHOD_NAME = "pearson"
+METHOD_VARIANT = "full"
 
 # %% tags=[]
 GENE_SELECTION_STRATEGY = "var_pc_log2"
@@ -278,7 +279,9 @@ for tissue_data_file in pbar:
     )
 
     # save
-    output_filename = f"{tissue_data_file.stem}-{clustering_method_name}.pkl"
+    output_filename = (
+        f"{tissue_data_file.stem}_{METHOD_VARIANT}-{clustering_method_name}.pkl"
+    )
     output_filepath = OUTPUT_DIR / output_filename
     output_files.append(output_filepath)
 
