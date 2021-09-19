@@ -45,7 +45,7 @@ CORRELATION_METHOD_NAME = "spearman"
 # %% tags=[]
 GENE_SELECTION_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # Tissues with largest sample size from GTEx (see nbs/05_preprocessing/00-gtex_v8-split_by_tissue.ipynb)
 TISSUES = [
     "Muscle - Skeletal",
@@ -55,11 +55,11 @@ TISSUES = [
     "Artery - Tibial",
 ]
 
-# %%
+# %% tags=[]
 # range of k values that will be used by the clustering algorithm
 K_RANGE = [2] + np.arange(5, 100 + 1, 5).tolist() + [125, 150, 175, 200]
 
-# %%
+# %% tags=[]
 # number of times the algorithm will be run for each configuration; it will pick the "best" partition among these, according
 # to some internal criteria (see the algorithm's documentation for more information on this parameter, which is `n_init`).
 N_INIT = 50
@@ -68,7 +68,7 @@ N_INIT = 50
 INITIAL_RANDOM_STATE = 12345
 
 
-# %%
+# %% tags=[]
 def process_similarity_matrix(similarity_matrix):
     """
     It process the similarity matrix to perform any needed adjustment before performing cluster analysis on it.
@@ -77,7 +77,7 @@ def process_similarity_matrix(similarity_matrix):
     return similarity_matrix + 1.0
 
 
-# %%
+# %% tags=[]
 def get_distance_matrix(similarity_matrix):
     """
     It converts the processed similarity matrix into a distance matrix. This is needed to compute some clustering quality measures.
@@ -86,30 +86,30 @@ def get_distance_matrix(similarity_matrix):
     return -(similarity_matrix - 1) + 1.0
 
 
-# %%
+# %% tags=[]
 assert process_similarity_matrix(1) == 2
 assert process_similarity_matrix(0) == 1
 assert process_similarity_matrix(-1) == 0
 
-# %%
+# %% tags=[]
 assert get_distance_matrix(process_similarity_matrix(1)) == 0
 assert get_distance_matrix(process_similarity_matrix(0)) == 1
 assert get_distance_matrix(process_similarity_matrix(-1)) == 2
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Paths
 
-# %%
+# %% tags=[]
 INPUT_DIR = conf.GTEX["SIMILARITY_MATRICES_DIR"]
 display(INPUT_DIR)
 assert INPUT_DIR.exists()
 
-# %%
+# %% tags=[]
 OUTPUT_DIR = conf.GTEX["CLUSTERING_DIR"]
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(INPUT_DIR)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Setup clustering options
 
 # %% tags=[]
@@ -131,15 +131,15 @@ input_files = list(
 display(len(input_files))
 display(input_files[:5])
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Filter files by selected tissues
 
-# %%
+# %% tags=[]
 # convert tissue name to internal, simplified representation
 tissue_names_map = {simplify_string(t.lower()): t for t in TISSUES}
 display(tissue_names_map)
 
-# %%
+# %% tags=[]
 # filter by selected tissues
 input_files = sorted(
     [
@@ -154,7 +154,7 @@ display(input_files)
 # make sure we got the right number
 assert len(input_files) == len(TISSUES), len(TISSUES)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Show the content of one similarity matrix
 
 # %% tags=[]
@@ -172,7 +172,7 @@ sim_matrix.head()
 # %% [markdown] tags=[]
 # ## Generate clusterers
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # A "clusterer" is an instance of one clustering algorithm with a specified set of parameters. For instance, KMeans with `n_clusters=2` and `random_state=189`.
 
 # %% tags=[]
@@ -211,7 +211,7 @@ display(clustering_method_name)
 # %% [markdown] tags=[]
 # ## Generate ensemble
 
-# %%
+# %% tags=[]
 output_files = []
 pbar = tqdm(input_files, ncols=100)
 
@@ -279,7 +279,7 @@ for tissue_data_file in pbar:
 # %% [markdown] tags=[]
 # # Plot cluster quality measures
 
-# %%
+# %% tags=[]
 def get_tissue_name(filename):
     tissue_simplified_name = filename.split("gtex_v8_data_")[1].split(
         f"-{GENE_SELECTION_STRATEGY}"
@@ -287,7 +287,7 @@ def get_tissue_name(filename):
     return tissue_names_map[tissue_simplified_name]
 
 
-# %%
+# %% tags=[]
 # combine all partitions across tissues
 ensembles = []
 
@@ -304,7 +304,7 @@ ensembles = pd.concat(ensembles, ignore_index=True)
 # %% tags=[]
 ensembles.head()
 
-# %%
+# %% tags=[]
 with sns.plotting_context("talk", font_scale=0.75), sns.axes_style(
     "whitegrid", {"grid.linestyle": "--"}
 ):
@@ -320,4 +320,4 @@ with sns.plotting_context("talk", font_scale=0.75), sns.axes_style(
     display(fig)
     plt.close(fig)
 
-# %%
+# %% tags=[]
