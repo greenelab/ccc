@@ -28,7 +28,6 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_score
-from IPython.display import HTML
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
@@ -74,8 +73,8 @@ def process_similarity_matrix(similarity_matrix):
     """
     It process the similarity matrix to perform any needed adjustment before performing cluster analysis on it.
     """
-    # no adjustments are needed for spearman
-    return similarity_matrix
+    # see comments for pearson
+    return similarity_matrix + 1.0
 
 
 # %%
@@ -83,9 +82,19 @@ def get_distance_matrix(similarity_matrix):
     """
     It converts the processed similarity matrix into a distance matrix. This is needed to compute some clustering quality measures.
     """
-    # here we follow the same idea from pearson (see corresponding notebook)
-    return 1.0 - similarity_matrix.abs()
+    # see comments for pearson
+    return -(similarity_matrix - 1) + 1.0
 
+
+# %%
+assert process_similarity_matrix(1) == 2
+assert process_similarity_matrix(0) == 1
+assert process_similarity_matrix(-1) == 0
+
+# %%
+assert get_distance_matrix(process_similarity_matrix(1)) == 0
+assert get_distance_matrix(process_similarity_matrix(0)) == 1
+assert get_distance_matrix(process_similarity_matrix(-1)) == 2
 
 # %% [markdown]
 # # Paths
