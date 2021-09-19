@@ -39,6 +39,7 @@ from clustermatch.clustering import generate_ensemble
 
 # %% tags=[]
 CORRELATION_METHOD_NAME = "pearson"
+METHOD_VARIANT = "full"
 
 # %% tags=[]
 # we don't have gene subsets for recount2
@@ -233,7 +234,7 @@ ensemble = ensemble.assign(
 )
 
 # save
-output_filename = f"{data_file.stem}-{clustering_method_name}.pkl"
+output_filename = f"{data_file.stem}_{METHOD_VARIANT}-{clustering_method_name}.pkl"
 output_filepath = OUTPUT_DIR / output_filename
 
 ensemble.to_pickle(path=output_filepath)
