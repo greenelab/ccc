@@ -45,11 +45,11 @@ METHOD_VARIANT = "full"
 # we don't have gene subsets for recount2
 # GENE_SELECTION_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # range of k values that will be used by the clustering algorithm
 K_RANGE = [2] + np.arange(5, 100 + 1, 5).tolist() + [125, 150, 175, 200]
 
-# %%
+# %% tags=[]
 # number of times the algorithm will be run for each configuration; it will pick the "best" partition among these, according
 # to some internal criteria (see the algorithm's documentation for more information on this parameter, which is `n_init`).
 N_INIT = 50
@@ -58,7 +58,7 @@ N_INIT = 50
 INITIAL_RANDOM_STATE = 12345
 
 
-# %%
+# %% tags=[]
 def process_similarity_matrix(similarity_matrix):
     """
     It process the similarity matrix to perform any needed adjustment before performing cluster analysis on it.
@@ -67,7 +67,7 @@ def process_similarity_matrix(similarity_matrix):
     return similarity_matrix + 1.0
 
 
-# %%
+# %% tags=[]
 def get_distance_matrix(similarity_matrix):
     """
     It converts the processed similarity matrix into a distance matrix. This is needed to compute some clustering quality measures.
@@ -76,30 +76,30 @@ def get_distance_matrix(similarity_matrix):
     return -(similarity_matrix - 1) + 1.0
 
 
-# %%
+# %% tags=[]
 assert process_similarity_matrix(1) == 2
 assert process_similarity_matrix(0) == 1
 assert process_similarity_matrix(-1) == 0
 
-# %%
+# %% tags=[]
 assert get_distance_matrix(process_similarity_matrix(1)) == 0
 assert get_distance_matrix(process_similarity_matrix(0)) == 1
 assert get_distance_matrix(process_similarity_matrix(-1)) == 2
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Paths
 
-# %%
+# %% tags=[]
 INPUT_DIR = conf.RECOUNT2["SIMILARITY_MATRICES_DIR"]
 display(INPUT_DIR)
 assert INPUT_DIR.exists()
 
-# %%
+# %% tags=[]
 OUTPUT_DIR = conf.RECOUNT2["CLUSTERING_DIR"]
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(INPUT_DIR)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Setup clustering options
 
 # %% tags=[]
@@ -121,10 +121,10 @@ display(input_files)
 
 assert len(input_files) == 1
 
-# %%
+# %% tags=[]
 data_file = input_files[0]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Show the content of one similarity matrix
 
 # %% tags=[]
@@ -142,7 +142,7 @@ sim_matrix.head()
 # %% [markdown] tags=[]
 # ## Generate clusterers
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # A "clusterer" is an instance of one clustering algorithm with a specified set of parameters. For instance, KMeans with `n_clusters=2` and `random_state=189`.
 
 # %% tags=[]
@@ -181,12 +181,12 @@ display(clustering_method_name)
 # %% [markdown] tags=[]
 # ## Generate ensemble
 
-# %%
+# %% tags=[]
 # read similarity matrix for this tissue
 sim_matrix = pd.read_pickle(data_file)
 sim_matrix = process_similarity_matrix(sim_matrix)
 
-# %%
+# %% tags=[]
 # generate ensemble
 ensemble = generate_ensemble(
     sim_matrix,
@@ -194,7 +194,7 @@ ensemble = generate_ensemble(
     tqdm_args={"leave": False, "ncols": 100},
 )
 
-# %%
+# %% tags=[]
 # perform some checks on the generate ensemble
 # there should be a single k among ensemble partitions
 _tmp = ensemble["n_clusters"].value_counts().unique()
@@ -223,7 +223,7 @@ assert np.all(
 _real_k_values = ensemble["partition"].apply(lambda x: np.unique(x).shape[0])
 assert np.all(ensemble["n_clusters"].values == _real_k_values.values)
 
-# %%
+# %% tags=[]
 # add clustering quality measures
 dist_matrix = get_distance_matrix(sim_matrix)
 
@@ -242,13 +242,13 @@ ensemble.to_pickle(path=output_filepath)
 # %% [markdown] tags=[]
 # # Plot cluster quality measures
 
-# %%
+# %% tags=[]
 ensemble.shape
 
-# %%
+# %% tags=[]
 ensemble.head()
 
-# %%
+# %% tags=[]
 with sns.plotting_context("talk", font_scale=0.75), sns.axes_style(
     "whitegrid", {"grid.linestyle": "--"}
 ):
@@ -264,4 +264,4 @@ with sns.plotting_context("talk", font_scale=0.75), sns.axes_style(
     display(fig)
     plt.close(fig)
 
-# %%
+# %% tags=[]
