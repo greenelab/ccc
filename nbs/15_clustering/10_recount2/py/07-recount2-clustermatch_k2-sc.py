@@ -37,7 +37,7 @@ from clustermatch.clustering import generate_ensemble
 # # Settings
 
 # %% tags=[]
-CORRELATION_METHOD_NAME = "clustermatch"
+CORRELATION_METHOD_NAME = "clustermatch_k2"
 
 # %% tags=[]
 # we don't have gene subsets for recount2
