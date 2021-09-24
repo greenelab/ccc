@@ -115,7 +115,14 @@ display(simplified_cutoff_str)
 
 
 # %% tags=[]
-def run_enrich(all_gene_ids, clustering_id, partition, enrich_function, ontology, simplify_cutoff=None):
+def run_enrich(
+    all_gene_ids,
+    clustering_id,
+    partition,
+    enrich_function,
+    ontology,
+    simplify_cutoff=None,
+):
     """
     TODO
     """
@@ -125,6 +132,7 @@ def run_enrich(all_gene_ids, clustering_id, partition, enrich_function, ontology
     from rpy2.robjects.packages import importr
     import rpy2.robjects as robjects
     from rpy2.robjects import pandas2ri
+
     pandas2ri.activate()
 
     clusterProfiler = importr("clusterProfiler")
@@ -140,7 +148,7 @@ def run_enrich(all_gene_ids, clustering_id, partition, enrich_function, ontology
         genes_per_cluster[f"C{c:n}"] = [
             g.split(".")[0] for g in all_gene_ids[partition == c]
         ]
-    
+
     assert len(genes_per_cluster) == n_clusters
     assert sum(map(lambda x: len(set(x)), genes_per_cluster.values())) == n_genes
 
@@ -236,7 +244,15 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
 
         # iterate over clustering solutions (partitions) and GO ontologies
         futures = {
-            executor.submit(run_enrich, all_gene_ids, cr_idx, cr.partition, ENRICH_FUNCTION, ont, SIMPLIFY_CUTOFF): ont
+            executor.submit(
+                run_enrich,
+                all_gene_ids,
+                cr_idx,
+                cr.partition,
+                ENRICH_FUNCTION,
+                ont,
+                SIMPLIFY_CUTOFF,
+            ): ont
             for cr_idx, cr in clustering_df.sort_values("n_clusters").iterrows()
             for ont in GO_ONTOLOGIES
         }
