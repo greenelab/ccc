@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "${{ env.PY_ENV }}.tar.gz"
-          key: ${{ runner.os }}-${{ env.PY_CACHE_NUMBER }}-${{ hashFiles('environment/environment.yml') }}-${{ hashFiles('environment/scripts/install_r_packages.r') }}
+          key: ${{ runner.os }}-${{ env.PY_CACHE_NUMBER }}-${{ hashFiles('environment/environment.yml', 'environment/scripts/install_r_packages.r', 'environment/scripts/install_other_packages.sh') }}
       - name: Setup Miniconda
         if: steps.cache.outputs.cache-hit != 'true'
         uses: conda-incubator/setup-miniconda@v2
