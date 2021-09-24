@@ -108,3 +108,25 @@ def test_conf_with_manuscript_dir():
     assert "CONTENT_DIR" in conf.MANUSCRIPT
     assert conf.MANUSCRIPT["CONTENT_DIR"] is not None
     assert conf.MANUSCRIPT["CONTENT_DIR"] != ""
+
+
+def test_conf_gtex_clustering_filename_regex():
+    import re
+    from clustermatch import conf
+
+    assert "CLUSTERING_FILENAME_PATTERN" in conf.GTEX
+    pat = re.compile(conf.GTEX["CLUSTERING_FILENAME_PATTERN"])
+
+    filename = "gtex_v8_data_adipose_subcutaneous-var_pc_log2-clustermatch_k2-SpectralClustering.pkl"
+    m = re.search(pat, filename)
+    assert m.group("tissue") == "adipose_subcutaneous"
+    assert m.group("gene_sel_strategy") == "var_pc_log2"
+    assert m.group("corr_method") == "clustermatch_k2"
+    assert m.group("clust_method") == "SpectralClustering"
+
+    filename = "gtex_v8_data_muscle_skeletal-var_raw-spearman_full-AgglomerativeClustering.pkl"
+    m = re.search(pat, filename)
+    assert m.group("tissue") == "muscle_skeletal"
+    assert m.group("gene_sel_strategy") == "var_raw"
+    assert m.group("corr_method") == "spearman_full"
+    assert m.group("clust_method") == "AgglomerativeClustering"
