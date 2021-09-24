@@ -66,6 +66,7 @@ jobs:
           call .\Scripts\activate.bat
           .\Scripts\conda-unpack.exe
           cd ..
+          set R_HOME=%CONDA_PREFIX%\Lib\R
           python environment\scripts\setup_data.py --mode testing
           pytest -v -rs tests
       - name: Setup data and run pytest (non-Windows systems)
