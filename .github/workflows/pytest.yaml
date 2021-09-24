@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "${{ env.PY_ENV }}.tar.gz"
-          key: ${{ runner.os }}-${{ env.PY_CACHE_NUMBER }}-${{ hashFiles('environment/environment.yml') }}
+          key: ${{ runner.os }}-${{ env.PY_CACHE_NUMBER }}-${{ hashFiles('environment/environment.yml') }}-${{ hashFiles('environment/scripts/install_r_packages.r') }}
       - name: Setup Miniconda
         if: steps.cache.outputs.cache-hit != 'true'
         uses: conda-incubator/setup-miniconda@v2
@@ -40,10 +40,14 @@ jobs:
           channel-priority: strict
           environment-file: environment/environment.yml
           auto-activate-base: false
-      - name: Conda-Pack
+      - name: Install other packages and Conda-Pack environment
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash -l {0}
         run: |
+          # other packages (R packages mainly)
+          bash environment/scripts/install_other_packages.sh
+
+          # install conda-pack, and pack environment
           conda install --yes -c conda-forge conda-pack coverage
           conda pack -f -n ${{ env.PY_ENV }} -o "${{ env.PY_ENV }}.tar.gz"
       - name: Unpack environment
