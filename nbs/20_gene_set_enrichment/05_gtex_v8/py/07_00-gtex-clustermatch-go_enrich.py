@@ -112,7 +112,7 @@ display(simplified_cutoff_str)
 
 
 # %% tags=[]
-def run_enrich(all_gene_ids, partition, ontology):
+def run_enrich(all_gene_ids, clustering_id, partition, ontology):
     """
     TODO
     """
@@ -126,26 +126,6 @@ def run_enrich(all_gene_ids, partition, ontology):
     # get partition numbers
     n_genes = partition.shape[0]
     n_clusters = np.unique(partition).shape[0]
-    
-#     # extract from input clustering filename some sections, such as tissue name, etc
-#     m = re.search(filename_pattern, str(clustering_filepath.name))
-    
-#     tissue = m.group("tissue")
-#     gene_sel_strategy = m.group("gene_sel_strategy")
-#     corr_method = m.group("corr_method")
-    
-#     # use those sections to read the list of genes from the input data
-#     # file that the clustering algorithm received
-#     similarity_matrix_filename = SIMILARITY_MATRIX_FILENAME_TEMPLATE.format(
-#         tissue=tissue,
-#         gene_sel_strategy=gene_sel_strategy,
-#         corr_method=corr_method,
-#     )
-    
-#     # compute the universe of genes
-#     all_gene_ids = pd.read_pickle(SIMILARITY_MATRICES_DIR / similarity_matrix_filename).index.tolist()
-#     all_gene_ids = np.array([g.split(".")[0] for g in all_gene_ids])
-#     assert all_gene_ids.shape[0] == n_genes
 
     # create a clusterProfiler-friendly structure to indicate which
     # genes belong to each cluster
@@ -173,20 +153,36 @@ def run_enrich(all_gene_ids, partition, ontology):
         readable=True,
     )
 
+    results = []
+    
     # save full results
     df = ck.slots["compareClusterResult"]
-    df.sort_values("p.adjust").to_pickle(
-        OUTPUT_DIR / f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{ontology}_full.pkl",
-    )
+    df["clustering_id"] = clustering_id
+    df["clustering_n_clusters"] = n_clusters
+    results.append(df)
+#     df.sort_values("p.adjust").to_pickle(
+#         OUTPUT_DIR / f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{ontology}_full.pkl",
+#     )
 
     # save simplified results
     if ENRICH_FUNCTION in ("enrichGO", "gseGO"):
         ck = clusterProfiler.simplify(ck, cutoff=SIMPLIFY_CUTOFF)
         df = ck.slots["compareClusterResult"]
-        df.sort_values("p.adjust").to_pickle(
-            OUTPUT_DIR / f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{ontology}_simplified_{simplified_cutoff_str}.pkl",
-        )
+        df["clustering_id"] = clustering_id
+        df["clustering_n_clusters"] = n_clusters
+        results.append(df)
+#         df.sort_values("p.adjust").to_pickle(
+#             OUTPUT_DIR / f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{ontology}_simplified_{simplified_cutoff_str}.pkl",
+#         )
 
+    return tuple(results)
+
+
+# %%
+# data = pd.read_pickle(input_files[1])
+
+# %%
+# data
 
 # %% [markdown]
 # ## Run
@@ -197,6 +193,9 @@ display(n_partitions_per_file)
 
 # %% [markdown]
 # ## Run
+
+# %%
+from collections import defaultdict
 
 # %%
 # the number of tasks is the number of input files times number of partitions per file times 3 (BP, CC, MF)
@@ -238,14 +237,50 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(t
         assert all_gene_ids.shape[0] == n_genes
 
         # iterate over clustering solutions (partitions) and GO ontologies
-        futures = [
-            executor.submit(run_enrich, all_gene_ids, cr.partition, ont)
-            for idx, cr in clustering_df.sort_values("n_clusters").iterrows()
+        futures = {
+            executor.submit(run_enrich, all_gene_ids, cr_idx, cr.partition, ont): ont
+            for cr_idx, cr in clustering_df.sort_values("n_clusters").iterrows()
             for ont in GO_ONTOLOGIES
-        ]
+        }
 
-        for future in as_completed(futures):
-            future.result()
+        # collect results
+        results_full = defaultdict(list)
+        results_simplified = defaultdict(list)
+        
+        for task in as_completed(futures):
+            ont = futures[task]
+            task_results = task.result()
+            
+            results_full[ont].append(task_results[0])
+            
+            if len(task_results) > 1:
+                results_simplified[ont].append(task_results[1])
+            
             pbar.update(1)
+        
+        # merge and serve
+        pbar.set_description(f"{tissue}/{gene_sel_strategy}/saving")
+        
+        for ontology in GO_ONTOLOGIES:
+            # full
+            results_full_df = pd.concat(
+                results_full[ontology],
+                ignore_index=True
+            ).sort_values(["clustering_n_clusters", "p.adjust"])
+
+            results_full_df.to_pickle(
+                OUTPUT_DIR / f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{ontology}_full.pkl",
+            )
+
+            # simplified
+            if len(results_simplified) > 0:
+                results_simplified_df = pd.concat(
+                    results_simplified[ontology],
+                    ignore_index=True
+                ).sort_values(["clustering_n_clusters", "p.adjust"])
+
+                results_simplified_df.to_pickle(
+                    OUTPUT_DIR / f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{ontology}_simplified_{simplified_cutoff_str}.pkl",
+                )
 
 # %% tags=[]
