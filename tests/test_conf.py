@@ -124,7 +124,9 @@ def test_conf_gtex_clustering_filename_regex():
     assert m.group("corr_method") == "clustermatch_k2"
     assert m.group("clust_method") == "SpectralClustering"
 
-    filename = "gtex_v8_data_muscle_skeletal-var_raw-spearman_full-AgglomerativeClustering.pkl"
+    filename = (
+        "gtex_v8_data_muscle_skeletal-var_raw-spearman_full-AgglomerativeClustering.pkl"
+    )
     m = re.search(pat, filename)
     assert m.group("tissue") == "muscle_skeletal"
     assert m.group("gene_sel_strategy") == "var_raw"
