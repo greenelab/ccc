@@ -1,6 +1,8 @@
 import numpy as np
 from rpy2.robjects.packages import importr, data
 
+from clustermatch.gene_enrich import run_enrich
+
 clusterProfiler = importr("clusterProfiler")
 
 
@@ -32,9 +34,9 @@ def test_run_enrich_original_example():
     assert partition[partition == 7].shape[0] == 237
 
     # run our function
-    # results = run_enrich(
-    #     all_gene_ids, "Some clustering id", partition, "enrichGO", "BP"
-    # )
+    results = run_enrich(
+        all_gene_ids, "Some clustering id", partition, "enrichGO", "BP"
+    )
 
 
 def test_run_enrich_no_enrichment():
