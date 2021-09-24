@@ -115,14 +115,16 @@ display(simplified_cutoff_str)
 
 
 # %% tags=[]
-def run_enrich(all_gene_ids, clustering_id, partition, ontology):
+def run_enrich(all_gene_ids, clustering_id, partition, enrich_function, ontology, simplify_cutoff=None):
     """
     TODO
     """
+    # this modules need to be imported from inside this function (if the function will be
+    # run in different processes, for instance, using ProcessPoolExecutor). Otherwise,
+    # rpy2 raises some weird exceptions
     from rpy2.robjects.packages import importr
     import rpy2.robjects as robjects
     from rpy2.robjects import pandas2ri
-
     pandas2ri.activate()
 
     clusterProfiler = importr("clusterProfiler")
@@ -134,23 +136,23 @@ def run_enrich(all_gene_ids, clustering_id, partition, ontology):
     # create a clusterProfiler-friendly structure to indicate which
     # genes belong to each cluster
     genes_per_cluster = {}
-
     for c in pd.Series(partition).value_counts().index:
         genes_per_cluster[f"C{c:n}"] = [
             g.split(".")[0] for g in all_gene_ids[partition == c]
         ]
+    
     assert len(genes_per_cluster) == n_clusters
     assert sum(map(lambda x: len(set(x)), genes_per_cluster.values())) == n_genes
 
     genes_per_cluster = robjects.ListVector(genes_per_cluster)
 
-    # run clusterprofiler
+    # run clusterProfiler
     ck = clusterProfiler.compareCluster(
         geneClusters=genes_per_cluster,
         OrgDb="org.Hs.eg.db",
         keyType="ENSEMBL",
         universe=all_gene_ids,
-        fun=ENRICH_FUNCTION,
+        fun=enrich_function,
         pAdjustMethod="BH",
         pvalueCutoff=0.05,
         ont=ontology,
@@ -159,34 +161,22 @@ def run_enrich(all_gene_ids, clustering_id, partition, ontology):
 
     results = []
 
-    # save full results
+    # save full results (all enriched terms, even if they are very similar)
     df = ck.slots["compareClusterResult"]
     df["clustering_id"] = clustering_id
     df["clustering_n_clusters"] = n_clusters
     results.append(df)
-    #     df.sort_values("p.adjust").to_pickle(
-    #         OUTPUT_DIR / f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{ontology}_full.pkl",
-    #     )
 
     # save simplified results
-    if ENRICH_FUNCTION in ("enrichGO", "gseGO"):
-        ck = clusterProfiler.simplify(ck, cutoff=SIMPLIFY_CUTOFF)
+    if simplify_cutoff is not None and ENRICH_FUNCTION in ("enrichGO", "gseGO"):
+        ck = clusterProfiler.simplify(ck, cutoff=simplify_cutoff)
         df = ck.slots["compareClusterResult"]
         df["clustering_id"] = clustering_id
         df["clustering_n_clusters"] = n_clusters
         results.append(df)
-    #         df.sort_values("p.adjust").to_pickle(
-    #             OUTPUT_DIR / f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{ontology}_simplified_{simplified_cutoff_str}.pkl",
-    #         )
 
     return tuple(results)
 
-
-# %%
-# data = pd.read_pickle(input_files[1])
-
-# %%
-# data
 
 # %% [markdown]
 # ## Run
@@ -246,7 +236,7 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
 
         # iterate over clustering solutions (partitions) and GO ontologies
         futures = {
-            executor.submit(run_enrich, all_gene_ids, cr_idx, cr.partition, ont): ont
+            executor.submit(run_enrich, all_gene_ids, cr_idx, cr.partition, ENRICH_FUNCTION, ont, SIMPLIFY_CUTOFF): ont
             for cr_idx, cr in clustering_df.sort_values("n_clusters").iterrows()
             for ont in GO_ONTOLOGIES
         }
