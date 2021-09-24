@@ -2,8 +2,10 @@
 # currently installed (options update=TRUE, ask=FALSE in BiocManager::install).
 
 
-default_repo = 'http://cran.us.r-project.org'
+default_repo <- 'http://cran.us.r-project.org'
 
+# install BiocManager but do not update R packages so we keep those installed
+# with conda
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager", repos=default_repo)
 BiocManager::install(version = "3.13", update=FALSE, ask=FALSE)
