@@ -363,9 +363,10 @@ pd.testing.assert_frame_equal(
     data_again,
     check_names=False,  # do not check "name" attribute of index and column
     check_dtype=False,  # do not check dtypes: do not distinguish between int64 and int32, for instance
+    check_categorical=False,
     check_exact=False,
     rtol=0.0,
-    atol=5e-5,
+    atol=5e-4,
 )
 
 # %% [markdown]
