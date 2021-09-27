@@ -119,6 +119,7 @@ def test_conf_gtex_clustering_filename_regex():
 
     filename = "gtex_v8_data_adipose_subcutaneous-var_pc_log2-clustermatch_k2-SpectralClustering.pkl"
     m = re.search(pat, filename)
+    assert m is not None
     assert m.group("tissue") == "adipose_subcutaneous"
     assert m.group("gene_sel_strategy") == "var_pc_log2"
     assert m.group("corr_method") == "clustermatch_k2"
@@ -128,7 +129,36 @@ def test_conf_gtex_clustering_filename_regex():
         "gtex_v8_data_muscle_skeletal-var_raw-spearman_full-AgglomerativeClustering.pkl"
     )
     m = re.search(pat, filename)
+    assert m is not None
     assert m.group("tissue") == "muscle_skeletal"
     assert m.group("gene_sel_strategy") == "var_raw"
     assert m.group("corr_method") == "spearman_full"
     assert m.group("clust_method") == "AgglomerativeClustering"
+
+
+def test_conf_gtex_gene_enrichment_filename_regex():
+    import re
+    from clustermatch import conf
+
+    assert "GENE_ENRICHMENT_FILENAME_PATTERN" in conf.GTEX
+    pat = re.compile(conf.GTEX["GENE_ENRICHMENT_FILENAME_PATTERN"])
+
+    filename = "gtex_v8_data_whole_blood-var_pc_log2-clustermatch-SpectralClustering-enrichGO-BP_full.pkl"
+    m = re.search(pat, filename)
+    assert m is not None
+    assert m.group("tissue") == "whole_blood"
+    assert m.group("gene_sel_strategy") == "var_pc_log2"
+    assert m.group("corr_method") == "clustermatch"
+    assert m.group("clust_method") == "SpectralClustering"
+    assert m.group("enrich_func") == "enrichGO"
+    assert m.group("results_subset") == "BP_full"
+
+    filename = "gtex_v8_data_muscle_skeletal-var_pc_log2-spearman_abs-AgglomerativeClustering-enrichKEGG-MF_simplified_070.pkl"
+    m = re.search(pat, filename)
+    assert m is not None
+    assert m.group("tissue") == "muscle_skeletal"
+    assert m.group("gene_sel_strategy") == "var_pc_log2"
+    assert m.group("corr_method") == "spearman_abs"
+    assert m.group("clust_method") == "AgglomerativeClustering"
+    assert m.group("enrich_func") == "enrichKEGG"
+    assert m.group("results_subset") == "MF_simplified_070"

@@ -81,6 +81,7 @@ GTEX["N_TISSUES"] = 54
 GTEX["RESULTS_DIR"] = Path(RESULTS_DIR, "gtex_v8").resolve()
 
 GTEX["GENE_SELECTION_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_selection").resolve()
+
 GTEX["SIMILARITY_MATRICES_DIR"] = Path(
     GTEX["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
@@ -90,12 +91,17 @@ GTEX[
 # GTEX[
 #     "SIMILARITY_MATRIX_FILENAME_PATTERN"
 # ] = r"gtex_v8_data_(?P<tissue>[0-9a-z_]+)-(?P<gene_sel_strategy>[0-9a-z_]+)-(?P<corr_method>[0-9a-z_]+).pkl"
+
 GTEX["CLUSTERING_DIR"] = Path(GTEX["RESULTS_DIR"], "clustering").resolve()
 GTEX[
     "CLUSTERING_FILENAME_PATTERN"
 ] = r"gtex_v8_data_(?P<tissue>[0-9a-z_]+)-(?P<gene_sel_strategy>[0-9a-z_]+)-(?P<corr_method>[0-9a-z_]+)-(?P<clust_method>[0-9a-zA-Z]+).pkl"
-GTEX["GENE_ENRICHMENT_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_set_enrichment").resolve()
 
+GTEX["GENE_ENRICHMENT_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_set_enrichment").resolve()
+GTEX["GENE_ENRICHMENT_FILENAME_PATTERN"] = (
+    GTEX["CLUSTERING_FILENAME_PATTERN"][:-4]
+    + r"-(?P<enrich_func>[A-Za-z_]+)-(?P<results_subset>[0-9A-Za-z_]+).pkl"
+)
 
 #
 # recount2 (from MultiPLIER)
