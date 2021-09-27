@@ -335,9 +335,6 @@ pd.testing.assert_frame_equal(
     data_again,
     check_names=False,  # do not check "name" attribute of index and column
     check_exact=True,  # since this is a binary format, it should match exactly
-    #     rtol=0.0,
-    #     atol=1e-50,
-    #     check_dtype=False, # do not check dtypes: do not distinguish between int64 and int32, for instance
 )
 
 # %% [markdown]
@@ -364,7 +361,8 @@ data_again.head()
 pd.testing.assert_frame_equal(
     data,
     data_again,
-    check_names=False,
+    check_names=False,  # do not check "name" attribute of index and column
+    check_dtype=False,  # do not check dtypes: do not distinguish between int64 and int32, for instance
     check_exact=False,
     rtol=0.0,
     atol=5e-5,
