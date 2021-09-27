@@ -24,16 +24,14 @@
 
 # %% tags=[]
 import re
+from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from tqdm import tqdm
 
 from clustermatch import conf
-from clustermatch.utils import simplify_string
 
 # %% [markdown] tags=[]
 # # Settings
@@ -50,14 +48,6 @@ ENRICH_FUNCTION = "enrichGO"
 SIMPLIFY_CUTOFF = 0.7
 GO_ONTOLOGIES = ("BP", "CC", "MF")
 
-# %%
-SIMILARITY_MATRICES_DIR = conf.GTEX["SIMILARITY_MATRICES_DIR"]
-display(SIMILARITY_MATRICES_DIR)
-
-# %%
-SIMILARITY_MATRIX_FILENAME_TEMPLATE = conf.GTEX["SIMILARITY_MATRIX_FILENAME_TEMPLATE"]
-display(SIMILARITY_MATRIX_FILENAME_TEMPLATE)
-
 # %% [markdown] tags=[]
 # # Paths
 
@@ -66,13 +56,19 @@ INPUT_DIR = conf.GTEX["CLUSTERING_DIR"]
 display(INPUT_DIR)
 assert INPUT_DIR.exists()
 
+# %%
+# this directory has the input data given to the clustering methods
+SIMILARITY_MATRICES_DIR = conf.GTEX["SIMILARITY_MATRICES_DIR"]
+display(SIMILARITY_MATRICES_DIR)
+
+# %%
+SIMILARITY_MATRIX_FILENAME_TEMPLATE = conf.GTEX["SIMILARITY_MATRIX_FILENAME_TEMPLATE"]
+display(SIMILARITY_MATRIX_FILENAME_TEMPLATE)
+
 # %% tags=[]
 OUTPUT_DIR = conf.GTEX["GENE_ENRICHMENT_DIR"]
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_DIR)
-
-# %%
-OUTPUT_FILENAME_TEMPLATE = f""
 
 # %% [markdown] tags=[]
 # # Get data files
@@ -97,14 +93,6 @@ assert len(input_files) > 0
 
 # %% [markdown] tags=[]
 # # clusterProfiler
-
-# %% tags=[]
-# rprint = robjects.globalenv.find("print")
-# dose = importr('DOSE')
-# clusterProfiler = importr("clusterProfiler")
-# reactomePA = importr("ReactomePA")
-# enrichplot = importr("enrichplot")
-# grdevices = importr("grDevices")
 
 # %% [markdown]
 # ## Define functions
@@ -192,12 +180,6 @@ def run_enrich(
 # %%
 n_partitions_per_file = pd.read_pickle(input_files[0]).shape[0]
 display(n_partitions_per_file)
-
-# %% [markdown]
-# ## Run
-
-# %%
-from collections import defaultdict
 
 # %%
 # the number of tasks is the number of input files times number of partitions per file times 3 (BP, CC, MF)
