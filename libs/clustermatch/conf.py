@@ -102,7 +102,9 @@ GTEX["GENE_ENRICHMENT_FILENAME_PATTERN"] = (
     GTEX["CLUSTERING_FILENAME_PATTERN"][:-4]
     + r"-(?P<enrich_func>[A-Za-z_]+)-(?P<results_subset>[0-9A-Za-z_]+).pkl"
 )
-GTEX["GENE_ENRICHMENT_COMBINED_FILE"] = GTEX["GENE_ENRICHMENT_DIR"] / "gtex_v8_data-gene_set_enrichment.pkl"
+GTEX["GENE_ENRICHMENT_COMBINED_FILE"] = (
+    GTEX["GENE_ENRICHMENT_DIR"] / "gtex_v8_data-gene_set_enrichment.pkl"
+)
 
 #
 # recount2 (from MultiPLIER)
