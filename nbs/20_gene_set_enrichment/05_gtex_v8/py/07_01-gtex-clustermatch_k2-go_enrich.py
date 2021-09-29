@@ -32,6 +32,9 @@ import pandas as pd
 from tqdm import tqdm
 
 from clustermatch import conf
+from clustermatch.log import get_logger
+
+logger = get_logger("gene_enrichment")
 
 # %% [markdown] tags=[]
 # # Settings
@@ -143,17 +146,24 @@ def run_enrich(
     genes_per_cluster = robjects.ListVector(genes_per_cluster)
 
     # run clusterProfiler
-    ck = clusterProfiler.compareCluster(
-        geneClusters=genes_per_cluster,
-        OrgDb="org.Hs.eg.db",
-        keyType="ENSEMBL",
-        universe=all_gene_ids,
-        fun=enrich_function,
-        pAdjustMethod="BH",
-        pvalueCutoff=0.05,
-        ont=ontology,
-        readable=True,
-    )
+    try:
+        ck = clusterProfiler.compareCluster(
+            geneClusters=genes_per_cluster,
+            OrgDb="org.Hs.eg.db",
+            keyType="ENSEMBL",
+            universe=all_gene_ids,
+            fun=enrich_function,
+            pAdjustMethod="BH",
+            pvalueCutoff=0.05,
+            ont=ontology,
+            readable=True,
+        )
+    except RRuntimeError as e:
+        if "No enrichment found in any of gene cluster" not in str(e):
+            raise
+
+        # no enrichment found, return empty tuple
+        return tuple()
 
     results = []
 
@@ -201,6 +211,12 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
         # update pbar description
         pbar.set_description(f"{tissue}/{gene_sel_strategy}")
 
+        # create output filepath template
+        full_output_filename_template = (
+            f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{{ontology}}_full.pkl"
+        )
+        simplified_output_filename_template = f"{clustering_filepath.stem}-{ENRICH_FUNCTION}-{{ontology}}_simplified_{simplified_cutoff_str}.pkl"
+
         # read clustering results
         clustering_df = pd.read_pickle(clustering_filepath)
 
@@ -232,12 +248,29 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
                 cr_idx,
                 cr.partition,
                 ENRICH_FUNCTION,
-                ont,
+                ontology,
                 SIMPLIFY_CUTOFF,
             ): ont
             for cr_idx, cr in clustering_df.sort_values("n_clusters").iterrows()
-            for ont in GO_ONTOLOGIES
+            for ontology in GO_ONTOLOGIES
+            if not (
+                (
+                    OUTPUT_DIR / full_output_filename_template.format(ontology=ontology)
+                ).exists()
+                and (
+                    OUTPUT_DIR
+                    / simplified_output_filename_template.format(ontology=ontology)
+                ).exists()
+            )
         }
+
+        futures_n_expected = int(len(GO_ONTOLOGIES) * clustering_df.shape[0])
+        futures_diff = futures_n_expected - len(futures)
+        if futures_diff > 0:
+            pbar.update(futures_diff)
+
+        if futures_diff == futures_n_expected:
+            continue
 
         # collect results
         results_full = defaultdict(list)
@@ -246,6 +279,10 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
         for task in as_completed(futures):
             ont = futures[task]
             task_results = task.result()
+
+            # continue if no enrichment found
+            if (task_results) == 0:
+                continue
 
             results_full[ont].append(task_results[0])
 
