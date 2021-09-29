@@ -83,7 +83,10 @@ df.head()
 # # QQ plot
 
 # %%
-PERFORMANCE_MEASURE = "fdr"
+CLUSTERMATCH_METHOD = "clustermatch_k2"
+
+# %%
+PERFORMANCE_MEASURE = "rich_factor"
 
 # %%
 QUANTILES = np.linspace(0, 1, 10000)
@@ -95,11 +98,12 @@ df["results_subset"].unique()
 
 # %%
 df_subset = df[
-    #     (df.tissue == "whole_blood")
-    (df.gene_sel_strategy == "var_pc_log2")
+    (np.ones(df.shape[0]).astype(bool))
+    & (df.tissue == "adipose_subcutaneous")
+    & (df.gene_sel_strategy == "var_pc_log2")
     & (df.clust_method == "SpectralClustering")
     & (df.enrich_func == "enrichGO")
-    & (df.results_subset.str.contains("_full"))
+    & (df.results_subset.str.contains("_simplified_"))
 ]
 
 # %%
@@ -141,8 +145,36 @@ fig, ax = plt.subplots(figsize=(10, 8))
 
 sns.scatterplot(
     data=quantiles_df,
+    x="pearson_full",
+    y=CLUSTERMATCH_METHOD,
+    label="vs Pearson (full)",
+    ax=ax,
+)
+
+sns.scatterplot(
+    data=quantiles_df,
+    x="spearman_full",
+    y=CLUSTERMATCH_METHOD,
+    label="vs Spearman (full)",
+    ax=ax,
+)
+
+ax.set_xlabel(None)
+# ax.set_ylabel(None)
+
+min_val = min((quantiles_df.iloc[:, 0].min(), quantiles_df.iloc[:, 1].min()))
+max_val = max((quantiles_df.iloc[:, 0].max(), quantiles_df.iloc[:, 1].max()))
+ax.plot([min_val, max_val], [min_val, max_val], "k", linewidth=0.5)
+
+ax.set_title(f"Gene Ontology ({PERFORMANCE_MEASURE})")
+
+# %%
+fig, ax = plt.subplots(figsize=(10, 8))
+
+sns.scatterplot(
+    data=quantiles_df,
     x="pearson_abs",
-    y="clustermatch",
+    y=CLUSTERMATCH_METHOD,
     label="vs Pearson (abs)",
     ax=ax,
 )
@@ -150,7 +182,7 @@ sns.scatterplot(
 sns.scatterplot(
     data=quantiles_df,
     x="spearman_abs",
-    y="clustermatch",
+    y=CLUSTERMATCH_METHOD,
     label="vs Spearman (abs)",
     ax=ax,
 )
