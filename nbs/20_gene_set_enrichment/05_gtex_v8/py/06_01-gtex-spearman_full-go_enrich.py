@@ -42,7 +42,7 @@ CORRELATION_METHOD_NAME = "spearman_full"
 # %% tags=[]
 # GENE_SELECTION_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # clusterProfiler settings
 ENRICH_FUNCTION = "enrichGO"
 SIMPLIFY_CUTOFF = 0.7
@@ -56,12 +56,12 @@ INPUT_DIR = conf.GTEX["CLUSTERING_DIR"]
 display(INPUT_DIR)
 assert INPUT_DIR.exists()
 
-# %%
+# %% tags=[]
 # this directory has the input data given to the clustering methods
 SIMILARITY_MATRICES_DIR = conf.GTEX["SIMILARITY_MATRICES_DIR"]
 display(SIMILARITY_MATRICES_DIR)
 
-# %%
+# %% tags=[]
 SIMILARITY_MATRIX_FILENAME_TEMPLATE = conf.GTEX["SIMILARITY_MATRIX_FILENAME_TEMPLATE"]
 display(SIMILARITY_MATRIX_FILENAME_TEMPLATE)
 
@@ -73,7 +73,7 @@ display(OUTPUT_DIR)
 # %% [markdown] tags=[]
 # # Get data files
 
-# %%
+# %% tags=[]
 filename_pattern = re.compile(conf.GTEX["CLUSTERING_FILENAME_PATTERN"])
 
 # %% tags=[]
@@ -94,10 +94,10 @@ assert len(input_files) > 0
 # %% [markdown] tags=[]
 # # clusterProfiler
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Define functions
 
-# %%
+# %% tags=[]
 simplified_cutoff_str = f"{SIMPLIFY_CUTOFF:.2f}".replace(".", "")
 display(simplified_cutoff_str)
 
@@ -174,14 +174,14 @@ def run_enrich(
     return tuple(results)
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Run
 
-# %%
+# %% tags=[]
 n_partitions_per_file = pd.read_pickle(input_files[0]).shape[0]
 display(n_partitions_per_file)
 
-# %%
+# %% tags=[]
 # the number of tasks is the number of input files times number of partitions per file times 3 (BP, CC, MF)
 n_tasks = len(input_files) * n_partitions_per_file * 3
 n_tasks = int(n_tasks)
