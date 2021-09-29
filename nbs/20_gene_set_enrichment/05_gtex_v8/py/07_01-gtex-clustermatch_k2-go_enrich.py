@@ -32,9 +32,6 @@ import pandas as pd
 from tqdm import tqdm
 
 from clustermatch import conf
-from clustermatch.log import get_logger
-
-logger = get_logger("gene_enrichment")
 
 # %% [markdown] tags=[]
 # # Settings
@@ -123,6 +120,7 @@ def run_enrich(
     from rpy2.robjects.packages import importr
     import rpy2.robjects as robjects
     from rpy2.robjects import pandas2ri
+    from rpy2.rinterface_lib.embedded import RRuntimeError
 
     pandas2ri.activate()
 
@@ -264,7 +262,10 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
             )
         }
 
+        # FIXME: this n_expected here is horrible
+        #  I leave it here for now
         futures_n_expected = int(len(GO_ONTOLOGIES) * clustering_df.shape[0])
+
         futures_diff = futures_n_expected - len(futures)
         if futures_diff > 0:
             pbar.update(futures_diff)
@@ -281,7 +282,8 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
             task_results = task.result()
 
             # continue if no enrichment found
-            if (task_results) == 0:
+            if len(task_results) == 0:
+                pbar.update(1)
                 continue
 
             results_full[ont].append(task_results[0])
