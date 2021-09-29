@@ -250,7 +250,7 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
                 ENRICH_FUNCTION,
                 ontology,
                 SIMPLIFY_CUTOFF,
-            ): ont
+            ): ontology
             for cr_idx, cr in clustering_df.sort_values("n_clusters").iterrows()
             for ontology in GO_ONTOLOGIES
             if not (
