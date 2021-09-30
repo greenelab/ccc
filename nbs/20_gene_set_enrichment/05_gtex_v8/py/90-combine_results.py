@@ -45,17 +45,17 @@ from clustermatch import conf
 # %% tags=[]
 # GENE_SELECTION_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # # clusterProfiler settings
 # ENRICH_FUNCTION = "enrichGO"
 # SIMPLIFY_CUTOFF = 0.7
 # GO_ONTOLOGIES = ("BP", "CC", "MF")
 
-# %%
+# %% tags=[]
 # SIMILARITY_MATRICES_DIR = conf.GTEX["SIMILARITY_MATRICES_DIR"]
 # display(SIMILARITY_MATRICES_DIR)
 
-# %%
+# %% tags=[]
 # SIMILARITY_MATRIX_FILENAME_TEMPLATE = conf.GTEX["SIMILARITY_MATRIX_FILENAME_TEMPLATE"]
 # display(SIMILARITY_MATRIX_FILENAME_TEMPLATE)
 
@@ -76,7 +76,7 @@ OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 # %% [markdown] tags=[]
 # # Get data files
 
-# %%
+# %% tags=[]
 filename_pattern = re.compile(conf.GTEX["GENE_ENRICHMENT_FILENAME_PATTERN"])
 
 # %% tags=[]
@@ -97,16 +97,16 @@ assert len(input_files) > 0
 # %% [markdown] tags=[]
 # ## Preview data
 
-# %%
+# %% tags=[]
 display(input_files[0])
 
-# %%
+# %% tags=[]
 _tmp_df = pd.read_pickle(input_files[0])
 
-# %%
+# %% tags=[]
 _tmp_df.shape
 
-# %%
+# %% tags=[]
 _tmp_df.sample(n=5, random_state=0)
 
 # %% [markdown] tags=[]
@@ -115,7 +115,7 @@ _tmp_df.sample(n=5, random_state=0)
 # %% [markdown] tags=[]
 # ## Read data, convert dtypes, add new metrics
 
-# %%
+# %% tags=[]
 all_results = []
 
 for f_full in tqdm(input_files, ncols=100):
@@ -176,7 +176,7 @@ for f_full in tqdm(input_files, ncols=100):
 
     all_results.append(f_data)
 
-# %%
+# %% tags=[]
 df = pd.concat(all_results, ignore_index=True)
 
 # to category dtype
@@ -205,49 +205,49 @@ df["bg_ratio"] = df["bg_count"].div(df["bg_total"])
 df["rich_factor"] = df["gene_count"].div(df["bg_count"])
 df["fold_enrich"] = df["gene_ratio"].div(df["bg_ratio"])
 
-# %%
+# %% tags=[]
 df.shape
 
-# %%
+# %% tags=[]
 display(df.dtypes)
 assert df.dtypes.loc["cluster_id"] == "category"
 
-# %%
+# %% tags=[]
 df.sample(n=5)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Some stats
 
-# %%
+# %% tags=[]
 display(df["fdr"].describe())
 assert df["fdr"].min() > 0.0
 assert df["fdr"].max() < 1.0
 
-# %%
+# %% tags=[]
 df["n_clusters"].unique()
 
-# %%
+# %% tags=[]
 df["tissue"].unique()
 
-# %%
+# %% tags=[]
 df["gene_sel_strategy"].unique()
 
-# %%
+# %% tags=[]
 df["corr_method"].unique()
 
-# %%
+# %% tags=[]
 df["clust_method"].unique()
 
-# %%
+# %% tags=[]
 df["results_subset"].unique()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Testing
 
-# %%
+# %% tags=[]
 assert not df.isna().any().any()
 
-# %%
+# %% tags=[]
 # test if values are correctly calculated
 _tmp = df[
     (df.go_term_id == "GO:0035383")
@@ -272,10 +272,10 @@ assert _tmp["bg_ratio"] == 34.0 / 3528.0
 assert _tmp["rich_factor"] == 15.0 / 34.0
 assert _tmp["fold_enrich"] == (15.0 / 329.0) / (34.0 / 3528.0)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Save
 
-# %%
+# %% tags=[]
 import rpy2.robjects as ro
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.conversion import localconverter
@@ -283,53 +283,53 @@ from rpy2.robjects.conversion import localconverter
 saveRDS = ro.r["saveRDS"]
 readRDS = ro.r["readRDS"]
 
-# %%
+# %% tags=[]
 data = df
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Pickle
 
-# %%
+# %% tags=[]
 display(OUTPUT_FILE)
 
-# %%
+# %% tags=[]
 data.to_pickle(OUTPUT_FILE)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## RDS
 
-# %%
+# %% tags=[]
 output_rds_file = OUTPUT_FILE.with_suffix(".rds")
 display(output_rds_file)
 
-# %%
+# %% tags=[]
 with localconverter(ro.default_converter + pandas2ri.converter):
     data_r = ro.conversion.py2rpy(data)
 
-# %%
+# %% tags=[]
 data_r
 
-# %%
+# %% tags=[]
 saveRDS(data_r, str(output_rds_file))
 
-# %%
+# %% tags=[]
 # testing
 data_r = readRDS(str(output_rds_file))
 
-# %%
+# %% tags=[]
 with localconverter(ro.default_converter + pandas2ri.converter):
     data_again = ro.conversion.rpy2py(data_r)
 
     # convert index to int, otherwise it's converted to string
     data_again.index = data_again.index.astype(int)
 
-# %%
+# %% tags=[]
 data_again.shape
 
-# %%
+# %% tags=[]
 data_again.head()
 
-# %%
+# %% tags=[]
 pd.testing.assert_frame_equal(
     data,
     data_again,
@@ -337,27 +337,27 @@ pd.testing.assert_frame_equal(
     check_exact=True,  # since this is a binary format, it should match exactly
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## tsv.gz
 
-# %%
+# %% tags=[]
 output_text_file = OUTPUT_FILE.with_suffix(".tsv.gz")
 display(output_text_file)
 
-# %%
+# %% tags=[]
 data.to_csv(output_text_file, sep="\t", index=False, float_format="%.5e")
 
-# %%
+# %% tags=[]
 # testing
 data_again = pd.read_csv(output_text_file, sep="\t")  # , index_col=0)
 
-# %%
+# %% tags=[]
 data_again.shape
 
-# %%
+# %% tags=[]
 data_again.head()
 
-# %%
+# %% tags=[]
 pd.testing.assert_frame_equal(
     data,
     data_again,
@@ -369,4 +369,4 @@ pd.testing.assert_frame_equal(
     atol=5e-5,
 )
 
-# %%
+# %% tags=[]
