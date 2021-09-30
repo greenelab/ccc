@@ -49,7 +49,6 @@ options = [
 ]
 GENERAL["N_JOBS_LOW"] = next(int(opt) for opt in options if opt is not None)
 
-
 #
 # Manuscript
 #
@@ -60,6 +59,15 @@ if MANUSCRIPT["BASE_DIR"] is not None:
     MANUSCRIPT["CONTENT_DIR"] = Path(MANUSCRIPT["BASE_DIR"], "content").resolve()
     MANUSCRIPT["FIGURES_DIR"] = Path(MANUSCRIPT["CONTENT_DIR"], "images").resolve()
 
+#
+# General configurations
+#
+GENE_SELECTION_STRATEGY_NAME_PATTERN = r"(?P<gene_sel_strategy>[0-9a-z_]+)"
+GTEX_TISSUE_NAME_PATTERN = r"(?P<tissue>[0-9a-z_]+)"
+CORRELATION_METHOD_PATTERN = r"(?P<corr_method>[0-9a-z_]+)"
+CLUSTERING_METHOD_PATTERN = r"(?P<clust_method>[0-9a-zA-Z]+)"
+ENRICH_FUNCTION_PATTERN = r"(?P<enrich_func>[A-Za-z_]+)"
+ENRICH_FUNCTION_PARAMS_PATTERN = r"(?P<results_subset>[0-9A-Za-z_]+)"
 
 #
 # GTEx
@@ -80,30 +88,46 @@ GTEX["N_TISSUES"] = 54
 # Results
 GTEX["RESULTS_DIR"] = Path(RESULTS_DIR, "gtex_v8").resolve()
 
+## Gene selection
 GTEX["GENE_SELECTION_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_selection").resolve()
 
+## Similarity matrices
 GTEX["SIMILARITY_MATRICES_DIR"] = Path(
     GTEX["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
 GTEX[
     "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
 ] = "gtex_v8_data_{tissue}-{gene_sel_strategy}-{corr_method}.pkl"
-# GTEX[
-#     "SIMILARITY_MATRIX_FILENAME_PATTERN"
-# ] = r"gtex_v8_data_(?P<tissue>[0-9a-z_]+)-(?P<gene_sel_strategy>[0-9a-z_]+)-(?P<corr_method>[0-9a-z_]+).pkl"
 
+## Clustering
 GTEX["CLUSTERING_DIR"] = Path(GTEX["RESULTS_DIR"], "clustering").resolve()
-GTEX[
-    "CLUSTERING_FILENAME_PATTERN"
-] = r"gtex_v8_data_(?P<tissue>[0-9a-z_]+)-(?P<gene_sel_strategy>[0-9a-z_]+)-(?P<corr_method>[0-9a-z_]+)-(?P<clust_method>[0-9a-zA-Z]+).pkl"
+GTEX["CLUSTERING_FILENAME_TEMPLATE"] = (
+    GTEX["SIMILARITY_MATRIX_FILENAME_TEMPLATE"][:-4] + "-{clust_method}.pkl"
+)
+GTEX["CLUSTERING_FILENAME_PATTERN"] = GTEX["CLUSTERING_FILENAME_TEMPLATE"].format(
+    tissue=GTEX_TISSUE_NAME_PATTERN,
+    gene_sel_strategy=GENE_SELECTION_STRATEGY_NAME_PATTERN,
+    corr_method=CORRELATION_METHOD_PATTERN,
+    clust_method=CLUSTERING_METHOD_PATTERN,
+)
 GTEX["CLUSTERING_COMBINED_FILE"] = (
     GTEX["CLUSTERING_DIR"] / "gtex_v8_data-clustering.pkl"
 )
 
+## Gene set enrichment analysis
 GTEX["GENE_ENRICHMENT_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_set_enrichment").resolve()
-GTEX["GENE_ENRICHMENT_FILENAME_PATTERN"] = (
-    GTEX["CLUSTERING_FILENAME_PATTERN"][:-4]
-    + r"-(?P<enrich_func>[A-Za-z_]+)-(?P<results_subset>[0-9A-Za-z_]+).pkl"
+GTEX["GENE_ENRICHMENT_FILENAME_TEMPLATE"] = (
+    GTEX["CLUSTERING_FILENAME_TEMPLATE"][:-4] + "-{enrich_func}-{enrich_params}.pkl"
+)
+GTEX["GENE_ENRICHMENT_FILENAME_PATTERN"] = GTEX[
+    "GENE_ENRICHMENT_FILENAME_TEMPLATE"
+].format(
+    tissue=GTEX_TISSUE_NAME_PATTERN,
+    gene_sel_strategy=GENE_SELECTION_STRATEGY_NAME_PATTERN,
+    corr_method=CORRELATION_METHOD_PATTERN,
+    clust_method=CLUSTERING_METHOD_PATTERN,
+    enrich_func=ENRICH_FUNCTION_PATTERN,
+    enrich_params=ENRICH_FUNCTION_PARAMS_PATTERN,
 )
 GTEX["GENE_ENRICHMENT_COMBINED_FILE"] = (
     GTEX["GENE_ENRICHMENT_DIR"] / "gtex_v8_data-gene_set_enrichment.pkl"
@@ -127,10 +151,47 @@ RECOUNT2["DATA_FILE"] = Path(
 # Results
 RECOUNT2["RESULTS_DIR"] = Path(RESULTS_DIR, "recount2").resolve()
 
+## Similarity matrices
 RECOUNT2["SIMILARITY_MATRICES_DIR"] = Path(
     RECOUNT2["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
+RECOUNT2[
+    "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
+] = "recount_data_prep_PLIER-{corr_method}.pkl"
+
+## Clustering
 RECOUNT2["CLUSTERING_DIR"] = Path(RECOUNT2["RESULTS_DIR"], "clustering").resolve()
+RECOUNT2["CLUSTERING_FILENAME_TEMPLATE"] = (
+    RECOUNT2["SIMILARITY_MATRIX_FILENAME_TEMPLATE"][:-4] + "-{clust_method}.pkl"
+)
+RECOUNT2["CLUSTERING_FILENAME_PATTERN"] = RECOUNT2[
+    "CLUSTERING_FILENAME_TEMPLATE"
+].format(
+    corr_method=r"(?P<corr_method>[0-9a-z_]+)",
+    clust_method=r"(?P<clust_method>[0-9a-zA-Z]+)",
+)
+RECOUNT2["CLUSTERING_COMBINED_FILE"] = (
+    RECOUNT2["CLUSTERING_DIR"] / "recount_data_prep_PLIER-clustering.pkl"
+)
+
+## Gene set enrichment analysis
+RECOUNT2["GENE_ENRICHMENT_DIR"] = Path(
+    RECOUNT2["RESULTS_DIR"], "gene_set_enrichment"
+).resolve()
+RECOUNT2["GENE_ENRICHMENT_FILENAME_TEMPLATE"] = (
+    RECOUNT2["CLUSTERING_FILENAME_TEMPLATE"][:-4] + "-{enrich_func}-{enrich_params}.pkl"
+)
+RECOUNT2["GENE_ENRICHMENT_FILENAME_PATTERN"] = RECOUNT2[
+    "GENE_ENRICHMENT_FILENAME_TEMPLATE"
+].format(
+    corr_method=CORRELATION_METHOD_PATTERN,
+    clust_method=CLUSTERING_METHOD_PATTERN,
+    enrich_func=ENRICH_FUNCTION_PATTERN,
+    enrich_params=ENRICH_FUNCTION_PARAMS_PATTERN,
+)
+RECOUNT2["GENE_ENRICHMENT_COMBINED_FILE"] = (
+    RECOUNT2["GENE_ENRICHMENT_DIR"] / "recount_data_prep_PLIER-gene_set_enrichment.pkl"
+)
 
 
 if __name__ == "__main__":

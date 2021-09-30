@@ -162,3 +162,49 @@ def test_conf_gtex_gene_enrichment_filename_regex():
     assert m.group("clust_method") == "AgglomerativeClustering"
     assert m.group("enrich_func") == "enrichKEGG"
     assert m.group("results_subset") == "MF_simplified_070"
+
+
+def test_conf_recount2_clustering_filename_regex():
+    import re
+    from clustermatch import conf
+
+    assert "CLUSTERING_FILENAME_PATTERN" in conf.RECOUNT2
+    pat = re.compile(conf.RECOUNT2["CLUSTERING_FILENAME_PATTERN"])
+
+    filename = "recount_data_prep_PLIER-clustermatch_k2to5-SpectralClustering.pkl"
+    m = re.search(pat, filename)
+    assert m is not None
+    assert m.group("corr_method") == "clustermatch_k2to5"
+    assert m.group("clust_method") == "SpectralClustering"
+
+    filename = "recount_data_prep_PLIER-spearman_abs-AgglomerativeClustering.pkl"
+    m = re.search(pat, filename)
+    assert m is not None
+    assert m.group("corr_method") == "spearman_abs"
+    assert m.group("clust_method") == "AgglomerativeClustering"
+
+
+def test_conf_recount2_gene_enrichment_filename_regex():
+    import re
+    from clustermatch import conf
+
+    assert "GENE_ENRICHMENT_FILENAME_PATTERN" in conf.RECOUNT2
+    pat = re.compile(conf.RECOUNT2["GENE_ENRICHMENT_FILENAME_PATTERN"])
+
+    filename = (
+        "recount_data_prep_PLIER-pearson_full-SpectralClustering-enrichGO-BP_full.pkl"
+    )
+    m = re.search(pat, filename)
+    assert m is not None
+    assert m.group("corr_method") == "pearson_full"
+    assert m.group("clust_method") == "SpectralClustering"
+    assert m.group("enrich_func") == "enrichGO"
+    assert m.group("results_subset") == "BP_full"
+
+    filename = "recount_data_prep_PLIER-clustermatch_k2to5-AgglomerativeClustering-enrichKEGG-MF_simplified_070.pkl"
+    m = re.search(pat, filename)
+    assert m is not None
+    assert m.group("corr_method") == "clustermatch_k2to5"
+    assert m.group("clust_method") == "AgglomerativeClustering"
+    assert m.group("enrich_func") == "enrichKEGG"
+    assert m.group("results_subset") == "MF_simplified_070"
