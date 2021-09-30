@@ -27,7 +27,17 @@ def _get_perc_from_k(k: int) -> list[float]:
 
 
 @njit(cache=True)
-def rank(data):
+def rank(data: np.ndarray) -> np.ndarray:
+    """
+    It returns the ranks of a numpy array. It's an implementation of
+    scipy.stats.rankdata (method="average") that can be compiled by numba.
+
+    Args:
+        data: a 1d array with numeric data.
+
+    Returns:
+        A 1d array with the ranks of the input data.
+    """
     data_sorted_idx = data.argsort()
     data_sorted = data[data_sorted_idx]
 
@@ -105,7 +115,7 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
 @njit(cache=True)
 def _get_range_n_clusters(
     n_features: int, internal_n_clusters: list = None
-) -> tuple[int]:
+) -> np.ndarray:
     """
     Given the number of features it returns a tuple of k values to cluster those
     features into. By default, it generates a tuple of k values from 2 to
@@ -184,7 +194,22 @@ def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
 
 
 @njit(cache=True)
-def cdist_parts(x, y):
+def cdist_parts(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """
+    It implements the same functionality in scipy.spatial.distance.cdist but
+    for clustering partitions, and instead of a distance it returns the adjusted
+    Rand index (ARI). In other words, it mimics this function call:
+
+        cdist(x, y, metric=ari)
+
+    Args:
+        x: a 2d array with m_x clustering partitions in rows and n objects in columns.
+        y: a 2d array with m_y clustering partitions in rows and n objects in columns.
+
+    Returns:
+        A 2d array with m_x rows and m_y columns and the ARI between each partition pair.
+        Each ij entry is equal to ari(x[i], y[j]) for each i and j.
+    """
     res = np.zeros((x.shape[0], y.shape[0]))
 
     for i in range(res.shape[0]):
@@ -195,9 +220,22 @@ def cdist_parts(x, y):
 
 
 @njit(cache=True)
-def get_coords_from_index(n_obj, idx):
+def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     """
-    TODO: finish
+    Given the number of objects and and index, it returns the row/column position
+    of the pairwise matrix. For example, if there are n_obj objects (such as genes),
+    a condensed 1d array can be created with pairwise comparisons between genes,
+    as well as a squared symmetric matrix. This functions receives the number of objects
+    and the index of the condensed array, and returns the coordiates of the squared symmetric
+    matrix.
+
+    Args:
+        n_obj: the number of objects.
+        idx: the index of the condensed pairwise array across all n_obj objects.
+
+    Returns
+        A tuple (i, j) with the coordinates of the squared symmetric matrix
+        equivalent to the condensed array.
     """
     b = 1 - 2 * n_obj
     x = np.floor((-b - np.sqrt(b ** 2 - 8 * idx)) / 2)
@@ -206,19 +244,25 @@ def get_coords_from_index(n_obj, idx):
 
 
 @njit(cache=True, parallel=True)
-def _cm(x, y=None, internal_n_clusters: list = None):
+def _cm(x: np.ndarray, y: np.ndarray = None, internal_n_clusters: list = None) -> np.ndarray:
     """
     This is the main function that computes the Clustermatch coefficient between
     two arrays. This implementation only supports numerical data for
-    optimization purposes, but it can also work with categorical data in the
-    original implementation (https://github.com/sinc-lab/clustermatch).
+    optimization purposes, but the original implementation can also work with
+    categorical data (https://github.com/sinc-lab/clustermatch).
 
     Args:
-        x:
-        y:
-        internal_n_clusters:
+        x: an 1d or 2d numerical array with the data. NaN are not supported.
+          If it is 2d, then the coefficient is computed for each pair of rows.
+        y: an optional 1d numerical array. If x is 1d and y is given, it computes
+          the coefficient between x and y.
+        internal_n_clusters: a list of integer values indicating the number of
+          clusters used to split x and y.
 
-    TODO: finish
+    Returns:
+        A 1d condensed array of pairwise coefficients. It has size (n * (n - 1))
+        / 2, where n is the number of columns in x and y (for example, the
+        number of samples for genes).
     """
     if x.ndim == 1 and y is not None:
         assert x.shape == y.shape
@@ -229,9 +273,6 @@ def _cm(x, y=None, internal_n_clusters: list = None):
         X = x
     else:
         raise ValueError("Wrong combination of parameters x and y")
-
-    # TODO: (future) if x is matrix and y a vector, then
-    #  we can do all rows in x against the vector in y?
 
     # get matrix of partitions for each object pair
     parts = []
@@ -273,12 +314,22 @@ def _cm(x, y=None, internal_n_clusters: list = None):
     return cm_values
 
 
-def cm(x, y=None, internal_n_clusters: list = None):
+def cm(x: np.ndarray, y: np.ndarray = None, internal_n_clusters: list = None):
     """
-    This function is a not-jitted function that can return different value types
-    according to the input given.
+    This function is a wrapper over _cm, a not-jitted (numba) function that can
+    return different value types according to the input given (this is a problem
+    with numba).
 
-    TODO: finish
+    Args:
+        x: same as in _cm function.
+        y: same as in _cm function.
+        internal_n_clusters: same as in _cm function.
+
+    Returns:
+        If x is 2d, then a np.ndarray of size n x n is returned with the
+        coefficient value, where n is the number of rows in x. If only a single
+        coefficient was computed (for example, x and y were given), then a
+        single scalar is returned.
     """
 
     # convert list to numba.types.List, since reflection is deprecated:
@@ -293,8 +344,7 @@ def cm(x, y=None, internal_n_clusters: list = None):
     # run optimized _cm function
     cm_values = _cm(x, y, n_clusters)
 
-    # return an array of values or a single scalar, which depends on the input
-    # data shape
+    # return an array of values or a single scalar
     if cm_values.shape[0] == 1:
         return cm_values[0]
 
