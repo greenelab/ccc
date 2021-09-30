@@ -77,16 +77,26 @@ df = pd.read_pickle(INPUT_FILE)
 df.shape
 
 # %%
-df.head()
+df.columns
+
+# %%
+with pd.option_context(
+    "display.max_rows", None, "display.max_columns", None, "display.max_colwidth", None
+):
+    tmp = df.head()
+    display(tmp)
 
 # %% [markdown]
 # # QQ plot
 
 # %%
-CLUSTERMATCH_METHOD = "clustermatch_k2"
+# CLUSTERMATCH_METHOD = "clustermatch_k2"
+CLUSTERMATCH_METHOD = "clustermatch"
 
 # %%
-PERFORMANCE_MEASURE = "rich_factor"
+# PERFORMANCE_MEASURE = "fdr"
+# PERFORMANCE_MEASURE = "rich_factor"
+PERFORMANCE_MEASURE = "fold_enrich"
 
 # %%
 QUANTILES = np.linspace(0, 1, 10000)
@@ -99,12 +109,16 @@ df["results_subset"].unique()
 # %%
 df_subset = df[
     (np.ones(df.shape[0]).astype(bool))
-    & (df.tissue == "adipose_subcutaneous")
+    & (df.fdr < 0.05)  # only significant results
+    #     & (df.tissue == "adipose_subcutaneous")
     & (df.gene_sel_strategy == "var_pc_log2")
     & (df.clust_method == "SpectralClustering")
     & (df.enrich_func == "enrichGO")
-    & (df.results_subset.str.contains("_simplified_"))
+    & (df.results_subset.str.contains("_full"))
 ]
+
+# %%
+assert df_subset["fdr"].max() < 0.05
 
 # %%
 df_subset.shape
@@ -136,6 +150,9 @@ quantiles_df.shape
 
 # %%
 quantiles_df.head()
+
+# %%
+quantiles_df.tail()
 
 # %%
 quantiles_df.describe()
@@ -197,6 +214,8 @@ ax.plot([min_val, max_val], [min_val, max_val], "k", linewidth=0.5)
 ax.set_title(f"Gene Ontology ({PERFORMANCE_MEASURE})")
 
 # %% [markdown]
+# **UPDATE**
+#
 # Clustermatch (multi pattern) outperforms pearson (linear and abs), although pearson find most significant associations towards the
 # right end of the distribution.
 #
