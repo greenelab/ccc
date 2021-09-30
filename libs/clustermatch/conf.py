@@ -96,6 +96,9 @@ GTEX["CLUSTERING_DIR"] = Path(GTEX["RESULTS_DIR"], "clustering").resolve()
 GTEX[
     "CLUSTERING_FILENAME_PATTERN"
 ] = r"gtex_v8_data_(?P<tissue>[0-9a-z_]+)-(?P<gene_sel_strategy>[0-9a-z_]+)-(?P<corr_method>[0-9a-z_]+)-(?P<clust_method>[0-9a-zA-Z]+).pkl"
+GTEX["CLUSTERING_COMBINED_FILE"] = (
+    GTEX["CLUSTERING_DIR"] / "gtex_v8_data-clustering.pkl"
+)
 
 GTEX["GENE_ENRICHMENT_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_set_enrichment").resolve()
 GTEX["GENE_ENRICHMENT_FILENAME_PATTERN"] = (
