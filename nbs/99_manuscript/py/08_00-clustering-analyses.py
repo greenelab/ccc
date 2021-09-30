@@ -105,11 +105,15 @@ with pd.option_context(
 # plot_data.sort_values(["n_clusters", "corr_method"]).head(20)
 
 # %%
-selected_corr_methods = ["clustermatch", "clustermatch_k2", "spearman_abs", "pearson_abs"]
+selected_corr_methods = [
+    "clustermatch",
+    "clustermatch_k2",
+    "spearman_abs",
+    "pearson_abs",
+]
 
 plot_data = df[
-    (np.ones(df.shape[0]).astype(bool))
-    & (df.corr_method.isin(selected_corr_methods))
+    (np.ones(df.shape[0]).astype(bool)) & (df.corr_method.isin(selected_corr_methods))
 ]
 
 # %%
@@ -135,7 +139,7 @@ sns.catplot(
     kind="point",
     height=5,
     aspect=2,
-#     ax=ax,
+    #     ax=ax,
 )
 
 # ax.set_xlabel(None)
@@ -161,8 +165,7 @@ sns.catplot(
 
 # %%
 plot_data = df[
-    (np.ones(df.shape[0]).astype(bool))
-    & (df.corr_method.isin(selected_corr_methods))
+    (np.ones(df.shape[0]).astype(bool)) & (df.corr_method.isin(selected_corr_methods))
 ]
 
 # %%
@@ -184,7 +187,7 @@ entropy([4364, 636])
 entropy([4960, 40])
 
 # %%
-entropy([1/2, 1/2])
+entropy([1 / 2, 1 / 2])
 
 # %%
 entropy([2500, 2500])
@@ -203,15 +206,22 @@ _compute_score([4364, 636])
 def _get_partition_stats(part):
     return pd.Series(part).value_counts().to_numpy()
 
+
 def _get_max_entropy(part_stats):
     n_clusters = len(part_stats)
-    return entropy([1/n_clusters for i in range(n_clusters)])
+    return entropy([1 / n_clusters for i in range(n_clusters)])
+
 
 def _compute_score(part_stats):
     return entropy(part_stats) / _get_max_entropy(part_stats)
 
-plot_data = plot_data.assign(partition_stats=plot_data["partition"].apply(_get_partition_stats))
-plot_data = plot_data.assign(cluster_score=plot_data["partition_stats"].apply(_compute_score))
+
+plot_data = plot_data.assign(
+    partition_stats=plot_data["partition"].apply(_get_partition_stats)
+)
+plot_data = plot_data.assign(
+    cluster_score=plot_data["partition_stats"].apply(_compute_score)
+)
 
 # %%
 plot_data["cluster_score"].describe()
@@ -231,7 +241,7 @@ sns.catplot(
     kind="point",
     height=5,
     aspect=2,
-#     ax=ax,
+    #     ax=ax,
 )
 
 # ax.set_xlabel(None)
