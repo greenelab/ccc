@@ -5,8 +5,9 @@ All correlation functions in this module are expected to have the same input and
 structure:
 
  * The input is a pandas DataFrame with genes in rows (Ensembl IDs) and samples
-   columns. The values are gene expression data normalized with some technique,
-   but that should not be relevant for the correlation method.
+   in columns. The values are gene expression data normalized with some technique,
+   but that should not be relevant for the correlation method. No empty values
+   are allowed.
 
  * The output is a pandas DataFrame, a symmetric correlation matrix with genes
    in rows and columns (Ensembl IDs), and the values are the correlation
@@ -51,6 +52,9 @@ def spearman(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def clustermatch(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
+    """
+    Compute the Clustermatch coefficient.
+    """
     from scipy.spatial.distance import squareform
     from clustermatch.coef import cm
 
