@@ -27,6 +27,7 @@ import re
 
 import numpy as np
 import pandas as pd
+from statsmodels.stats.multitest import multipletests
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
@@ -131,7 +132,7 @@ for f_full in tqdm(input_files, ncols=100):
             "Description": "go_term_desc",
             "Cluster": "cluster_id",
             "clustering_n_clusters": "n_clusters",
-            "p.adjust": "fdr",
+            "p.adjust": "fdr_per_file",
         }
     )
 
@@ -163,7 +164,8 @@ for f_full in tqdm(input_files, ncols=100):
             "bg_count",
             "bg_total",
             "bg_ratio",
-            "fdr",
+            "pvalue",
+            "fdr_per_file",
         ]
     ]
 
@@ -204,6 +206,11 @@ df["bg_ratio"] = df["bg_count"].div(df["bg_total"])
 # add other metrics
 df["rich_factor"] = df["gene_count"].div(df["bg_count"])
 df["fold_enrich"] = df["gene_ratio"].div(df["bg_ratio"])
+
+# %%
+# adjust for multiple testing across all results
+adj_pval = multipletests(df["pvalue"], alpha=0.05, method="fdr_bh")
+df = df.assign(fdr=adj_pval[1])
 
 # %% tags=[]
 df.shape
