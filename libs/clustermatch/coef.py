@@ -244,7 +244,9 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
 
 
 @njit(cache=True, parallel=True)
-def _cm(x: np.ndarray, y: np.ndarray = None, internal_n_clusters: list = None) -> np.ndarray:
+def _cm(
+    x: np.ndarray, y: np.ndarray = None, internal_n_clusters: list = None
+) -> np.ndarray:
     """
     This is the main function that computes the Clustermatch coefficient between
     two arrays. This implementation only supports numerical data for
