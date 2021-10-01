@@ -182,7 +182,9 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
         similarity_matrix_filename = SIMILARITY_MATRIX_FILENAME_TEMPLATE.format(
             #             tissue=tissue,
             #             gene_sel_strategy=gene_sel_strategy,
-            corr_method=corr_method.split("_")[0] if not corr_method.startswith("clustermatch") else corr_method,
+            corr_method=corr_method.split("_")[0]
+            if not corr_method.startswith("clustermatch")
+            else corr_method,
         )
 
         # get the universe of genes
