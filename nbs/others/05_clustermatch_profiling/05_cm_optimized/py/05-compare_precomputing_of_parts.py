@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown]
-# TODO
+# Compares two different clustermatch implementations: one using precomputation of internal clusterings, and the other one using the original implementation that does not perform such precomputation.
 
 # %% [markdown]
 # # Modules

@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# This file actually does not compare different ari implementations. The name is kept to ease comparison with the previous runs from `05_cm_optimized0`
+# This file actually does not compare different ARI implementations. The name is kept to ease comparison with the previous runs from `05_cm_optimized`
 
 # %% [markdown] tags=[]
 # # Modules
