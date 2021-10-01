@@ -1,9 +1,11 @@
 def run_enrich(
     all_gene_ids,
-    clustering_id,
     partition,
     enrich_function,
     ontology,
+    key_type="ENSEMBL",
+    pvalue_cutoff=0.05,
+    qvalue_cutoff=0.20,
     simplify_cutoff=None,
 ):
     """
@@ -45,13 +47,14 @@ def run_enrich(
         ck = clusterProfiler.compareCluster(
             geneClusters=genes_per_cluster,
             OrgDb="org.Hs.eg.db",
-            keyType="ENSEMBL",
+            keyType=key_type,
             universe=all_gene_ids,
             fun=enrich_function,
             pAdjustMethod="BH",
-            pvalueCutoff=0.50,
+            pvalueCutoff=pvalue_cutoff,
+            qvalueCutoff=qvalue_cutoff,
             ont=ontology,
-            readable=True,
+            readable=True if key_type != "SYMBOL" else False,
         )
     except RRuntimeError as e:
         if "No enrichment found in any of gene cluster" not in str(e):
@@ -60,20 +63,30 @@ def run_enrich(
         # no enrichment found, return empty tuple
         return tuple()
 
+    columns_rename = {
+        "Count": "gene_count",
+        "GeneRatio": "gene_ratio",
+        "BgRatio": "bg_ratio",
+        "ID": "go_term_id",
+        "Description": "go_term_desc",
+        "Cluster": "cluster_id",
+        "p.adjust": "fdr_per_partition",
+    }
+
     results = []
 
     # save full results (all enriched terms, even if they are very similar)
     df = ck.slots["compareClusterResult"]
-    df["clustering_id"] = clustering_id
-    df["clustering_n_clusters"] = n_clusters
+    df["n_clusters"] = n_clusters
+    df = df.rename(columns=columns_rename)
     results.append(df)
 
     # save simplified results
     if simplify_cutoff is not None and enrich_function in ("enrichGO", "gseGO"):
         ck = clusterProfiler.simplify(ck, cutoff=simplify_cutoff)
         df = ck.slots["compareClusterResult"]
-        df["clustering_id"] = clustering_id
-        df["clustering_n_clusters"] = n_clusters
+        df["n_clusters"] = n_clusters
+        df = df.rename(columns=columns_rename)
         results.append(df)
 
     return tuple(results)
