@@ -16,8 +16,8 @@
 # %% [markdown] tags=[]
 # # Description
 
-# %% [markdown] tags=[]
-# TODO
+# %% [markdown]
+# Clustermatch run using a larger number of genes.
 
 # %% [markdown] tags=[]
 # # Modules
