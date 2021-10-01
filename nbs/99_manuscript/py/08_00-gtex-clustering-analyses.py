@@ -36,6 +36,9 @@ from clustermatch import conf
 # %% [markdown] tags=[]
 # # Settings
 
+# %%
+DATASET_CONFIG = conf.GTEX
+
 # %% tags=[]
 # ENRICH_FUNCTION = "enrichGO"
 
@@ -63,7 +66,7 @@ from clustermatch import conf
 # # Paths
 
 # %% tags=[]
-INPUT_FILE = conf.GTEX["CLUSTERING_COMBINED_FILE"]
+INPUT_FILE = DATASET_CONFIG["CLUSTERING_COMBINED_FILE"]
 display(INPUT_FILE)
 assert INPUT_FILE.exists()
 
