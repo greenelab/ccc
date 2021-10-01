@@ -31,11 +31,6 @@ from clustermatch.coef import cm
 # # Data
 
 # %% tags=[]
-import numpy as np
-
-from clustermatch.coef import cm
-
-# %% tags=[]
 n_genes, n_samples = 500, 1000
 
 # %% tags=[]
