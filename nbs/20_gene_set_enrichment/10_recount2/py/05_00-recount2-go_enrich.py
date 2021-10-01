@@ -260,7 +260,7 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
             # full
             results_full_df = pd.concat(
                 results_full[ontology], ignore_index=True
-            ).sort_values(["clustering_n_clusters", "p.adjust"])
+            ).sort_values(["n_clusters", "fdr_per_partition"])
 
             results_full_df.to_pickle(
                 OUTPUT_DIR
@@ -271,7 +271,7 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
             if len(results_simplified) > 0:
                 results_simplified_df = pd.concat(
                     results_simplified[ontology], ignore_index=True
-                ).sort_values(["clustering_n_clusters", "p.adjust"])
+                ).sort_values(["n_clusters", "fdr_per_partition"])
 
                 results_simplified_df.to_pickle(
                     OUTPUT_DIR
