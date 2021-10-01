@@ -219,7 +219,33 @@ def test_corr_clustermatch_basics():
 
 
 def test_corr_clustermatch_outputs_same_as_original_clustermatch():
-    def cm(data):
-        return corr.clustermatch(data, internal_n_clusters=list(range(2, 10 + 1)))
+    # compare with results obtained from the original clustermatch
+    # implementation (https://github.com/sinc-lab/clustermatch) plus some
+    # patches (see README.md in tests/data about clustermatch data).
+    from pathlib import Path
+    from pandas.testing import assert_frame_equal
 
-    _run_tests_against_clustermatch_original_implementation(cm)
+    input_data_dir = Path(__file__).parent / "data"
+
+    # load data
+    data = pd.read_pickle(input_data_dir / "clustermatch-random_data-data.pkl")
+
+    # run new clustermatch implementation.
+    # Here, I fixed the internal number of clusters, since that slightly changed
+    # in the new implementation compared with the original one.
+    corr_mat = corr.clustermatch(data, internal_n_clusters=list(range(2, 10 + 1)))
+
+    expected_corr_matrix = pd.read_pickle(
+        input_data_dir / "clustermatch-random_data-coef.pkl"
+    )
+    expected_corr_matrix = expected_corr_matrix.loc[data.index, data.index]
+
+    assert corr_mat.shape == expected_corr_matrix.shape
+    assert corr_mat.index.tolist() == expected_corr_matrix.index.tolist()
+    assert corr_mat.columns.tolist() == expected_corr_matrix.columns.tolist()
+
+    assert_frame_equal(
+        expected_corr_matrix,
+        corr_mat,
+        check_exact=False,
+    )
