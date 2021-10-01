@@ -91,13 +91,45 @@ input_files = sorted(
         f
         for f in INPUT_DIR.iterdir()
         if (m := re.search(filename_pattern, str(f))) is not None
-        #         and m.group("corr_method") == CORRELATION_METHOD_NAME
     ]
 )
 display(len(input_files))
 display(input_files[:5])
 
 assert len(input_files) > 0
+
+# %% [markdown]
+# # Preview input data
+
+# %% [markdown]
+# ## Clustering results
+
+# %%
+tmp = pd.read_pickle(input_files[0])
+
+# %%
+tmp.shape
+
+# %%
+tmp.head()
+
+# %% [markdown]
+# ## Similarity matrices (input to clustering methods)
+
+# %%
+similarity_matrix_filename = SIMILARITY_MATRIX_FILENAME_TEMPLATE.format(
+    corr_method="clustermatch_k2",
+)
+display(similarity_matrix_filename)
+
+# %%
+tmp = pd.read_pickle(SIMILARITY_MATRICES_DIR / similarity_matrix_filename)
+
+# %%
+tmp.shape
+
+# %%
+tmp.head()
 
 # %% [markdown]
 # # Run
@@ -150,14 +182,14 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
         similarity_matrix_filename = SIMILARITY_MATRIX_FILENAME_TEMPLATE.format(
             #             tissue=tissue,
             #             gene_sel_strategy=gene_sel_strategy,
-            corr_method=corr_method.split("_")[0],
+            corr_method=corr_method.split("_")[0] if not corr_method.startswith("clustermatch") else corr_method,
         )
 
         # get the universe of genes
         all_gene_ids = pd.read_pickle(
             SIMILARITY_MATRICES_DIR / similarity_matrix_filename
         ).index.tolist()
-        all_gene_ids = np.array([g.split(".")[0] for g in all_gene_ids])
+        all_gene_ids = np.array(all_gene_ids)
         assert all_gene_ids.shape[0] == n_genes
 
         # iterate over clustering solutions (partitions) and GO ontologies
@@ -165,11 +197,11 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
             executor.submit(
                 run_enrich,
                 all_gene_ids,
-                cr_idx,
                 cr.partition,
                 ENRICH_FUNCTION,
                 ontology,
-                SIMPLIFY_CUTOFF,
+                key_type="SYMBOL",
+                simplify_cutoff=SIMPLIFY_CUTOFF,
             ): ontology
             for cr_idx, cr in clustering_df.sort_values("n_clusters").iterrows()
             for ontology in GO_ONTOLOGIES
