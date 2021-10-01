@@ -76,6 +76,15 @@ jobs:
           python environment/scripts/setup_data.py --mode testing
 
           if [ "$RUNNER_OS" == "Linux" ]; then
+            # for linux/ubuntu, run the tests once: with numba jit activated
+            # (which is the expected implementation) and with the jit
+            # deactivated (otherwise coverage does not work).
+
+            # numba jit activated
+            pytest -v -rs tests
+
+            # numba jit deactivated + code coverage
+            export NUMBA_DISABLE_JIT=1
             coverage run --source=libs/ -m pytest -v -rs tests
             coverage xml -o coverage.xml
           else
