@@ -37,6 +37,9 @@ from clustermatch import conf
 # %% [markdown] tags=[]
 # # Settings
 
+# %%
+DATASET_CONFIG = conf.GTEX
+
 # %% tags=[]
 # ENRICH_FUNCTION = "enrichGO"
 
@@ -64,12 +67,12 @@ from clustermatch import conf
 # # Paths
 
 # %% tags=[]
-INPUT_DIR = conf.GTEX["CLUSTERING_DIR"]
+INPUT_DIR = DATASET_CONFIG["CLUSTERING_DIR"]
 display(INPUT_DIR)
 assert INPUT_DIR.exists()
 
 # %% tags=[]
-OUTPUT_FILE = conf.GTEX["CLUSTERING_COMBINED_FILE"]
+OUTPUT_FILE = DATASET_CONFIG["CLUSTERING_COMBINED_FILE"]
 display(OUTPUT_FILE)
 
 OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -78,7 +81,7 @@ OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 # # Get data files
 
 # %% tags=[]
-filename_pattern = re.compile(conf.GTEX["CLUSTERING_FILENAME_PATTERN"])
+filename_pattern = re.compile(DATASET_CONFIG["CLUSTERING_FILENAME_PATTERN"])
 
 # %% tags=[]
 # get input data files according to Settings
