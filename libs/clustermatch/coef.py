@@ -300,16 +300,7 @@ def _cm(
             max_ari = np.nan
         else:
             comp_values = cdist_parts(obji_parts, objj_parts)
-
-            # max_pos = np.unravel_index(comp_values.argmax(), comp_values.shape)
             max_ari = np.amax(comp_values)
-            # max_pos = np.where(comp_values == max_ari)
-            # max_ari = comp_values[max_pos]
-
-            # TODO: use this to return stats
-            # get the partition in obj1 and the partition in obj2 that maximized ari
-            # obj1_max_part = obji_parts[max_pos[0]]
-            # obj2_max_part = objj_parts[max_pos[1]]
 
         cm_values[idx] = max_ari
 
