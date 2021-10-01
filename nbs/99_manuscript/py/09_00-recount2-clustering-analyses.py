@@ -250,4 +250,84 @@ sns.catplot(
 
 # ax.set_title(f"Gene Ontology ({PERFORMANCE_MEASURE})")
 
+# %% [markdown]
+# # Compare different corr methods
+
+# %%
+from collections import defaultdict
+from sklearn.metrics import adjusted_rand_score as ari
+
+# %%
+df[(df["corr_method"] == "clustermatch_k2") & (df["n_clusters"] == 2)].iloc[0][
+    "partition"
+]
+
+# %%
+df.head()
+
+# %%
+x = df[(df["corr_method"] == "clustermatch_k2") & (df["n_clusters"] == 2)].iloc[0][
+    "partition"
+]
+
+y = df[(df["corr_method"] == "pearson_abs") & (df["n_clusters"] == 2)].iloc[0][
+    "partition"
+]
+
+ari(x, y)
+
+# %%
+all_methods = df["corr_method"].unique()
+display(all_methods)
+
+# %%
+all_k_values = df["n_clusters"].unique()
+display(all_methods)
+
+# %%
+data = df.set_index(["corr_method", "n_clusters"]).sort_index()
+
+# %%
+data.loc[("clustermatch_k2", 2), "partition"]
+
+
+# %%
+def _get_part(method_name, k):
+    tmp = data.loc[(method_name, k), "partition"]
+    #     assert tmp.shape[0] == 1
+    return tmp  # .iloc[0]["partition"]
+
+
+# %%
+sim_mat = defaultdict(list)
+
+for k in all_k_values:
+    for i in range(len(all_methods) - 1):
+        mi = all_methods[i]
+        mi_part = _get_part(mi, k)
+
+        for j in range(i + 1, len(all_methods)):
+            mj = all_methods[j]
+            mj_part = _get_part(mj, k)
+
+            sim_mat[k].append(ari(mi_part, mj_part))
+
+# %%
+from scipy.spatial.distance import squareform
+
+# %%
+sim_mat[3]
+
+# %%
+k = 2
+
+smat = squareform(sim_mat[k])
+np.fill_diagonal(smat, 1.0)
+smat = pd.DataFrame(smat, index=all_methods, columns=all_methods)
+
+# %%
+g = sns.clustermap(smat, annot=True)
+g.fig.suptitle(f"$k$={k}")
+g.fig.subplots_adjust(top=0.9)
+
 # %%
