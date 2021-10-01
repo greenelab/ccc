@@ -139,8 +139,8 @@ for f_full in tqdm(input_files, ncols=100):
         ]
     ]
 
-#     f_data["tissue"] = metadata.group("tissue")
-#     f_data["gene_sel_strategy"] = metadata.group("gene_sel_strategy")
+    #     f_data["tissue"] = metadata.group("tissue")
+    #     f_data["gene_sel_strategy"] = metadata.group("gene_sel_strategy")
     f_data["corr_method"] = metadata.group("corr_method")
     f_data["clust_method"] = metadata.group("clust_method")
 
