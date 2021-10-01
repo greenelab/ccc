@@ -215,6 +215,10 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
 
             pbar.update(1)
 
+        if len(results_full) == 0:
+            # no significant results, continue
+            continue
+            
         # merge and serve
         pbar.set_description(f"{corr_method}/saving")
 
