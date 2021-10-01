@@ -49,7 +49,7 @@ def run_enrich(
             universe=all_gene_ids,
             fun=enrich_function,
             pAdjustMethod="BH",
-            pvalueCutoff=0.05,
+            pvalueCutoff=0.50,
             ont=ontology,
             readable=True,
         )
