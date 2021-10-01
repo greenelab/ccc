@@ -33,8 +33,7 @@ index 9f7d06c..07e8192 100644
 
 Then I moved to the git root directory and executed the following commands in ipython:
 
-
-THIS IS WITH RANDOM DATA WITHOUT NANS
+### Random data without NaN
 ```python
 from pathlib import Path
 
@@ -57,6 +56,7 @@ cm_sim_matrix.to_pickle(OUTPUT_DIR / "clustermatch-random_data-coef.pkl")
 
 
 THIS IS WITH THE ORIGINAL DATA WITH NANS
+### Tomato dataset used in the original clustermatch implementation (contains NaN)
 ```python
 from pathlib import Path
 
