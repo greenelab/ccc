@@ -37,7 +37,7 @@ from clustermatch import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 DATASET_CONFIG = conf.RECOUNT2
 
 # %% [markdown] tags=[]
@@ -103,18 +103,18 @@ for f_full in tqdm(input_files, ncols=100):
     f_name = f_full.name
 
     f_data = pd.read_pickle(f_full)
-    f_data = f_data.rename(
-        columns={
-            "Count": "gene_count",
-            "GeneRatio": "gene_ratio",
-            "BgRatio": "bg_ratio",
-            "ID": "go_term_id",
-            "Description": "go_term_desc",
-            "Cluster": "cluster_id",
-            "clustering_n_clusters": "n_clusters",
-            "p.adjust": "fdr_per_file",
-        }
-    )
+    # f_data = f_data.rename(
+    # columns={
+    # "Count": "gene_count",
+    # "GeneRatio": "gene_ratio",
+    # "BgRatio": "bg_ratio",
+    # "ID": "go_term_id",
+    # "Description": "go_term_desc",
+    # "Cluster": "cluster_id",
+    # "clustering_n_clusters": "n_clusters",
+    # "p.adjust": "fdr_per_file",
+    # }
+    # )
 
     # genes in cluster
     f_data = f_data.assign(
@@ -145,16 +145,16 @@ for f_full in tqdm(input_files, ncols=100):
             "bg_total",
             "bg_ratio",
             "pvalue",
-            "fdr_per_file",
+            "fdr_per_partition",
         ]
     ]
 
-    f_data["tissue"] = metadata.group("tissue")
-    f_data["gene_sel_strategy"] = metadata.group("gene_sel_strategy")
+    # f_data["tissue"] = metadata.group("tissue")
+    # f_data["gene_sel_strategy"] = metadata.group("gene_sel_strategy")
     f_data["corr_method"] = metadata.group("corr_method")
     f_data["clust_method"] = metadata.group("clust_method")
     f_data["enrich_func"] = metadata.group("enrich_func")
-    f_data["results_subset"] = metadata.group("results_subset")
+    f_data["enrich_params"] = metadata.group("enrich_params")
 
     all_results.append(f_data)
 
@@ -165,12 +165,12 @@ df = pd.concat(all_results, ignore_index=True)
 df["cluster_id"] = df["cluster_id"].astype("category")
 df["go_term_id"] = df["go_term_id"].astype("category")
 df["go_term_desc"] = df["go_term_desc"].astype("category")
-df["tissue"] = df["tissue"].astype("category")
-df["gene_sel_strategy"] = df["gene_sel_strategy"].astype("category")
+# df["tissue"] = df["tissue"].astype("category")
+# df["gene_sel_strategy"] = df["gene_sel_strategy"].astype("category")
 df["corr_method"] = df["corr_method"].astype("category")
 df["clust_method"] = df["clust_method"].astype("category")
 df["enrich_func"] = df["enrich_func"].astype("category")
-df["results_subset"] = df["results_subset"].astype("category")
+df["enrich_params"] = df["enrich_params"].astype("category")
 
 # convert to int32
 df["n_clusters"] = df["n_clusters"].astype("int32")
@@ -187,7 +187,7 @@ df["bg_ratio"] = df["bg_count"].div(df["bg_total"])
 df["rich_factor"] = df["gene_count"].div(df["bg_count"])
 df["fold_enrich"] = df["gene_ratio"].div(df["bg_ratio"])
 
-# %%
+# %% tags=[]
 # adjust for multiple testing across all results
 adj_pval = multipletests(df["pvalue"], alpha=0.05, method="fdr_bh")
 df = df.assign(fdr=adj_pval[1])
@@ -214,10 +214,10 @@ assert df["fdr"].max() < 1.0
 df["n_clusters"].unique()
 
 # %% tags=[]
-df["tissue"].unique()
+# df["tissue"].unique()
 
 # %% tags=[]
-df["gene_sel_strategy"].unique()
+# df["gene_sel_strategy"].unique()
 
 # %% tags=[]
 df["corr_method"].unique()
@@ -226,7 +226,7 @@ df["corr_method"].unique()
 df["clust_method"].unique()
 
 # %% tags=[]
-df["results_subset"].unique()
+df["enrich_params"].unique()
 
 # %% [markdown] tags=[]
 # ## Testing
@@ -236,28 +236,28 @@ assert not df.isna().any().any()
 
 # %% tags=[]
 # test if values are correctly calculated
-_tmp = df[
-    (df.go_term_id == "GO:0035383")
-    & (df.n_clusters == 65)
-    & (df.cluster_id == "C21")
-    & (df.tissue == "adipose_subcutaneous")
-    & (df.gene_sel_strategy == "var_pc_log2")
-    & (df.corr_method == "clustermatch")
-    & (df.clust_method == "SpectralClustering")
-    & (df.enrich_func == "enrichGO")
-    & (df.results_subset == "BP_full")
-]
-assert _tmp.shape[0] == 1
-_tmp = _tmp.iloc[0]
-
-assert _tmp["gene_count"] == 15
-assert _tmp["gene_total"] == 329
-assert _tmp["gene_ratio"] == 15.0 / 329.0
-assert _tmp["bg_count"] == 34
-assert _tmp["bg_total"] == 3528
-assert _tmp["bg_ratio"] == 34.0 / 3528.0
-assert _tmp["rich_factor"] == 15.0 / 34.0
-assert _tmp["fold_enrich"] == (15.0 / 329.0) / (34.0 / 3528.0)
+# _tmp = df[
+#    (df.go_term_id == "GO:0035383")
+#    & (df.n_clusters == 65)
+#    & (df.cluster_id == "C21")
+#    # & (df.tissue == "adipose_subcutaneous")
+#    # & (df.gene_sel_strategy == "var_pc_log2")
+#    & (df.corr_method == "clustermatch")
+#    & (df.clust_method == "SpectralClustering")
+#    & (df.enrich_func == "enrichGO")
+#    & (df.enrich_params == "BP_full")
+# ]
+# assert _tmp.shape[0] == 1
+# _tmp = _tmp.iloc[0]
+#
+# assert _tmp["gene_count"] == 15
+# assert _tmp["gene_total"] == 329
+# assert _tmp["gene_ratio"] == 15.0 / 329.0
+# assert _tmp["bg_count"] == 34
+# assert _tmp["bg_total"] == 3528
+# assert _tmp["bg_ratio"] == 34.0 / 3528.0
+# assert _tmp["rich_factor"] == 15.0 / 34.0
+# assert _tmp["fold_enrich"] == (15.0 / 329.0) / (34.0 / 3528.0)
 
 # %% [markdown] tags=[]
 # # Save

@@ -38,7 +38,7 @@ from clustermatch.gene_enrich import run_enrich
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 DATASET_CONFIG = conf.RECOUNT2
 
 # %% tags=[]
@@ -48,7 +48,7 @@ DATASET_CONFIG = conf.RECOUNT2
 # %% tags=[]
 # GENE_SELECTION_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # clusterProfiler settings
 ENRICH_FUNCTION = "enrichGO"
 SIMPLIFY_CUTOFF = 0.7
@@ -62,12 +62,12 @@ INPUT_DIR = DATASET_CONFIG["CLUSTERING_DIR"]
 display(INPUT_DIR)
 assert INPUT_DIR.exists()
 
-# %%
+# %% tags=[]
 # this directory has the input data given to the clustering methods
 SIMILARITY_MATRICES_DIR = DATASET_CONFIG["SIMILARITY_MATRICES_DIR"]
 display(SIMILARITY_MATRICES_DIR)
 
-# %%
+# %% tags=[]
 SIMILARITY_MATRIX_FILENAME_TEMPLATE = DATASET_CONFIG[
     "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
 ]
@@ -81,7 +81,7 @@ display(OUTPUT_DIR)
 # %% [markdown] tags=[]
 # # Get data files
 
-# %%
+# %% tags=[]
 filename_pattern = re.compile(DATASET_CONFIG["CLUSTERING_FILENAME_PATTERN"])
 
 # %% tags=[]
@@ -98,51 +98,51 @@ display(input_files[:5])
 
 assert len(input_files) > 0
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Preview input data
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Clustering results
 
-# %%
+# %% tags=[]
 tmp = pd.read_pickle(input_files[0])
 
-# %%
+# %% tags=[]
 tmp.shape
 
-# %%
+# %% tags=[]
 tmp.head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Similarity matrices (input to clustering methods)
 
-# %%
+# %% tags=[]
 similarity_matrix_filename = SIMILARITY_MATRIX_FILENAME_TEMPLATE.format(
     corr_method="clustermatch_k2",
 )
 display(similarity_matrix_filename)
 
-# %%
+# %% tags=[]
 tmp = pd.read_pickle(SIMILARITY_MATRICES_DIR / similarity_matrix_filename)
 
-# %%
+# %% tags=[]
 tmp.shape
 
-# %%
+# %% tags=[]
 tmp.head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Run
 
-# %%
+# %% tags=[]
 simplified_cutoff_str = f"{SIMPLIFY_CUTOFF:.2f}".replace(".", "")
 display(simplified_cutoff_str)
 
-# %%
+# %% tags=[]
 n_partitions_per_file = pd.read_pickle(input_files[0]).shape[0]
 display(n_partitions_per_file)
 
-# %%
+# %% tags=[]
 # the number of tasks is the number of input files times number of partitions per file times 3 (BP, CC, MF)
 n_tasks = len(input_files) * n_partitions_per_file * 3
 n_tasks = int(n_tasks)
