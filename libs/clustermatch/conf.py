@@ -67,7 +67,7 @@ GTEX_TISSUE_NAME_PATTERN = r"(?P<tissue>[0-9a-z_]+)"
 CORRELATION_METHOD_PATTERN = r"(?P<corr_method>[0-9a-z_]+)"
 CLUSTERING_METHOD_PATTERN = r"(?P<clust_method>[0-9a-zA-Z]+)"
 ENRICH_FUNCTION_PATTERN = r"(?P<enrich_func>[A-Za-z_]+)"
-ENRICH_FUNCTION_PARAMS_PATTERN = r"(?P<results_subset>[0-9A-Za-z_]+)"
+ENRICH_FUNCTION_PARAMS_PATTERN = r"(?P<enrich_params>[0-9A-Za-z_]+)"
 
 #
 # GTEx
