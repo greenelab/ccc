@@ -132,6 +132,24 @@ entrez_gene_ids = entrez_gene_ids.rename(
 )
 
 # %% [markdown]
+# # Merge
+
+# %%
+gene_mappings = pd.merge(
+    data[["gene_ens_id_v", "gene_ens_id"]],
+    entrez_gene_ids,
+    left_on="gene_ens_id",
+    right_on="ensembl_id",
+    how="inner"
+)[["gene_ens_id_v", "ensembl_id", "entrez_id"]]
+
+# %%
+gene_mappings.shape
+
+# %%
+gene_mappings.head()
+
+# %% [markdown]
 # # Save
 
 # %% tags=[]
@@ -139,6 +157,6 @@ output_filename = conf.GTEX["DATA_DIR"] / "gtex_entrez_gene_ids_mappings.pkl"
 display(output_filename)
 
 # %% tags=[]
-entrez_gene_ids.to_pickle(output_filename)
+gene_mappings.to_pickle(output_filename)
 
 # %%
