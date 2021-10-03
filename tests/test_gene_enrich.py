@@ -527,6 +527,43 @@ def test_run_enrich_enrichpathway_example():
     )
 
 
+def test_run_enrich_enrichpathway_example_no_enrichment():
+    pandas2ri.deactivate()
+
+    # example taken from here:
+    # https://yulab-smu.top/biomedical-knowledge-mining-book/reactomepa.html
+    gene_data = data(dose).fetch("geneList")["geneList"]
+
+    # get gene names (Entrez IDs)
+    gene_names = np.array(gene_data.names)
+    assert np.unique(gene_names).shape[0] == gene_names.shape[0]  # unique
+
+    gene_values = np.array(gene_data)
+    gene_names = gene_names[np.abs(gene_values) <= 1.5]
+    assert gene_names.shape[0] == 11982
+
+    # take a random group
+    gene_group_cluster = np.random.rand(gene_names.shape[0]) > 0.5
+    gene = gene_names[gene_group_cluster]
+
+    # create a "gene partition"
+    gene_partition = np.zeros(gene_names.shape[0])
+    gene_partition[np.isin(gene_names, gene)] = 1
+    np.testing.assert_array_equal(np.unique(gene_partition), np.array([0, 1]))
+    assert gene_partition[gene_partition == 1].shape[0] == gene.shape[0]
+
+    # run
+    results = run_enrich(
+        gene_names,
+        "ENTREZID",
+        gene_partition,
+        "enrichPathway",
+        "human",
+        pvalue_cutoff=0.01,
+    )
+    assert results is None
+
+
 def test_run_enrich_enrichkegg_example_keytype_is_not_entrezid():
     pandas2ri.deactivate()
 

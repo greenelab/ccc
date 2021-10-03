@@ -143,7 +143,7 @@ def run_enrich(
             raise
 
         # no enrichment found, return empty tuple
-        return tuple()
+        return None
 
     # results = []
 
