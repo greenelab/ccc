@@ -269,7 +269,7 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
                 pbar.update(1)
                 continue
 
-            results_full.append(task_results[0])
+            results_full.append(task_results)
 
             pbar.update(1)
 
