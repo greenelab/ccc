@@ -10,6 +10,7 @@ COLUMNS_RENAME = {
     "Cluster": "cluster_id",
     "p.adjust": "pvalue_adjust",
     "geneID": "gene_id",
+    "ONTOLOGY": "ontology",
 }
 
 
@@ -29,6 +30,14 @@ def _get_dataframe(ck, n_clusters):
         bg_count=df["bg_ratio"].apply(lambda x: int(x.split("/")[0])),
         bg_total=df["bg_ratio"].apply(lambda x: int(x.split("/")[1])),
     )
+
+    # convert ratios to numbers
+    df["gene_ratio"] = df["gene_count"].div(df["gene_total"])
+    df["bg_ratio"] = df["bg_count"].div(df["bg_total"])
+
+    # # add other metrics
+    df["rich_factor"] = df["gene_count"].div(df["bg_count"])
+    df["fold_enrich"] = df["gene_ratio"].div(df["bg_ratio"])
 
     return df
 
@@ -72,11 +81,13 @@ def run_enrich(
     genes_per_cluster = {}
     for c in pd.Series(partition).value_counts().index:
         genes_per_cluster[f"C{c:n}"] = [
+            # FIXME: this split assumes Ensembl IDs, but should harm with other
+            #  formats as long as they don't have dots
             g.split(".")[0] for g in all_gene_ids[partition == c]
         ]
 
     assert len(genes_per_cluster) == n_clusters
-    assert sum(map(lambda x: len(set(x)), genes_per_cluster.values())) == n_genes
+    assert sum(map(lambda x: len(set(x)), genes_per_cluster.values())) == n_genes, "Gene IDs are not unique inside clusters"
 
     genes_per_cluster = robjects.ListVector(genes_per_cluster)
 
