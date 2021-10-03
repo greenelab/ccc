@@ -38,7 +38,7 @@ def run_enrich(
     key_type,
     partition,
     enrich_function,
-    ontology,
+    enrich_params,
     pvalue_cutoff=0.05,
     qvalue_cutoff=0.20,
     simplify_cutoff=None,
@@ -94,7 +94,7 @@ def run_enrich(
     if enrich_function == ENRICH_GO_FUNC_NAME:
         compare_cluster_arguments.update(
             {
-                "ont": ontology,
+                "ont": enrich_params,
                 "readable": True if key_type != "SYMBOL" else False,
                 "OrgDb": "org.Hs.eg.db",
             }
@@ -104,6 +104,8 @@ def run_enrich(
             raise ValueError("Input genes must be Entrez gene IDs")
 
         del compare_cluster_arguments["keyType"]
+
+        compare_cluster_arguments["organism"] = enrich_params
 
     try:
         ck = clusterProfiler.compareCluster(**compare_cluster_arguments)
