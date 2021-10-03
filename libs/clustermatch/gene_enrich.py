@@ -50,7 +50,7 @@ def run_enrich(
     enrich_params,
     pvalue_cutoff=0.05,
     qvalue_cutoff=0.20,
-    simplify_cutoff=None,
+    # simplify_cutoff=None,
 ):
     """
     TODO
@@ -83,11 +83,14 @@ def run_enrich(
         genes_per_cluster[f"C{c:n}"] = [
             # FIXME: this split assumes Ensembl IDs, but should harm with other
             #  formats as long as they don't have dots
-            g.split(".")[0] for g in all_gene_ids[partition == c]
+            g.split(".")[0]
+            for g in all_gene_ids[partition == c]
         ]
 
     assert len(genes_per_cluster) == n_clusters
-    assert sum(map(lambda x: len(set(x)), genes_per_cluster.values())) == n_genes, "Gene IDs are not unique inside clusters"
+    assert (
+        sum(map(lambda x: len(set(x)), genes_per_cluster.values())) == n_genes
+    ), "Gene IDs are not unique inside clusters"
 
     genes_per_cluster = robjects.ListVector(genes_per_cluster)
 
@@ -127,19 +130,19 @@ def run_enrich(
         # no enrichment found, return empty tuple
         return tuple()
 
-    results = []
+    # results = []
 
     # save full results (all enriched terms, even if they are very similar)
     df = _get_dataframe(ck, n_clusters)
-    results.append(df)
+    # results.append(df)
 
-    # save simplified results
-    if simplify_cutoff is not None and enrich_function in (
-        ENRICH_GO_FUNC_NAME,
-        "gseGO",
-    ):
-        ck = clusterProfiler.simplify(ck, cutoff=simplify_cutoff)
-        df = _get_dataframe(ck, n_clusters)
-        results.append(df)
+    # # save simplified results
+    # if simplify_cutoff is not None and enrich_function in (
+    #     ENRICH_GO_FUNC_NAME,
+    #     "gseGO",
+    # ):
+    #     ck = clusterProfiler.simplify(ck, cutoff=simplify_cutoff)
+    #     df = _get_dataframe(ck, n_clusters)
+    #     results.append(df)
 
-    return tuple(results)
+    return df
