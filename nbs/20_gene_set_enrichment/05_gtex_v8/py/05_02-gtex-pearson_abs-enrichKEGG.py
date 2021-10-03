@@ -214,19 +214,35 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
         )
 
         # get the universe of genes
-        all_gene_ids = pd.read_pickle(
+        all_gene_ens_ids = pd.read_pickle(
             SIMILARITY_MATRICES_DIR / similarity_matrix_filename
         ).index.tolist()
 
         # convert gene ensembl ids to entrez and create clustering partition mask
-        partition_mask = np.array(
-            [True if x in gene_id_maps else False for x in all_gene_ids]
-        )
-        all_gene_ids = [gene_id_maps[x] for x in all_gene_ids if x in gene_id_maps]
+        partition_mask = []
+        all_gene_ids = []
+        entrez_ids_added = set()  # this is faster
 
+        for x in all_gene_ens_ids:
+            if x not in gene_id_maps:
+                partition_mask.append(False)
+                continue
+
+            new_entrez_id = gene_id_maps[x]
+
+            # TODO: maybe this avoiding of repeated gene ids is not necessary?
+            # do not add repeated ids
+            if new_entrez_id in entrez_ids_added:
+                partition_mask.append(False)
+                continue
+
+            all_gene_ids.append(new_entrez_id)
+            entrez_ids_added.add(new_entrez_id)
+            partition_mask.append(True)
+
+        partition_mask = np.array(partition_mask, dtype=bool)
         all_gene_ids = np.array(all_gene_ids)
         assert np.unique(all_gene_ids).shape[0] == all_gene_ids.shape[0]
-
         assert all_gene_ids.shape[0] == np.sum(partition_mask)
 
         # iterate over clustering solutions (partitions) and GO ontologies
