@@ -125,31 +125,31 @@ for f_full in tqdm(input_files, ncols=100):
     f_name = f_full.name
 
     f_data = pd.read_pickle(f_full)
-#     f_data = f_data.rename(
-#         columns={
-#             "Count": "gene_count",
-#             "GeneRatio": "gene_ratio",
-#             "BgRatio": "bg_ratio",
-#             "ID": "go_term_id",
-#             "Description": "go_term_desc",
-#             "Cluster": "cluster_id",
-#             "clustering_n_clusters": "n_clusters",
-#             "p.adjust": "fdr_per_file",
-#         }
-#     )
+    #     f_data = f_data.rename(
+    #         columns={
+    #             "Count": "gene_count",
+    #             "GeneRatio": "gene_ratio",
+    #             "BgRatio": "bg_ratio",
+    #             "ID": "go_term_id",
+    #             "Description": "go_term_desc",
+    #             "Cluster": "cluster_id",
+    #             "clustering_n_clusters": "n_clusters",
+    #             "p.adjust": "fdr_per_file",
+    #         }
+    #     )
 
-#     # genes in cluster
-#     f_data = f_data.assign(
-#         gene_total=f_data["gene_ratio"].apply(lambda x: int(x.split("/")[1]))
-#     )
+    #     # genes in cluster
+    #     f_data = f_data.assign(
+    #         gene_total=f_data["gene_ratio"].apply(lambda x: int(x.split("/")[1]))
+    #     )
 
-#     # background genes
-#     f_data = f_data.assign(
-#         bg_count=f_data["bg_ratio"].apply(lambda x: int(x.split("/")[0]))
-#     )
-#     f_data = f_data.assign(
-#         bg_total=f_data["bg_ratio"].apply(lambda x: int(x.split("/")[1]))
-#     )
+    #     # background genes
+    #     f_data = f_data.assign(
+    #         bg_count=f_data["bg_ratio"].apply(lambda x: int(x.split("/")[0]))
+    #     )
+    #     f_data = f_data.assign(
+    #         bg_total=f_data["bg_ratio"].apply(lambda x: int(x.split("/")[1]))
+    #     )
 
     # add metadata
     metadata = re.search(filename_pattern, f_name)
@@ -186,8 +186,8 @@ df = pd.concat(all_results, ignore_index=True)
 
 # to category dtype
 df["cluster_id"] = df["cluster_id"].astype("category")
-df["term_id"] = df["go_term_id"].astype("category")
-df["term_desc"] = df["go_term_desc"].astype("category")
+df["term_id"] = df["term_id"].astype("category")
+df["term_desc"] = df["term_desc"].astype("category")
 df["tissue"] = df["tissue"].astype("category")
 df["gene_sel_strategy"] = df["gene_sel_strategy"].astype("category")
 df["corr_method"] = df["corr_method"].astype("category")
