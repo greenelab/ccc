@@ -117,7 +117,7 @@ df_subset = df[
     & (df.gene_sel_strategy == "var_pc_log2")
     & (df.clust_method == "SpectralClustering")
     & (df.enrich_func == "enrichKEGG")
-#     & (df.enrich_params.str.contains("_full"))
+    #     & (df.enrich_params.str.contains("_full"))
 ]
 
 # %%
