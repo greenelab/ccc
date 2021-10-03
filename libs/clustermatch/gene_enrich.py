@@ -1,4 +1,3 @@
-
 ENRICH_GO_FUNC_NAME = "enrichGO"
 ENRICH_KEGG_FUNC_NAME = "enrichKEGG"
 
@@ -28,7 +27,7 @@ def _get_dataframe(ck, n_clusters):
     df = df.assign(
         gene_total=df["gene_ratio"].apply(lambda x: int(x.split("/")[1])),
         bg_count=df["bg_ratio"].apply(lambda x: int(x.split("/")[0])),
-        bg_total=df["bg_ratio"].apply(lambda x: int(x.split("/")[1]))
+        bg_total=df["bg_ratio"].apply(lambda x: int(x.split("/")[1])),
     )
 
     return df
@@ -93,11 +92,13 @@ def run_enrich(
     }
 
     if enrich_function == ENRICH_GO_FUNC_NAME:
-        compare_cluster_arguments.update({
-            "ont": ontology,
-            "readable": True if key_type != "SYMBOL" else False,
-            "OrgDb": "org.Hs.eg.db",
-        })
+        compare_cluster_arguments.update(
+            {
+                "ont": ontology,
+                "readable": True if key_type != "SYMBOL" else False,
+                "OrgDb": "org.Hs.eg.db",
+            }
+        )
     elif enrich_function == ENRICH_KEGG_FUNC_NAME:
         if compare_cluster_arguments["keyType"] != "ENTREZID":
             raise ValueError("Input genes must be Entrez gene IDs")
@@ -120,7 +121,10 @@ def run_enrich(
     results.append(df)
 
     # save simplified results
-    if simplify_cutoff is not None and enrich_function in (ENRICH_GO_FUNC_NAME, "gseGO"):
+    if simplify_cutoff is not None and enrich_function in (
+        ENRICH_GO_FUNC_NAME,
+        "gseGO",
+    ):
         ck = clusterProfiler.simplify(ck, cutoff=simplify_cutoff)
         df = _get_dataframe(ck, n_clusters)
         results.append(df)

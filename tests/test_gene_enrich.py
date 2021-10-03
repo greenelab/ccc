@@ -351,7 +351,6 @@ def test_run_enrich_enrichgo_with_simplify_cutoff():
     assert _row["gene_id"].startswith("CDCA8/CDC20/KIF23/CENPE/ASPM/DLGAP5/")
 
 
-
 def test_run_enrich_enrichkegg_example():
     pandas2ri.deactivate()
 
