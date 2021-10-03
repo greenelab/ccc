@@ -209,7 +209,7 @@ df["bg_total"] = df["bg_total"].astype("int32")
 # df["rich_factor"] = df["gene_count"].div(df["bg_count"])
 # df["fold_enrich"] = df["gene_ratio"].div(df["bg_ratio"])
 
-# %%
+# %% tags=[]
 # # adjust for multiple testing across all results
 # adj_pval = multipletests(df["pvalue"], alpha=0.05, method="fdr_bh")
 # df = df.assign(fdr=adj_pval[1])

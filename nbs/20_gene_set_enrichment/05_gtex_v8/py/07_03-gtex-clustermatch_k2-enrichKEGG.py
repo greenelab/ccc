@@ -46,7 +46,7 @@ CORRELATION_METHOD_NAME = "clustermatch_k2"
 # %% tags=[]
 # GENE_SELECTION_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # clusterProfiler settings
 ENRICH_FUNCTION = "enrichKEGG"
 ENRICH_PARAMS = "hsa"
@@ -59,12 +59,12 @@ INPUT_DIR = DATASET_CONFIG["CLUSTERING_DIR"]
 display(INPUT_DIR)
 assert INPUT_DIR.exists()
 
-# %%
+# %% tags=[]
 # this directory has the input data given to the clustering methods
 SIMILARITY_MATRICES_DIR = DATASET_CONFIG["SIMILARITY_MATRICES_DIR"]
 display(SIMILARITY_MATRICES_DIR)
 
-# %%
+# %% tags=[]
 SIMILARITY_MATRIX_FILENAME_TEMPLATE = DATASET_CONFIG[
     "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
 ]
@@ -78,7 +78,7 @@ display(OUTPUT_DIR)
 # %% [markdown] tags=[]
 # # Get data files
 
-# %%
+# %% tags=[]
 filename_pattern = re.compile(DATASET_CONFIG["CLUSTERING_FILENAME_PATTERN"])
 
 # %% tags=[]
@@ -141,22 +141,22 @@ input_filename = conf.GTEX["DATA_DIR"] / "gtex_entrez_gene_ids_mappings.pkl"
 display(input_filename)
 assert input_filename.exists()
 
-# %%
+# %% tags=[]
 gene_ids_mappings = pd.read_pickle(input_filename)
 
-# %%
+# %% tags=[]
 gene_ids_mappings.shape
 
-# %%
+# %% tags=[]
 gene_ids_mappings.head()
 
-# %%
+# %% tags=[]
 gene_id_maps = gene_ids_mappings.set_index("gene_ens_id_v")["entrez_id"].to_dict()
 
-# %%
+# %% tags=[]
 dict(list(gene_id_maps.items())[0:2])
 
-# %%
+# %% tags=[]
 # is map from ensembl to entrez unique?
 _tmp_index = [gene_id_maps[x] for x in tmp.index if x in gene_id_maps]
 display(len(_tmp_index))
@@ -165,11 +165,11 @@ display(_tmp_index[:5])
 # %% [markdown] tags=[]
 # # Run
 
-# %%
+# %% tags=[]
 n_partitions_per_file = pd.read_pickle(input_files[0]).shape[0]
 display(n_partitions_per_file)
 
-# %%
+# %% tags=[]
 # the number of tasks is the number of input files times number of partitions per file
 n_tasks = len(input_files) * n_partitions_per_file
 n_tasks = int(n_tasks)
