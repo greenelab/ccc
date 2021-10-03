@@ -170,8 +170,8 @@ n_partitions_per_file = pd.read_pickle(input_files[0]).shape[0]
 display(n_partitions_per_file)
 
 # %%
-# the number of tasks is the number of input files times number of partitions per file times 3 (BP, CC, MF)
-n_tasks = len(input_files) * n_partitions_per_file * 3
+# the number of tasks is the number of input files times number of partitions per file
+n_tasks = len(input_files) * n_partitions_per_file
 n_tasks = int(n_tasks)
 display(f"number of tasks: {n_tasks}")
 
