@@ -168,6 +168,8 @@ for f_full in tqdm(input_files, ncols=100):
             "bg_ratio",
             "pvalue",
             "pvalue_adjust",
+            "rich_factor",
+            "fold_enrich",
         ]
     ]
 
