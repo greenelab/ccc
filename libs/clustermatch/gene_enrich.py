@@ -1,5 +1,6 @@
 ENRICH_GO_FUNC_NAME = "enrichGO"
 ENRICH_KEGG_FUNC_NAME = "enrichKEGG"
+ENRICH_PATHWAY_FUNC_NAME = "enrichPathway"
 
 COLUMNS_RENAME = {
     "Count": "gene_count",
@@ -67,6 +68,8 @@ def run_enrich(
     from rpy2.rinterface_lib.embedded import RRuntimeError
 
     pandas2ri.activate()
+    if enrich_function == ENRICH_PATHWAY_FUNC_NAME:
+        reactomePA = importr("ReactomePA")
     clusterProfiler = importr("clusterProfiler")
 
     # the universe of genes are unique
@@ -113,13 +116,25 @@ def run_enrich(
                 "OrgDb": "org.Hs.eg.db",
             }
         )
-    elif enrich_function == ENRICH_KEGG_FUNC_NAME:
+    elif enrich_function in ENRICH_KEGG_FUNC_NAME:
         if compare_cluster_arguments["keyType"] != "ENTREZID":
             raise ValueError("Input genes must be Entrez gene IDs")
 
         del compare_cluster_arguments["keyType"]
 
         compare_cluster_arguments["organism"] = enrich_params
+    elif enrich_function == ENRICH_PATHWAY_FUNC_NAME:
+        if compare_cluster_arguments["keyType"] != "ENTREZID":
+            raise ValueError("Input genes must be Entrez gene IDs")
+
+        del compare_cluster_arguments["keyType"]
+
+        compare_cluster_arguments.update(
+            {
+                "readable": True if key_type != "SYMBOL" else False,
+                "organism": enrich_params,
+            }
+        )
 
     try:
         ck = clusterProfiler.compareCluster(**compare_cluster_arguments)

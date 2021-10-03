@@ -442,6 +442,91 @@ def test_run_enrich_enrichkegg_example():
     assert _row["gene_id"].startswith("8318/991/9133/890/983/4085/7272/1111/891/4174")
 
 
+def test_run_enrich_enrichpathway_example():
+    pandas2ri.deactivate()
+
+    # example taken from here:
+    # https://yulab-smu.top/biomedical-knowledge-mining-book/reactomepa.html
+    gene_data = data(dose).fetch("geneList")["geneList"]
+
+    # get gene names (Entrez IDs)
+    gene_names = np.array(gene_data.names)
+    assert np.unique(gene_names).shape[0] == gene_names.shape[0]  # unique
+
+    gene_values = np.array(gene_data)
+    gene = gene_names[np.abs(gene_values) > 1.5]
+    assert gene.shape[0] == 513
+
+    # create a "gene partition"
+    gene_partition = np.zeros(gene_names.shape[0])
+    gene_partition[np.isin(gene_names, gene)] = 1
+    np.testing.assert_array_equal(np.unique(gene_partition), np.array([0, 1]))
+    assert gene_partition[gene_partition == 1].shape[0] == gene.shape[0]
+
+    # run
+    results = run_enrich(
+        gene_names,
+        "ENTREZID",
+        gene_partition,
+        "enrichPathway",
+        "human",
+        pvalue_cutoff=0.05,
+    )
+    assert results is not None
+    # assert len(all_results) == 1
+
+    # results = all_results[0]
+    assert results.shape[0] == 52
+
+    # partition information
+    assert "n_clusters" in results.columns
+    unique_n_clusters = results["n_clusters"].unique()
+    assert unique_n_clusters.shape[0] == 1
+    assert 2 in unique_n_clusters
+
+    assert "cluster_id" in results.columns
+    unique_cluster_id = results["cluster_id"].unique()
+    # only one cluster (C1) has significant results
+    assert unique_cluster_id.shape[0] == 1
+    assert "C1" in unique_cluster_id
+
+    # check one row, with go term id: GO:0005819
+    assert "term_id" in results.columns
+    assert "gene_count" in results.columns
+    assert "gene_total" in results.columns
+    assert "gene_ratio" in results.columns
+    _row = results[results["term_id"] == "R-HSA-69278"]
+    assert _row.shape[0] == 1
+    _row = _row.iloc[0]
+    assert _row["gene_ratio"] == 55 / 328
+    assert _row["gene_total"] == 328
+    assert _row["gene_count"] == 55
+
+    assert "bg_count" in results.columns
+    assert "bg_total" in results.columns
+    assert "bg_ratio" in results.columns
+    assert _row["bg_ratio"] == 457 / 8063
+    assert _row["bg_total"] == 8063
+    assert _row["bg_count"] == 457
+
+    assert _row["rich_factor"] == 55 / 457.0
+    assert _row["fold_enrich"] == (55 / 328.0) / (457 / 8063.0)
+
+    assert "term_desc" in results.columns
+    assert _row["term_desc"] == "Cell Cycle, Mitotic"
+    assert "pvalue" in results.columns
+    assert f"{_row.pvalue:.6e}" == "1.411998e-13"
+    assert "pvalue_adjust" in results.columns
+    assert f"{_row.pvalue_adjust:.6e}" == "7.783842e-11"
+    assert "qvalue" in results.columns
+    assert f"{_row.qvalue:.6e}" == "7.012076e-11"
+
+    assert "gene_id" in results.columns
+    assert _row["gene_id"].startswith(
+        "CDC45/CDCA8/MCM10/CDC20/FOXM1/KIF23/CENPE/MYBL2/CCNB2/NDC80/TOP2A/"
+    )
+
+
 def test_run_enrich_enrichkegg_example_keytype_is_not_entrezid():
     pandas2ri.deactivate()
 
