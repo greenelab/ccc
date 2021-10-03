@@ -168,7 +168,6 @@ for f_full in tqdm(input_files, ncols=100):
             "bg_ratio",
             "pvalue",
             "pvalue_adjust",
-            "qvalue",
         ]
     ]
 
@@ -196,11 +195,11 @@ df["enrich_func"] = df["enrich_func"].astype("category")
 df["enrich_params"] = df["enrich_params"].astype("category")
 
 # convert to int32
-df["n_clusters"] = df["n_clusters"].astype("uint32")
-df["gene_count"] = df["gene_count"].astype("uint32")
-df["gene_total"] = df["gene_total"].astype("uint32")
-df["bg_count"] = df["bg_count"].astype("uint32")
-df["bg_total"] = df["bg_total"].astype("uint32")
+df["n_clusters"] = df["n_clusters"].astype("int32")
+df["gene_count"] = df["gene_count"].astype("int32")
+df["gene_total"] = df["gene_total"].astype("int32")
+df["bg_count"] = df["bg_count"].astype("int32")
+df["bg_total"] = df["bg_total"].astype("int32")
 
 # # convert ratios to numbers
 # df["gene_ratio"] = df["gene_count"].div(df["gene_total"])
@@ -219,6 +218,9 @@ df["bg_total"] = df["bg_total"].astype("uint32")
 df.shape
 
 # %% tags=[]
+df.head()
+
+# %% tags=[]
 display(df.dtypes)
 assert df.dtypes.loc["cluster_id"] == "category"
 
@@ -229,9 +231,9 @@ df.sample(n=5, random_state=0)
 # ## Some stats
 
 # %% tags=[]
-display(df["qvalue"].describe())
-assert df["qvalue"].min() > 0.0
-assert df["qvalue"].max() < 1.0
+display(df["pvalue_adjust"].describe())
+assert df["pvalue_adjust"].min() > 0.0
+assert df["pvalue_adjust"].max() < 1.0
 
 # %% tags=[]
 df["n_clusters"].unique()
