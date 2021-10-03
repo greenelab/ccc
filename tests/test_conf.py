@@ -151,7 +151,7 @@ def test_conf_gtex_gene_enrichment_filename_regex():
     assert m.group("corr_method") == "clustermatch"
     assert m.group("clust_method") == "SpectralClustering"
     assert m.group("enrich_func") == "enrichGO"
-    assert m.group("results_subset") == "BP_full"
+    assert m.group("enrich_params") == "BP_full"
 
     filename = "gtex_v8_data_muscle_skeletal-var_pc_log2-spearman_abs-AgglomerativeClustering-enrichKEGG-MF_simplified_070.pkl"
     m = re.search(pat, filename)
@@ -161,7 +161,7 @@ def test_conf_gtex_gene_enrichment_filename_regex():
     assert m.group("corr_method") == "spearman_abs"
     assert m.group("clust_method") == "AgglomerativeClustering"
     assert m.group("enrich_func") == "enrichKEGG"
-    assert m.group("results_subset") == "MF_simplified_070"
+    assert m.group("enrich_params") == "MF_simplified_070"
 
 
 def test_conf_recount2_clustering_filename_regex():
@@ -199,7 +199,7 @@ def test_conf_recount2_gene_enrichment_filename_regex():
     assert m.group("corr_method") == "pearson_full"
     assert m.group("clust_method") == "SpectralClustering"
     assert m.group("enrich_func") == "enrichGO"
-    assert m.group("results_subset") == "BP_full"
+    assert m.group("enrich_params") == "BP_full"
 
     filename = "recount_data_prep_PLIER-clustermatch_k2to5-AgglomerativeClustering-enrichKEGG-MF_simplified_070.pkl"
     m = re.search(pat, filename)
@@ -207,4 +207,4 @@ def test_conf_recount2_gene_enrichment_filename_regex():
     assert m.group("corr_method") == "clustermatch_k2to5"
     assert m.group("clust_method") == "AgglomerativeClustering"
     assert m.group("enrich_func") == "enrichKEGG"
-    assert m.group("results_subset") == "MF_simplified_070"
+    assert m.group("enrich_params") == "MF_simplified_070"

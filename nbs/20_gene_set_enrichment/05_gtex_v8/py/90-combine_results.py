@@ -265,7 +265,7 @@ _tmp = df[
     & (df.corr_method == "clustermatch")
     & (df.clust_method == "SpectralClustering")
     & (df.enrich_func == "enrichGO")
-    & (df.results_subset == "BP_full")
+    & (df.enrich_params == "BP_full")
 ]
 assert _tmp.shape[0] == 1
 _tmp = _tmp.iloc[0]
