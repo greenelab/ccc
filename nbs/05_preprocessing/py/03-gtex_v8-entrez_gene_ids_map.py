@@ -34,7 +34,7 @@ pandas2ri.activate()
 # from clustermatch.utils import simplify_string
 from clustermatch import conf
 
-# %%
+# %% tags=[]
 clusterProfiler = importr("clusterProfiler")
 
 # %% [markdown] tags=[]
@@ -48,58 +48,58 @@ clusterProfiler = importr("clusterProfiler")
 # %% [markdown] tags=[]
 # # Data loading
 
-# %%
+# %% tags=[]
 input_filename = conf.GTEX["DATA_DIR"] / "gtex_gene_id_symbol_mappings.pkl"
 display(input_filename)
 
-# %%
+# %% tags=[]
 data = pd.read_pickle(input_filename)
 
-# %%
+# %% tags=[]
 data.shape
 
-# %%
+# %% tags=[]
 data.head()
 
 # %% [markdown] tags=[]
 # # Add Ensembl IDs without version
 
-# %%
+# %% tags=[]
 data = data.rename(columns={"gene_ens_id": "gene_ens_id_v"})
 
-# %%
+# %% tags=[]
 data = data.assign(gene_ens_id=data["gene_ens_id_v"].apply(lambda x: x.split(".")[0]))
 
-# %%
+# %% tags=[]
 data = data[["gene_ens_id_v", "gene_ens_id", "gene_symbol"]]
 
-# %%
+# %% tags=[]
 data.head()
 
-# %%
+# %% tags=[]
 assert data.shape[0] == data.drop_duplicates().shape[0]
 
 # %% [markdown] tags=[]
 # # Add Entrez Gene IDs
 
-# %%
+# %% tags=[]
 assert data["gene_ens_id_v"].is_unique
 
-# %%
+# %% tags=[]
 data["gene_ens_id"].is_unique
 
-# %%
+# %% tags=[]
 data["gene_symbol"].is_unique
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Gene Ensembl IDs (without version) and gene symbols by their own are not unique.
 
-# %%
+# %% tags=[]
 gene_ens_ids = data["gene_ens_id"].unique().tolist()
 display(len(gene_ens_ids))
 display(gene_ens_ids[:5])
 
-# %%
+# %% tags=[]
 entrez_gene_ids = clusterProfiler.bitr(
     gene_ens_ids,
     fromType="ENSEMBL",
@@ -108,22 +108,22 @@ entrez_gene_ids = clusterProfiler.bitr(
     drop=True,
 )
 
-# %%
+# %% tags=[]
 entrez_gene_ids.shape
 
-# %%
+# %% tags=[]
 entrez_gene_ids.head()
 
-# %%
+# %% tags=[]
 assert entrez_gene_ids.shape[0] == entrez_gene_ids.drop_duplicates().shape[0]
 
-# %%
+# %% tags=[]
 entrez_gene_ids["ENSEMBL"].drop_duplicates().shape
 
-# %%
+# %% tags=[]
 entrez_gene_ids["ENTREZID"].drop_duplicates().shape
 
-# %%
+# %% tags=[]
 entrez_gene_ids = entrez_gene_ids.rename(
     columns={
         "ENSEMBL": "ensembl_id",
@@ -131,25 +131,25 @@ entrez_gene_ids = entrez_gene_ids.rename(
     }
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Merge
 
-# %%
+# %% tags=[]
 gene_mappings = pd.merge(
     data[["gene_ens_id_v", "gene_ens_id"]],
     entrez_gene_ids,
     left_on="gene_ens_id",
     right_on="ensembl_id",
-    how="inner"
+    how="inner",
 )[["gene_ens_id_v", "ensembl_id", "entrez_id"]]
 
-# %%
+# %% tags=[]
 gene_mappings.shape
 
-# %%
+# %% tags=[]
 gene_mappings.head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Save
 
 # %% tags=[]
@@ -159,4 +159,4 @@ display(output_filename)
 # %% tags=[]
 gene_mappings.to_pickle(output_filename)
 
-# %%
+# %% tags=[]
