@@ -16,6 +16,9 @@ BiocManager::install("clusterProfiler", update=FALSE, ask=FALSE)
 # org.Hs.eg.db
 BiocManager::install("org.Hs.eg.db", update=FALSE, ask=FALSE)
 
+# ReactomePA
+BiocManager::install("ReactomePA", update=FALSE, ask=FALSE)
+
 # library(devtools)
 
 # fgsea
