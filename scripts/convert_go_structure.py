@@ -13,14 +13,14 @@ ENRICH_FUNCTION_PATTERN = r"(?P<enrich_func>[A-Za-z_]+)"
 ENRICH_FUNCTION_PARAMS_PATTERN = r"(?P<enrich_params>[0-9A-Za-z_]+)"
 
 # GTEx v8
-#ENRICHMENT_FILE_TEMPLATE = "gtex_v8_data_{tissue}-{gene_sel_strategy}-{corr_method}-{clust_method}-{enrich_func}-{enrich_params}.pkl"
+# ENRICHMENT_FILE_TEMPLATE = "gtex_v8_data_{tissue}-{gene_sel_strategy}-{corr_method}-{clust_method}-{enrich_func}-{enrich_params}.pkl"
 
 # recount2
 ENRICHMENT_FILE_TEMPLATE = "recount_data_prep_PLIER-{corr_method}-{clust_method}-{enrich_func}-{enrich_params}.pkl"
 
 ENRICHMENT_FILE_PATTERN = ENRICHMENT_FILE_TEMPLATE.format(
-    #tissue=GTEX_TISSUE_NAME_PATTERN,
-    #gene_sel_strategy=GENE_SELECTION_STRATEGY_NAME_PATTERN,
+    # tissue=GTEX_TISSUE_NAME_PATTERN,
+    # gene_sel_strategy=GENE_SELECTION_STRATEGY_NAME_PATTERN,
     corr_method=CORRELATION_METHOD_PATTERN,
     clust_method=CLUSTERING_METHOD_PATTERN,
     enrich_func=ENRICH_FUNCTION_PATTERN,
@@ -28,39 +28,42 @@ ENRICHMENT_FILE_PATTERN = ENRICHMENT_FILE_TEMPLATE.format(
 )
 filename_pattern = re.compile(ENRICHMENT_FILE_PATTERN)
 
+
 def convert_file(filepath, dataset_name):
     data = pd.read_pickle(filepath)
 
     if "gtex" in dataset_name:
         data = data.drop(columns=["clustering_id"])
-    
-    data = data.rename(columns={
-        "Cluster": "cluster_id",
-        "ID": "term_id",
-        "go_term_id": "term_id",
-        "Description": "term_desc",
-        "go_term_desc": "term_desc",
-        "GeneRatio": "gene_ratio",
-        "BgRatio": "bg_ratio",
-        "p.adjust": "pvalue_adjust",
-        "fdr_per_partition": "pvalue_adjust",
-        "geneID": "gene_id",
-        "Count": "gene_count",
-        "clustering_n_clusters": "n_clusters",
-    })
-    
+
+    data = data.rename(
+        columns={
+            "Cluster": "cluster_id",
+            "ID": "term_id",
+            "go_term_id": "term_id",
+            "Description": "term_desc",
+            "go_term_desc": "term_desc",
+            "GeneRatio": "gene_ratio",
+            "BgRatio": "bg_ratio",
+            "p.adjust": "pvalue_adjust",
+            "fdr_per_partition": "pvalue_adjust",
+            "geneID": "gene_id",
+            "Count": "gene_count",
+            "clustering_n_clusters": "n_clusters",
+        }
+    )
+
     filename = filepath.name
 
     match = re.search(filename_pattern, filename)
 
     data = data.assign(ontology=match.group("enrich_params").split("_")[0])
-    
+
     data = data.assign(
         gene_total=data["gene_ratio"].apply(lambda x: int(x.split("/")[1])),
         bg_count=data["bg_ratio"].apply(lambda x: int(x.split("/")[0])),
         bg_total=data["bg_ratio"].apply(lambda x: int(x.split("/")[1])),
     )
-    
+
     # convert ratios to numbers
     data["gene_ratio"] = data["gene_count"].div(data["gene_total"])
     data["bg_ratio"] = data["bg_count"].div(data["bg_total"])
@@ -71,12 +74,15 @@ def convert_file(filepath, dataset_name):
     return data
 
 
-	
 if __name__ == "__main__":
-    #dataset_name = "gtex_v8"
+    # dataset_name = "gtex_v8"
     dataset_name = "recount2"
 
-    input_files = list(Path(f"base/results/{dataset_name}/gene_set_enrichment/tmp_enrichGO_old/").iterdir())
+    input_files = list(
+        Path(
+            f"base/results/{dataset_name}/gene_set_enrichment/tmp_enrichGO_old/"
+        ).iterdir()
+    )
     # keep only full results
     input_files = [
         x
@@ -91,4 +97,3 @@ if __name__ == "__main__":
     for f in tqdm(input_files):
         data = convert_file(f, dataset_name)
         data.to_pickle(OUTPUT_DIR / f.name)
-
