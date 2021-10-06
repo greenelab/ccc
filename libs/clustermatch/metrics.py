@@ -93,7 +93,7 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
         A pair confusion matrix with 2 rows and 2 columns. From sklearn's
         pair_confusion_matrix docstring: considering a pair of objects that is
         clustered together a positive pair, then as in binary classification the
-        count of true negatives is in position 00, false negativies in 10, true
+        count of true negatives is in position 00, false negatives in 10, true
         positives in 11, and false positives in 01.
     """
     n_samples = np.int64(part0.shape[0])
