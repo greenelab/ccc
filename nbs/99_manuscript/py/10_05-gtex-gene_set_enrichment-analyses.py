@@ -90,14 +90,17 @@ with pd.option_context(
     display(tmp)
 
 # %% [markdown]
-# # QQ plot
+# # enrichGO
 
 # %%
-# CLUSTERMATCH_METHOD = "clustermatch_k2"
-CLUSTERMATCH_METHOD = "clustermatch"
+ENRICH_FUNC = "enrichGO"
 
 # %%
-# PERFORMANCE_MEASURE = "fdr"
+CLUSTERMATCH_METHOD = "clustermatch_k2"
+# CLUSTERMATCH_METHOD = "clustermatch"
+
+# %%
+# PERFORMANCE_MEASURE = "pvalue_adjust"
 # PERFORMANCE_MEASURE = "rich_factor"
 PERFORMANCE_MEASURE = "fold_enrich"
 
@@ -107,21 +110,33 @@ display(QUANTILES[:10])
 display(QUANTILES[-10:])
 
 # %%
+df["tissue"].unique()
+
+# %%
+df["gene_sel_strategy"].unique()
+
+# %%
+df["clust_method"].unique()
+
+# %%
+df["enrich_func"].unique()
+
+# %%
 df["enrich_params"].unique()
 
 # %%
 df_subset = df[
     (np.ones(df.shape[0]).astype(bool))
-    & (df.fdr < 0.05)  # only significant results
-    #     & (df.tissue == "adipose_subcutaneous")
+    & (df.pvalue_adjust < 0.05)  # only significant results
+#     & (df.tissue == "whole_blood")
     & (df.gene_sel_strategy == "var_pc_log2")
     & (df.clust_method == "SpectralClustering")
-    & (df.enrich_func == "enrichGO")
+    & (df.enrich_func == ENRICH_FUNC)
     & (df.enrich_params.str.contains("_full"))
 ]
 
 # %%
-assert df_subset["fdr"].max() < 0.05
+assert df_subset["pvalue_adjust"].max() < 0.05
 
 # %%
 df_subset.shape
@@ -140,7 +155,7 @@ for m in df_methods:
     df_values = df_subset[df_subset.corr_method == m][PERFORMANCE_MEASURE]
     display(f"{m} - {df_values.shape[0]}")
 
-    if PERFORMANCE_MEASURE == "fdr":
+    if PERFORMANCE_MEASURE.startswith("pvalue"):
         df_values = -np.log10(df_values)
 
     results_per_method[m] = df_values.quantile(QUANTILES).to_numpy()
@@ -161,32 +176,32 @@ quantiles_df.tail()
 quantiles_df.describe()
 
 # %%
-fig, ax = plt.subplots(figsize=(10, 8))
+# fig, ax = plt.subplots(figsize=(10, 8))
 
-sns.scatterplot(
-    data=quantiles_df,
-    x="pearson_full",
-    y=CLUSTERMATCH_METHOD,
-    label="vs Pearson (full)",
-    ax=ax,
-)
+# sns.scatterplot(
+#     data=quantiles_df,
+#     x="pearson_full",
+#     y=CLUSTERMATCH_METHOD,
+#     label="vs Pearson (full)",
+#     ax=ax,
+# )
 
-sns.scatterplot(
-    data=quantiles_df,
-    x="spearman_full",
-    y=CLUSTERMATCH_METHOD,
-    label="vs Spearman (full)",
-    ax=ax,
-)
+# sns.scatterplot(
+#     data=quantiles_df,
+#     x="spearman_full",
+#     y=CLUSTERMATCH_METHOD,
+#     label="vs Spearman (full)",
+#     ax=ax,
+# )
 
-ax.set_xlabel(None)
-# ax.set_ylabel(None)
+# ax.set_xlabel(None)
+# # ax.set_ylabel(None)
 
-min_val = min((quantiles_df.iloc[:, 0].min(), quantiles_df.iloc[:, 1].min()))
-max_val = max((quantiles_df.iloc[:, 0].max(), quantiles_df.iloc[:, 1].max()))
-ax.plot([min_val, max_val], [min_val, max_val], "k", linewidth=0.5)
+# min_val = min((quantiles_df.iloc[:, 0].min(), quantiles_df.iloc[:, 1].min()))
+# max_val = max((quantiles_df.iloc[:, 0].max(), quantiles_df.iloc[:, 1].max()))
+# ax.plot([min_val, max_val], [min_val, max_val], "k", linewidth=0.5)
 
-ax.set_title(f"Gene Ontology ({PERFORMANCE_MEASURE})")
+# ax.set_title(f"{ENRICH_FUNC} ({PERFORMANCE_MEASURE})")
 
 # %%
 fig, ax = plt.subplots(figsize=(10, 8))
@@ -208,13 +223,14 @@ sns.scatterplot(
 )
 
 ax.set_xlabel(None)
-# ax.set_ylabel(None)
+if CLUSTERMATCH_METHOD.endswith("_k2"):
+    ax.set_ylabel("clustermatch (linear)")
 
 min_val = min((quantiles_df.iloc[:, 0].min(), quantiles_df.iloc[:, 1].min()))
 max_val = max((quantiles_df.iloc[:, 0].max(), quantiles_df.iloc[:, 1].max()))
 ax.plot([min_val, max_val], [min_val, max_val], "k", linewidth=0.5)
 
-ax.set_title(f"Gene Ontology ({PERFORMANCE_MEASURE})")
+ax.set_title(f"{ENRICH_FUNC} ({PERFORMANCE_MEASURE})")
 
 # %% [markdown]
 # **UPDATE**
