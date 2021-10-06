@@ -265,7 +265,7 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor, tqdm(
             task_results = task.result()
 
             # continue if no enrichment found
-            if len(task_results) == 0:
+            if task_results is None:
                 pbar.update(1)
                 continue
 
