@@ -31,6 +31,7 @@ def rank(data: np.ndarray) -> np.ndarray:
     """
     It returns the ranks of a numpy array. It's an implementation of
     scipy.stats.rankdata (method="average") that can be compiled by numba.
+    Ranks start with 1.
 
     Args:
         data: a 1d array with numeric data.
