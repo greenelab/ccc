@@ -36,7 +36,7 @@ def _get_dataframe(ck, n_clusters):
     df["gene_ratio"] = df["gene_count"].div(df["gene_total"])
     df["bg_ratio"] = df["bg_count"].div(df["bg_total"])
 
-    # # add other metrics
+    # add other metrics
     df["rich_factor"] = df["gene_count"].div(df["bg_count"])
     df["fold_enrich"] = df["gene_ratio"].div(df["bg_ratio"])
 
