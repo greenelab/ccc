@@ -128,7 +128,7 @@ df["enrich_params"].unique()
 df_subset = df[
     (np.ones(df.shape[0]).astype(bool))
     & (df.pvalue_adjust < 0.05)  # only significant results
-#     & (df.tissue == "whole_blood")
+    #     & (df.tissue == "whole_blood")
     & (df.gene_sel_strategy == "var_pc_log2")
     & (df.clust_method == "SpectralClustering")
     & (df.enrich_func == ENRICH_FUNC)
