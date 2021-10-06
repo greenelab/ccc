@@ -79,7 +79,7 @@ def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
 @njit(cache=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
-    Returns the pair confusing matrix from two clustering partitions. It is an
+    Returns the pair confusion matrix from two clustering partitions. It is an
     implemenetation of
     https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.pair_confusion_matrix.html
     The code is based on the sklearn implementation. See copyright notice at the
