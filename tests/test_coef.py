@@ -622,18 +622,17 @@ def test_cdist_parts_two_vs_two():
 
 
 def test_get_coords_from_index():
-    # data is an example with n_obj = 5, not used in fact
-    data = np.array(
-        [
-            [10, 11],
-            [23, 22],
-            [27, 26],
-            [37, 36],
-            [47, 46],
-        ]
-    )
+    # data is an example with n_obj = 5 just to illustrate
+    # data = np.array(
+    #     [
+    #         [10, 11],
+    #         [23, 22],
+    #         [27, 26],
+    #         [37, 36],
+    #         [47, 46],
+    #     ]
+    # )
     n_obj = 5
-    assert n_obj == data.shape[0]
 
     # index: 0 -> (0, 1) (row_idx, col_idx)
     res = get_coords_from_index(n_obj, 0)
@@ -654,16 +653,16 @@ def test_get_coords_from_index():
 
 
 def test_get_coords_from_index_smaller():
-    data = np.array(
-        [
-            [10, 11],
-            [23, 22],
-            [27, 26],
-            [37, 36],
-        ]
-    )
+    # data is an example with n_obj = 5 just to illustrate
+    # data = np.array(
+    #     [
+    #         [10, 11],
+    #         [23, 22],
+    #         [27, 26],
+    #         [37, 36],
+    #     ]
+    # )
     n_obj = 4
-    assert n_obj == data.shape[0]
 
     # index: 0 -> (0, 1) (row_idx, col_idx)
     res = get_coords_from_index(n_obj, 0)
