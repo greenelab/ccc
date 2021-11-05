@@ -41,7 +41,18 @@ sleep 5
 mkdir -p ${ROOT_DIR}
 
 COMMAND="$@"
+if [ -z "${COMMAND}" ]; then
+  FULL_COMMAND=()
+else
+  FULL_COMMAND=(/bin/bash -c "${COMMAND}")
+fi
 
+echo "${FULL_COMMAND}"
+
+# show commands being executed
+set -x
+
+# run
 docker run --rm \
   -e CM_N_JOBS=${CM_N_JOBS} \
   -e NUMBA_NUM_THREADS=${CM_N_JOBS} \
@@ -52,6 +63,7 @@ docker run --rm \
   -v "${CODE_DIR}:/opt/code" \
   -v "${ROOT_DIR}:/opt/data" \
   -v "${CM_MANUSCRIPT_DIR}:/opt/manuscript" \
+  -p 8888:8893 \
   --user "$(id -u):$(id -g)" \
-  miltondp/clustermatch_gene_expr \
-  /bin/bash -c "${COMMAND}"
+  miltondp/clustermatch_gene_expr "${FULL_COMMAND[@]}"
+
