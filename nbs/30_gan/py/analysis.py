@@ -35,7 +35,9 @@ display(INPUT_DIR)
 # ## Top common genes
 
 # %%
-common_top_genes = pd.read_pickle(INPUT_DIR / "cm_gen_test_top_10k_common_genes.pkl").to_list()
+common_top_genes = pd.read_pickle(
+    INPUT_DIR / "cm_gen_test_top_10k_common_genes.pkl"
+).to_list()
 
 # %%
 display(common_top_genes[:5])
@@ -134,8 +136,8 @@ assert gen_cm.shape[0] == test_cm.shape[0]
 # %%
 new_index = [
     (common_top_genes[idx0], common_top_genes[idx1])
-    for idx0 in range(len(common_top_genes)-1)
-    for idx1 in range(idx0+1, len(common_top_genes))
+    for idx0 in range(len(common_top_genes) - 1)
+    for idx1 in range(idx0 + 1, len(common_top_genes))
 ]
 
 # %%
@@ -264,7 +266,9 @@ display(coefs_q)
 # # Interesting gene pairs
 
 # %%
-_tmp_coefs = coefs.assign(diff=coefs["test"].sub(coefs["gen"])).sort_values("diff", ascending=False)
+_tmp_coefs = coefs.assign(diff=coefs["test"].sub(coefs["gen"])).sort_values(
+    "diff", ascending=False
+)
 
 # %%
 _tmp_coefs.head(20)
