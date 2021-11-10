@@ -222,12 +222,17 @@ def test_get_range_n_clusters_without_internal_n_clusters():
 
 
 def test_get_range_n_clusters_with_internal_n_clusters_is_list():
+    # in this test I use the List type from Numba, since I'm testing an internal
+    # function, and it will never receive a python list (which is deprecated)
+
+    from numba.typed import List
+
     # 100 features
     range_n_clusters = _get_range_n_clusters(
         100,
-        internal_n_clusters=[
+        internal_n_clusters=List([
             2,
-        ],
+        ]),
     )
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2]))
@@ -235,9 +240,9 @@ def test_get_range_n_clusters_with_internal_n_clusters_is_list():
     # 25 features
     range_n_clusters = _get_range_n_clusters(
         25,
-        internal_n_clusters=[
+        internal_n_clusters=List([
             2,
-        ],
+        ]),
     )
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2]))
