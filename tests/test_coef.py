@@ -225,8 +225,6 @@ def test_get_range_n_clusters_with_internal_n_clusters_is_list():
     # in this test I use the List type from Numba, since I'm testing an internal
     # function, and it will never receive a python list (which is deprecated)
 
-    from numba.typed import List
-
     # 100 features
     range_n_clusters = _get_range_n_clusters(
         100,
