@@ -2,6 +2,8 @@
 Contains function that implement the Clustermatch coefficient
 (https://doi.org/10.1093/bioinformatics/bty899).
 """
+from typing import Iterable
+
 import numpy as np
 from numba import njit, prange
 from numba.typed import List
@@ -115,7 +117,7 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
 
 @njit(cache=True)
 def _get_range_n_clusters(
-    n_features: int, internal_n_clusters: List = None
+    n_features: int, internal_n_clusters: Iterable[int] = None
 ) -> np.ndarray:
     """
     Given the number of features it returns a tuple of k values to cluster those
@@ -246,7 +248,7 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
 
 @njit(cache=True, parallel=True)
 def _cm(
-    x: np.ndarray, y: np.ndarray = None, internal_n_clusters: List = None
+    x: np.ndarray, y: np.ndarray = None, internal_n_clusters: Iterable[int] = None
 ) -> np.ndarray:
     """
     This is the main function that computes the Clustermatch coefficient between
@@ -308,7 +310,7 @@ def _cm(
     return cm_values
 
 
-def cm(x: np.ndarray, y: np.ndarray = None, internal_n_clusters: list = None):
+def cm(x: np.ndarray, y: np.ndarray = None, internal_n_clusters: Iterable[int] = None):
     """
     This function is a wrapper over _cm, a not-jitted (numba) function that can
     return different value types according to the input given (this is a problem
