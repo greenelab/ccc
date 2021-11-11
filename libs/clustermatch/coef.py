@@ -115,7 +115,7 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
 
 @njit(cache=True)
 def _get_range_n_clusters(
-    n_features: int, internal_n_clusters: list = None
+    n_features: int, internal_n_clusters: List = None
 ) -> np.ndarray:
     """
     Given the number of features it returns a tuple of k values to cluster those
@@ -246,7 +246,7 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
 
 @njit(cache=True, parallel=True)
 def _cm(
-    x: np.ndarray, y: np.ndarray = None, internal_n_clusters: list = None
+    x: np.ndarray, y: np.ndarray = None, internal_n_clusters: List = None
 ) -> np.ndarray:
     """
     This is the main function that computes the Clustermatch coefficient between
