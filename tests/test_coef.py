@@ -1,5 +1,6 @@
 from random import shuffle
 
+import pytest
 import numpy as np
 from scipy import stats
 from sklearn.preprocessing import minmax_scale
@@ -14,6 +15,7 @@ from clustermatch.coef import (
     rank,
     cdist_parts,
     get_coords_from_index,
+    unravel_index_2d,
 )
 
 
@@ -714,6 +716,156 @@ def test_cm_values_equal_to_original_implementation():
         expected_corr_matrix,
         corr_mat,
     )
+
+
+def test_unravel_index_2d_square_simple():
+    shape = (2, 2)
+    assert unravel_index_2d(0, shape) == (0, 0)
+    assert unravel_index_2d(1, shape) == (0, 1)
+    assert unravel_index_2d(2, shape) == (1, 0)
+    assert unravel_index_2d(3, shape) == (1, 1)
+
+
+def test_unravel_index_2d_rect_simple():
+    shape = (2, 3)
+    assert unravel_index_2d(0, shape) == (0, 0)
+    assert unravel_index_2d(1, shape) == (0, 1)
+    assert unravel_index_2d(2, shape) == (0, 2)
+    assert unravel_index_2d(3, shape) == (1, 0)
+    assert unravel_index_2d(4, shape) == (1, 1)
+    assert unravel_index_2d(5, shape) == (1, 2)
+
+    shape = (1, 4)
+    assert unravel_index_2d(0, shape) == (0, 0)
+    assert unravel_index_2d(1, shape) == (0, 1)
+    assert unravel_index_2d(2, shape) == (0, 2)
+    assert unravel_index_2d(3, shape) == (0, 3)
+
+    shape = (4, 1)
+    assert unravel_index_2d(0, shape) == (0, 0)
+    assert unravel_index_2d(1, shape) == (1, 0)
+    assert unravel_index_2d(2, shape) == (2, 0)
+    assert unravel_index_2d(3, shape) == (3, 0)
+
+
+def test_unravel_index_2d_square0():
+    x = np.array([[0, 7], [-5, 6.999]])
+    x_max_idx = np.argmax(x, axis=None)
+    assert x_max_idx == 1
+
+    expected_idx = np.unravel_index(x_max_idx, x.shape)
+    observed_idx = unravel_index_2d(x_max_idx, x.shape)
+
+    assert expected_idx == observed_idx == (0, 1)
+
+
+def test_unravel_index_2d_square1():
+    x = np.array([[0, 7], [-5, 7.01]])
+    x_max_idx = np.argmax(x, axis=None)
+    assert x_max_idx == 3
+
+    expected_idx = np.unravel_index(x_max_idx, x.shape)
+    observed_idx = unravel_index_2d(x_max_idx, x.shape)
+
+    assert expected_idx == observed_idx == (1, 1)
+
+
+def test_unravel_index_2d_square_all_equal():
+    x = np.array([[7.0, 7.0], [7.0, 7.0]])
+    x_max_idx = np.argmax(x, axis=None)
+    assert x_max_idx == 0
+
+    expected_idx = np.unravel_index(x_max_idx, x.shape)
+    observed_idx = unravel_index_2d(x_max_idx, x.shape)
+
+    assert expected_idx == observed_idx == (0, 0)
+
+
+def test_unravel_index_2d_rect():
+    x = np.array([[0, 7, -5.6], [8.1, 6.999, 0]])
+    x_max_idx = np.argmax(x, axis=None)
+    assert x_max_idx == 3
+
+    expected_idx = np.unravel_index(x_max_idx, x.shape)
+    observed_idx = unravel_index_2d(x_max_idx, x.shape)
+
+    assert expected_idx == observed_idx == (1, 0)
+
+
+def test_unravel_index_index_out_of_bounds():
+    with pytest.raises(ValueError):
+        unravel_index_2d(6, (2, 3))
+
+
+def test_unravel_index_non_2d():
+    with pytest.raises(ValueError):
+        unravel_index_2d(0, (2, 3, 4))
+
+
+def test_cm_return_parts_quadratic():
+    # Prepare
+    np.random.seed(0)
+
+    # two features with a quadratic relationship
+    feature0 = np.array([-4, -3, -2, -1, 0, 0, 1, 2, 3, 4])
+    feature1 = np.array([10, 9, 8, 7, 6, 6, 7, 8, 9, 10])
+
+    # Run
+    cm_value, max_parts, parts = cm(
+        feature0, feature1, internal_n_clusters=[2, 3], return_parts=True
+    )
+
+    # Validate
+    assert cm_value.round(2) == 0.31
+
+    assert parts is not None
+    # FIXME: parts should be also a numpy array for API consistency
+    # assert hasattr(parts, "shape")
+    assert len(parts) == 2
+    assert parts[0].shape == (2, 10)
+    assert len(np.unique(parts[0][0])) == 2
+    assert len(np.unique(parts[0][1])) == 3
+    assert parts[1].shape == (2, 10)
+    assert len(np.unique(parts[1][0])) == 2
+    assert len(np.unique(parts[1][1])) == 3
+
+    assert max_parts is not None
+    assert hasattr(max_parts, "shape")
+    assert max_parts.shape == (2,)
+    # the set of partitions that maximize ari is:
+    #   - k == 3 for feature0
+    #   - k == 2 for feature1
+    np.testing.assert_array_equal(max_parts, np.array([1, 0]))
+
+
+def test_cm_return_parts_linear():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+
+    # Run
+    cm_value, max_parts, parts = cm(feature0, feature1, return_parts=True)
+
+    # Validate
+    assert cm_value == 1.0
+
+    assert parts is not None
+    # FIXME: parts should be also a numpy array for API consistency
+    # assert hasattr(parts, "shape")
+    assert len(parts) == 2
+    assert parts[0].shape == (9, 100)
+    assert parts[1].shape == (9, 100)
+
+    assert max_parts is not None
+    assert hasattr(max_parts, "shape")
+    assert max_parts.shape == (2,)
+    # even in this test we do not specify internal_n_clusters (so it goes from
+    # k=2 to k=10, nine partitions), k=2 for both features should already have
+    # the maximum value
+    np.testing.assert_array_equal(max_parts, np.array([0, 0]))
 
 
 # TODO: add stats options to get the partitions or number of clusters that
