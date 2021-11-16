@@ -246,6 +246,23 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     return int(x), int(y)
 
 
+@njit(cache=True)
+def unravel_index_2d(flat_index, shape):
+    if len(shape) != 2:
+        raise ValueError("shape has to be of length 2")
+
+    if flat_index >= np.array(shape).prod():
+        raise ValueError("index is out of bounds for array with size")
+
+    res = []
+
+    for size in shape[::-1]:
+        res.append(flat_index % size)
+        flat_index = flat_index // size
+
+    return tuple((res[1], res[0]))
+
+
 @njit(cache=True, parallel=True)
 def _cm(
     x: np.ndarray, y: np.ndarray = None, internal_n_clusters: Iterable[int] = None
@@ -265,6 +282,8 @@ def _cm(
           clusters used to split x and y.
 
     Returns:
+        TODO: UPDATE
+
         A 1d condensed array of pairwise coefficients. It has size (n * (n - 1))
         / 2, where n is the number of columns in x and y (for example, the
         number of samples for genes).
@@ -287,11 +306,19 @@ def _cm(
         row_parts = _get_parts(row, range_n_clusters)
 
         parts.append(row_parts)
+        # parts.append([list(x) for x in row_parts])
+
+    # FIXME: ideally, it would be better to also return a ndarray of partitions,
+    #  but numba fails to compile with the line below
+    # parts = np.array(parts, dtype=np.uint8)
 
     n = X.shape[0]
     out_size = (n * (n - 1)) // 2
     cm_values = np.empty(out_size)
     cm_values[:] = np.nan
+
+    max_parts = np.zeros((out_size, 2), dtype=np.uint64)
+    # max_parts[:] = np.nan
 
     for idx in prange(cm_values.shape[0]):
         i, j = get_coords_from_index(n, idx)
@@ -303,14 +330,23 @@ def _cm(
             max_ari = np.nan
         else:
             comp_values = cdist_parts(obji_parts, objj_parts)
-            max_ari = np.amax(comp_values)
+            max_flat_idx = comp_values.argmax()
+            max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+
+            max_ari = comp_values[max_idx]
+            max_parts[idx, :] = max_idx
 
         cm_values[idx] = max_ari
 
-    return cm_values
+    return cm_values, max_parts, parts
 
 
-def cm(x: np.ndarray, y: np.ndarray = None, internal_n_clusters: Iterable[int] = None):
+def cm(
+    x: np.ndarray,
+    y: np.ndarray = None,
+    internal_n_clusters: Iterable[int] = None,
+    return_parts: bool = False,
+):
     """
     This function is a wrapper over _cm, a not-jitted (numba) function that can
     return different value types according to the input given (this is a problem
@@ -320,8 +356,11 @@ def cm(x: np.ndarray, y: np.ndarray = None, internal_n_clusters: Iterable[int] =
         x: same as in _cm function.
         y: same as in _cm function.
         internal_n_clusters: same as in _cm function.
+        return_parts: TODO finish
 
     Returns:
+        TODO: UPDATE
+
         If x is 2d, then a np.ndarray of size n x n is returned with the
         coefficient value, where n is the number of rows in x. If only a single
         coefficient was computed (for example, x and y were given), then a
@@ -338,10 +377,16 @@ def cm(x: np.ndarray, y: np.ndarray = None, internal_n_clusters: Iterable[int] =
             n_clusters.append(k)
 
     # run optimized _cm function
-    cm_values = _cm(x, y, n_clusters)
+    cm_values, max_parts, parts = _cm(x, y, n_clusters)
 
     # return an array of values or a single scalar
     if cm_values.shape[0] == 1:
-        return cm_values[0]
+        if return_parts:
+            return cm_values[0], max_parts[0], parts
+        else:
+            return cm_values[0]
 
-    return cm_values
+    if return_parts:
+        return cm_values, max_parts, parts
+    else:
+        return cm_values
