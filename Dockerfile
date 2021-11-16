@@ -6,6 +6,7 @@ ENV CODE_DIR=/opt/code
 ENV CM_CONDA_ENV_NAME="clustermatch_gene_expr"
 ENV CM_N_JOBS=1
 ENV CM_ROOT_DIR=/opt/data
+ENV CM_USER_HOME=${CM_ROOT_DIR}/user_home
 ENV CM_MANUSCRIPT_DIR=/opt/manuscript
 
 VOLUME ${CM_ROOT_DIR}
@@ -34,11 +35,13 @@ RUN python -c "import papermill"
 
 COPY . ${CODE_DIR}
 WORKDIR ${CODE_DIR}
-RUN mkdir /.local /.config /.cache /.jupyter \
-  && chmod -R 0777 ./ /.config /.cache /.local /.jupyter
 
 RUN echo "Make sure modules can be loaded"
 RUN python -c "from clustermatch import conf"
+
+# setup user home directory
+RUN mkdir ${CM_USER_HOME} && chmod -R 0777 ${CM_USER_HOME}
+ENV HOME=${CM_USER_HOME}
 
 ENTRYPOINT ["/opt/code/entrypoint.sh"]
 CMD ["scripts/run_nbs_server.sh", "--container-mode"]
