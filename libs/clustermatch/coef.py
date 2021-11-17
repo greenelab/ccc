@@ -247,7 +247,7 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
 
 
 @njit(cache=True)
-def unravel_index_2d(flat_index, shape):
+def unravel_index_2d(flat_index: int, shape: tuple[int]) -> tuple[int]:
     if len(shape) != 2:
         raise ValueError("shape has to be of length 2")
 
