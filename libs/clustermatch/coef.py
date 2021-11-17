@@ -341,6 +341,20 @@ def _cm(
     return cm_values, max_parts, parts
 
 
+def to_numpy(x):
+    """
+    TODO: update
+    """
+    if x is None:
+        return x
+
+    func = getattr(x, "to_numpy", None)
+    if not callable(func):
+        return x
+
+    return x.to_numpy()
+
+
 def cm(
     x: np.ndarray,
     y: np.ndarray = None,
@@ -370,6 +384,9 @@ def cm(
     # convert list to numba.types.List, since reflection is deprecated:
     # https://numba.pydata.org/numba-doc/latest/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
     n_clusters = None
+
+    x = to_numpy(x)
+    y = to_numpy(y)
 
     if internal_n_clusters is not None:
         n_clusters = List()

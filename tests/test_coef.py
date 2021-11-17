@@ -2,6 +2,7 @@ from random import shuffle
 
 import pytest
 import numpy as np
+import pandas as pd
 from scipy import stats
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
@@ -480,6 +481,39 @@ def test_cm_single_argument_is_matrix():
     assert cm_value[2] < 0.03
 
 
+def test_cm_x_y_are_pandas_series():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects (random data)
+    feature0 = pd.Series(np.random.rand(100))
+    feature1 = pd.Series(np.random.rand(100))
+
+    # Run
+    cm_value = cm(feature0, feature1)
+
+    # Validate
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+
+
+def test_cm_x_is_pandas_dataframe():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects (random data)
+    data_matrix = pd.DataFrame(np.random.rand(10, 100))
+
+    # Run
+    cm_value = cm(data_matrix)
+
+    # Validate
+    assert cm_value is not None
+    assert isinstance(cm_value, np.ndarray)
+    assert cm_value.shape == (45,)
+    assert np.issubdtype(cm_value.dtype, np.float)
+
+
 def test_get_parts_simple():
     np.random.seed(0)
 
@@ -866,8 +900,3 @@ def test_cm_return_parts_linear():
     # k=2 to k=10, nine partitions), k=2 for both features should already have
     # the maximum value
     np.testing.assert_array_equal(max_parts, np.array([0, 0]))
-
-
-# TODO: add stats options to get the partitions or number of clusters that
-#  generated each cm value (this will be useful to debug the method as we
-#  talked with Diego)
