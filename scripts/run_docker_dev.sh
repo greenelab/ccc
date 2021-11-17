@@ -34,17 +34,19 @@ echo "  Manuscript dir: ${CM_MANUSCRIPT_DIR}"
 echo "  CPU cores: ${CM_N_JOBS}"
 
 echo ""
-echo "Waiting 5 seconds before starting"
-sleep 5
+echo "Waiting 2 seconds before starting"
+sleep 2
 
 # always create data directory before running Docker
 mkdir -p ${ROOT_DIR}
 
 COMMAND="$@"
+PORT_ARG="-p 8888:8893"
 if [ -z "${COMMAND}" ]; then
   FULL_COMMAND=()
 else
   FULL_COMMAND=(/bin/bash -c "${COMMAND}")
+  PORT_ARG=""
 fi
 
 echo "${FULL_COMMAND}"
@@ -53,7 +55,7 @@ echo "${FULL_COMMAND}"
 set -x
 
 # run
-docker run --rm \
+docker run --rm ${PORT_ARG} \
   -e CM_N_JOBS=${CM_N_JOBS} \
   -e NUMBA_NUM_THREADS=${CM_N_JOBS} \
   -e MKL_NUM_THREADS=${CM_N_JOBS} \
@@ -63,7 +65,6 @@ docker run --rm \
   -v "${CODE_DIR}:/opt/code" \
   -v "${ROOT_DIR}:/opt/data" \
   -v "${CM_MANUSCRIPT_DIR}:/opt/manuscript" \
-  -p 8888:8893 \
   --user "$(id -u):$(id -g)" \
   miltondp/clustermatch_gene_expr "${FULL_COMMAND[@]}"
 
