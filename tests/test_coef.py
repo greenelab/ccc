@@ -276,9 +276,20 @@ def test_get_range_n_clusters_with_internal_n_clusters_has_single_int():
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([3]))
 
+    # 5 features
+    range_n_clusters = _get_range_n_clusters(5, internal_n_clusters=[4])
+    assert range_n_clusters is not None
+    np.testing.assert_array_equal(range_n_clusters, np.array([4]))
+
+    # 25 features but invalid number of clusters
     range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[1])
     assert range_n_clusters is not None
-    np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4, 5]))
+    np.testing.assert_array_equal(range_n_clusters, np.array([]))
+
+    # 25 features but invalid number of clusters
+    range_n_clusters = _get_range_n_clusters(25, internal_n_clusters=[25])
+    assert range_n_clusters is not None
+    np.testing.assert_array_equal(range_n_clusters, np.array([]))
 
 
 def test_get_range_n_clusters_with_internal_n_clusters_are_less_than_two():
@@ -333,6 +344,18 @@ def test_get_range_n_clusters_with_very_few_features():
 
     # 0 features
     range_n_clusters = _get_range_n_clusters(0)
+    assert range_n_clusters is not None
+    np.testing.assert_array_equal(range_n_clusters, np.array([]))
+
+
+def test_get_range_n_clusters_with_larger_k_than_features():
+    # 10 features
+    range_n_clusters = _get_range_n_clusters(10, internal_n_clusters=[10])
+    assert range_n_clusters is not None
+    np.testing.assert_array_equal(range_n_clusters, np.array([]))
+
+    # 10 features
+    range_n_clusters = _get_range_n_clusters(10, internal_n_clusters=[11])
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([]))
 
