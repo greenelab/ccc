@@ -5,6 +5,7 @@ Contains function that implement the Clustermatch coefficient
 from typing import Iterable
 
 import numpy as np
+from numpy.typing import NDArray
 from numba import njit, prange
 from numba.typed import List
 
@@ -118,7 +119,7 @@ def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
 @njit(cache=True)
 def _get_range_n_clusters(
     n_features: int, internal_n_clusters: Iterable[int] = None
-) -> np.ndarray:
+) -> NDArray[np.uint8]:
     """
     Given the number of features it returns a tuple of k values to cluster those
     features into. By default, it generates a tuple of k values from 2 to
@@ -137,24 +138,32 @@ def _get_range_n_clusters(
     """
 
     # the one in the list is needed for numba to infer the type
-    clusters_range_list = List([1])
+    # clusters_range_list = List([1])
 
     if internal_n_clusters is not None:
-        clusters_range_list = List()
-        for x in internal_n_clusters:
-            clusters_range_list.append(x)
+        # clusters_range_list = List()
+        # for x in internal_n_clusters:
+        #     clusters_range_list.append(x)
 
-    # keep values larger than one only and remove repeated
-    clusters_range_list = list(set([int(x) for x in clusters_range_list if x > 1]))
+        clusters_range_list = list(
+            set([int(x) for x in internal_n_clusters if 1 < x < n_features])
+        )
+        # for x in internal_n_clusters:
+        #     _tmp_list.add(x)
 
-    # default behavior if no internal_n_clusters is given: return range from
-    # 2 to sqrt(n_features)
-    if len(clusters_range_list) == 0:
+        # keep values larger than one only and remove repeated
+        # clusters_range_list = list(
+        #     set([int(x) for x in clusters_range_list if 1 < x < n_features])
+        # )
+    else:
+        # default behavior if no internal_n_clusters is given: return range from
+        # 2 to sqrt(n_features)
+        # if len(clusters_range_list) == 0:
         n_sqrt = int(np.round(np.sqrt(n_features)))
         n_sqrt = min((n_sqrt, 10))
         clusters_range_list = list(range(2, n_sqrt + 1))
 
-    return np.array(clusters_range_list)
+    return np.array(clusters_range_list, dtype=np.uint8)
 
 
 @njit(cache=True)
