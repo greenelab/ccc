@@ -574,6 +574,24 @@ def test_get_parts_simple():
     assert len(np.unique(parts[1])) == 3
 
 
+def test_get_parts_with_singletons():
+    np.random.seed(0)
+
+    feature0 = np.array([1.3] * 10)
+
+    # run
+    parts = _get_parts(feature0, (2,))
+    assert parts is not None
+    assert len(parts) == 1
+    np.testing.assert_array_equal(np.unique(parts[0]), np.array([-1]))
+
+    parts = _get_parts(feature0, (2, 3))
+    assert parts is not None
+    assert len(parts) == 2
+    np.testing.assert_array_equal(np.unique(parts[0]), np.array([-1]))
+    np.testing.assert_array_equal(np.unique(parts[1]), np.array([-1]))
+
+
 def test_cdist_parts_one_vs_one():
     from scipy.spatial.distance import cdist
     from sklearn.metrics import adjusted_rand_score as ari
@@ -880,8 +898,6 @@ def test_cm_return_parts_quadratic():
     assert cm_value.round(2) == 0.31
 
     assert parts is not None
-    # FIXME: parts should be also a numpy array for API consistency
-    # assert hasattr(parts, "shape")
     assert len(parts) == 2
     assert parts[0].shape == (2, 10)
     assert len(np.unique(parts[0][0])) == 2
@@ -914,8 +930,6 @@ def test_cm_return_parts_linear():
     assert cm_value == 1.0
 
     assert parts is not None
-    # FIXME: parts should be also a numpy array for API consistency
-    # assert hasattr(parts, "shape")
     assert len(parts) == 2
     assert parts[0].shape == (9, 100)
     assert parts[1].shape == (9, 100)
