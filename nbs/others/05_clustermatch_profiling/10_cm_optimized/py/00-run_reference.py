@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown]
-# Creates a point of comparison with non-optimized version of clustermatch.
+# Creates a point of reference/comparison with non-optimized version of clustermatch.
 
 # %% [markdown] tags=[]
 # # Remove pycache dir
@@ -43,22 +43,31 @@ import numpy as np
 from clustermatch.coef import _cm
 
 # %% [markdown] tags=[]
-# # Data
+# # Settings
 
 # %%
-N_REPS = 100
-N_SAMPLES = 10000
+N_REPS = 10
 
 # %% tags=[]
 np.random.seed(0)
+
+# %% [markdown] tags=[]
+# # Setup
+
+# %%
+# let numba compile all the code before profiling
+_cm.py_func(np.random.rand(10), np.random.rand(10))
+
+# %% [markdown] tags=[]
+# # Run with `n_samples` small
+
+# %%
+N_SAMPLES = 100
 
 # %%
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
-
-# %% [markdown] tags=[]
-# # Run
 
 # %% tags=[]
 def func():
@@ -69,15 +78,47 @@ def func():
 
 
 # %% tags=[]
-# %%timeit func()
+# %%timeit -n1 -r1 func()
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 20 -T 00-previous_version.txt
+# %%prun -s cumulative -l 20 -T 00-n_samples_small.txt
 func()
 
 # %% [markdown] tags=[]
 # The bottleneck functions are, in order of importance:
+# 1. `cdist_parts`
+# 1. `_get_parts`
+
+# %% [markdown] tags=[]
+# # Run with `n_samples` large
+
+# %%
+N_SAMPLES = 100000
+
+# %%
+x = np.random.rand(N_SAMPLES)
+y = np.random.rand(N_SAMPLES)
+
+
+# %% tags=[]
+def func():
+    for i in range(N_REPS):
+        # py_func accesses the original python function, not the numba-optimized one
+        # this is needed to be able to profile the function
+        _cm.py_func(x, y)
+
+
+# %% tags=[]
+# %%timeit -n1 -r1 func()
+func()
+
+# %% tags=[]
+# %%prun -s cumulative -l 20 -T 00-n_samples_large.txt
+func()
+
+# %% [markdown] tags=[]
+# The bottleneck functions now are **different**, in order of importance:
 # 1. `_get_parts`
 # 1. `cdist_parts`
 
