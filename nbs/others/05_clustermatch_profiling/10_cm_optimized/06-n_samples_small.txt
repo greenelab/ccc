@@ -1,0 +1,26 @@
+         21654 function calls in 0.059 seconds
+
+   Ordered by: cumulative time
+   List reduced from 64 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.059    0.059 {built-in method builtins.exec}
+        1    0.000    0.000    0.059    0.059 <string>:1(<module>)
+        1    0.000    0.000    0.059    0.059 691993785.py:1(func)
+       10    0.001    0.000    0.059    0.006 coef.py:251(_cm)
+       20    0.001    0.000    0.036    0.002 coef.py:154(_get_parts)
+      180    0.006    0.000    0.032    0.000 coef.py:63(run_quantile_clustering)
+      180    0.005    0.000    0.022    0.000 stats.py:8631(rankdata)
+       10    0.022    0.002    0.022    0.002 coef.py:183(cdist_parts)
+      360    0.004    0.000    0.012    0.000 index_tricks.py:323(__getitem__)
+     1620    0.002    0.000    0.010    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+       20    0.000    0.000    0.004    0.000 coef.py:177(<listcomp>)
+      540    0.001    0.000    0.003    0.000 fromnumeric.py:51(_wrapfunc)
+      180    0.000    0.000    0.003    0.000 <__array_function__ internals>:2(unique)
+      180    0.000    0.000    0.003    0.000 arraysetops.py:138(unique)
+      360    0.001    0.000    0.003    0.000 numerictypes.py:599(find_common_type)
+      360    0.002    0.000    0.002    0.000 {method 'argsort' of 'numpy.ndarray' objects}
+      180    0.001    0.000    0.002    0.000 arraysetops.py:320(_unique1d)
+      180    0.000    0.000    0.002    0.000 <__array_function__ internals>:2(searchsorted)
+      180    0.000    0.000    0.002    0.000 <__array_function__ internals>:2(argsort)
+      360    0.001    0.000    0.002    0.000 <__array_function__ internals>:2(concatenate)
