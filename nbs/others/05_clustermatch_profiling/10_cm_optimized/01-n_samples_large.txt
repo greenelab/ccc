@@ -1,0 +1,20 @@
+         154 function calls in 14.819 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   14.819   14.819 {built-in method builtins.exec}
+        1    0.000    0.000   14.819   14.819 <string>:1(<module>)
+        1    0.005    0.005   14.819   14.819 1556911885.py:1(func)
+       10    0.009    0.001   14.815    1.481 coef.py:265(_cm)
+       20   11.105    0.555   11.105    0.555 coef.py:169(_get_parts)
+       10    3.700    0.370    3.700    0.370 coef.py:198(cdist_parts)
+       20    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+       20    0.000    0.000    0.000    0.000 coef.py:119(_get_range_n_clusters)
+       10    0.000    0.000    0.000    0.000 {method 'argmax' of 'numpy.ndarray' objects}
+       10    0.000    0.000    0.000    0.000 {built-in method numpy.empty}
+       10    0.000    0.000    0.000    0.000 coef.py:248(unravel_index_2d)
+       10    0.000    0.000    0.000    0.000 special.py:18(__new__)
+       20    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       10    0.000    0.000    0.000    0.000 coef.py:224(get_coords_from_index)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
