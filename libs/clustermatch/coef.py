@@ -282,6 +282,9 @@ def _cm(
 
     Returns:
         TODO: UPDATE
+        - the value returns is always between 0 and 1
+        - if there is no variation in at least one of the two variables to be
+        compared, the coefficient is nan
 
         A 1d condensed array of pairwise coefficients. It has size (n * (n - 1))
         / 2, where n is the number of columns in x and y (for example, the
@@ -326,7 +329,7 @@ def _cm(
         obji_parts, objj_parts = parts[i], parts[j]
 
         if obji_parts.shape[0] == 0 or objj_parts.shape[0] == 0:
-            max_ari = np.nan
+            cm_values[idx] = np.nan
         else:
             comp_values = cdist_parts(obji_parts, objj_parts)
             max_flat_idx = comp_values.argmax()
@@ -335,7 +338,7 @@ def _cm(
             max_ari = comp_values[max_idx]
             max_parts[idx, :] = max_idx
 
-        cm_values[idx] = max_ari
+            cm_values[idx] = max_ari if max_ari >= 0.0 else 0.0
 
     return cm_values, max_parts, parts
 
