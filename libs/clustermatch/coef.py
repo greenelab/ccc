@@ -167,13 +167,13 @@ def _get_range_n_clusters(
 
 
 @njit(cache=True)
-def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.uint8]:
+def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]:
     """
     Given a 1d data array, it computes a partition for each k value in the given
     range of clusters. This function only supports numerical data, and it
     always runs run_run_quantile_clustering with the different k values.
 
-    TODO: update, return type is uint8 AND now removes singletons
+    TODO: update, return type is int16 AND now removes singletons by assigning -1 to all the partition
 
     Args:
         data: a 1d data vector. It is assumed that there are no nans.
@@ -183,16 +183,17 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.uint8]
         A numpy array with partitions of data, with length equal to the number
         of k values given.
     """
-    parts = np.zeros((len(range_n_clusters), data.shape[0]), dtype=np.int8)
+    parts = np.zeros((len(range_n_clusters), data.shape[0]), dtype=np.int16)
 
     for idx in range(len(range_n_clusters)):
         k = range_n_clusters[idx]
-        part = run_quantile_clustering(data, k)
-        parts[idx] = part
+        parts[idx] = run_quantile_clustering(data, k)
 
     # remove singletons
     partitions_ks = np.array([len(np.unique(p)) for p in parts])
-    return parts[partitions_ks > 1]
+    parts[partitions_ks == 1, :] = -1
+
+    return parts
 
 
 @njit(cache=True, parallel=True)
@@ -301,18 +302,16 @@ def _cm(
         raise ValueError("Wrong combination of parameters x and y")
 
     # get matrix of partitions for each object pair
-    parts = []
+    range_n_clusters = _get_range_n_clusters(X.shape[1], internal_n_clusters)
+    
+    # store a set of partitions per row (object) in X as a multidimensional array:
+    #  - 1st dim: number of objects/rows in X
+    #  - 2nd dim: number of partitions per object
+    #  - 3rd dim: number of features per object (columns in X)
+    parts = np.zeros((X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16)
 
-    for row in X:
-        range_n_clusters = _get_range_n_clusters(row.shape[0], internal_n_clusters)
-        row_parts = _get_parts(row, range_n_clusters)
-
-        parts.append(row_parts)
-        # parts.append([list(x) for x in row_parts])
-
-    # FIXME: ideally, it would be better to also return a ndarray of partitions,
-    #  but numba fails to compile with the line below
-    # parts = np.array(parts, dtype=np.uint8)
+    for idx in range(X.shape[0]):
+        parts[idx] = _get_parts(X[idx], range_n_clusters)
 
     n = X.shape[0]
     out_size = (n * (n - 1)) // 2
@@ -328,7 +327,7 @@ def _cm(
         # get partitions for the pair of objects
         obji_parts, objj_parts = parts[i], parts[j]
 
-        if obji_parts.shape[0] == 0 or objj_parts.shape[0] == 0:
+        if obji_parts[0, 0] == -1 or objj_parts[0, 0] == -1:
             cm_values[idx] = np.nan
         else:
             comp_values = cdist_parts(obji_parts, objj_parts)
