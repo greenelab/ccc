@@ -173,6 +173,8 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.uint8]
     range of clusters. This function only supports numerical data, and it
     always runs run_run_quantile_clustering with the different k values.
 
+    TODO: update, return type is uint8 AND now removes singletons
+
     Args:
         data: a 1d data vector. It is assumed that there are no nans.
         range_n_clusters: a tuple with the number of clusters.
@@ -181,28 +183,16 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.uint8]
         A numpy array with partitions of data, with length equal to the number
         of k values given.
     """
-    partitions = []
+    parts = np.zeros((len(range_n_clusters), data.shape[0]), dtype=np.int8)
 
-    for k in range_n_clusters:
-        # it doesn't make sense to put each object in its own singleton cluster
-        # or create more clusters than number of objects
-        if len(data) <= k:
-            continue
-
+    for idx in range(len(range_n_clusters)):
+        k = range_n_clusters[idx]
         part = run_quantile_clustering(data, k)
+        parts[idx] = part
 
-        # we do not include singleton partitions (only one cluster)
-        if len(np.unique(part)) == 1:
-            continue
-
-        partitions.append(list(part))
-
-    # This is a hack to get numba compile this function
-    if len(partitions) == 0:
-        tmp = np.array([[1, 2], [2, 3]], dtype=np.uint8)
-        return tmp[np.array([False, False])]
-
-    return np.array(partitions, dtype=np.uint8)
+    # remove singletons
+    partitions_ks = np.array([len(np.unique(p)) for p in parts])
+    return parts[partitions_ks > 1]
 
 
 @njit(cache=True)

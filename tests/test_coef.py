@@ -555,21 +555,6 @@ def test_get_parts_simple():
     assert len(np.unique(parts[1])) == 3
 
 
-def test_get_parts_k_is_greater_or_equal_than_n_objects():
-    np.random.seed(0)
-
-    feature0 = np.random.rand(10)
-
-    # run
-    parts = _get_parts(feature0, (10,))
-    assert parts is not None
-    assert len(parts) == 0
-
-    parts = _get_parts(feature0, (20,))
-    assert parts is not None
-    assert len(parts) == 0
-
-
 def test_cdist_parts_one_vs_one():
     from scipy.spatial.distance import cdist
     from sklearn.metrics import adjusted_rand_score as ari
