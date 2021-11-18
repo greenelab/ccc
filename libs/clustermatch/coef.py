@@ -195,7 +195,7 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.uint8]
     return parts[partitions_ks > 1]
 
 
-@njit(cache=True)
+@njit(cache=True, parallel=True)
 def cdist_parts(x: NDArray, y: NDArray) -> NDArray[np.float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
@@ -214,7 +214,7 @@ def cdist_parts(x: NDArray, y: NDArray) -> NDArray[np.float]:
     """
     res = np.zeros((x.shape[0], y.shape[0]))
 
-    for i in range(res.shape[0]):
+    for i in prange(res.shape[0]):
         for j in range(res.shape[1]):
             res[i, j] = ari(x[i], y[j])
 
