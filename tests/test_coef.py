@@ -384,6 +384,22 @@ def test_cm_basic():
     assert isinstance(cm_value, float)
 
 
+def test_cm_ari_is_negative():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects (random data)
+    feature0 = np.array([1, 2, 3, 4, 5])
+    feature1 = np.array([2, 4, 1, 3, 5])
+
+    # Run
+    cm_value = cm(feature0, feature1)
+
+    # Validate
+    # ari for this example is -0.25, but cm should return 0.0
+    assert cm_value == 0.0
+
+
 def test_cm_random_data():
     # Prepare
     np.random.seed(123)
@@ -399,7 +415,7 @@ def test_cm_random_data():
         cm_value = cm(feature0, feature1)
 
         # Validate
-        assert cm_value < 0.05
+        assert 0.0 <= cm_value < 0.05
 
 
 def test_cm_linear():
@@ -447,11 +463,14 @@ def test_cm_quadratic2():
     assert cm_value > 0.40
 
 
-def test_cm_feature_with_all_same_values():
+def test_cm_one_feature_with_all_same_values():
+    # if there is no variation in at least one of the two variables to be
+    #  compared, clustermatch returns nan
+
     # Prepare
     np.random.seed(0)
 
-    # two features on 100 objects with a linear relationship
+    # two features on 100 objects; all values in feature1 are the same
     feature0 = np.random.rand(100)
     feature1 = np.array([5] * feature0.shape[0])
 
@@ -463,8 +482,8 @@ def test_cm_feature_with_all_same_values():
 
 
 def test_cm_all_features_with_all_same_values():
-    # this test generates internal partitions with only one cluster. In this
-    # case, clustermatch returns NaN
+    # if there is no variation in both variables to be compared, clustermatch
+    #  returns nan
 
     # Prepare
     np.random.seed(0)
