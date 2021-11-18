@@ -30,7 +30,7 @@ def _get_perc_from_k(k: int) -> list[float]:
 
 
 @njit(cache=True)
-def rank(data: np.ndarray) -> np.ndarray:
+def rank(data: NDArray) -> NDArray:
     """
     It returns the ranks of a numpy array. It's an implementation of
     scipy.stats.rankdata (method="average") that can be compiled by numba.
@@ -78,7 +78,7 @@ def rank(data: np.ndarray) -> np.ndarray:
 
 
 @njit(cache=True)
-def run_quantile_clustering(data: np.ndarray, k: int) -> np.ndarray:
+def run_quantile_clustering(data: NDArray, k: int) -> NDArray:
     """
     Performs a simple quantile clustering on one dimensional data (1d). Quantile
     clustering is defined as the procedure that forms clusters in 1d data by
@@ -167,7 +167,7 @@ def _get_range_n_clusters(
 
 
 @njit(cache=True)
-def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
+def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.uint8]:
     """
     Given a 1d data array, it computes a partition for each k value in the given
     range of clusters. This function only supports numerical data, and it
@@ -206,7 +206,7 @@ def _get_parts(data: np.ndarray, range_n_clusters: tuple[int]) -> np.ndarray:
 
 
 @njit(cache=True)
-def cdist_parts(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+def cdist_parts(x: NDArray, y: NDArray) -> NDArray[np.float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
     for clustering partitions, and instead of a distance it returns the adjusted
@@ -274,8 +274,8 @@ def unravel_index_2d(flat_index: int, shape: tuple[int]) -> tuple[int]:
 
 @njit(cache=True, parallel=True)
 def _cm(
-    x: np.ndarray, y: np.ndarray = None, internal_n_clusters: Iterable[int] = None
-) -> np.ndarray:
+    x: NDArray, y: NDArray = None, internal_n_clusters: Iterable[int] = None
+) -> NDArray[np.float]:
     """
     This is the main function that computes the Clustermatch coefficient between
     two arrays. This implementation only supports numerical data for
@@ -365,8 +365,8 @@ def to_numpy(x):
 
 
 def cm(
-    x: np.ndarray,
-    y: np.ndarray = None,
+    x: NDArray,
+    y: NDArray = None,
     internal_n_clusters: Iterable[int] = None,
     return_parts: bool = False,
 ):
