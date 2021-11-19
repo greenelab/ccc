@@ -895,7 +895,7 @@ def test_cm_return_parts_quadratic():
     )
 
     # Validate
-    assert cm_value.round(2) == 0.31
+    assert cm_value.round(2) == 0.59
 
     assert parts is not None
     assert len(parts) == 2
