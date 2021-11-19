@@ -129,6 +129,7 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
         match; it could be negative in some cases) and 1.0 (perfect match).
     """
     (tn, fp), (fn, tp) = get_pair_confusion_matrix(part0, part1)
+    tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
 
     # Special cases: empty data or full agreement
     if fn == 0 and fp == 0:
