@@ -21,7 +21,9 @@
 #
 # Here we profile function `cdist_parts` again.
 #
-# So **be carreful** with this version. Not completely tested after refactoring `rank`.
+# This version is the final test with the completely optimized clustermatch's functions.
+#
+# This notebook was run on my laptop.
 
 # %% [markdown] tags=[]
 # # Remove pycache dir
