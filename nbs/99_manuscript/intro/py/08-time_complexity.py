@@ -52,7 +52,7 @@ from clustermatch.methods import mic, distcorr
 N_REPS = 10
 N_SAMPLES_LIST = [10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000]
 
-# %%
+# %% tags=[]
 np.random.seed(0)
 
 # %% [markdown] tags=[]
