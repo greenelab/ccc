@@ -22,10 +22,10 @@
 # %% [markdown] tags=[]
 # # Modules
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Make sure we are not using multiple cores for this comparison.
 
-# %%
+# %% tags=[]
 # # %env NUMBA_NUM_THREADS=1
 # # %env MKL_NUM_THREADS=1
 # # %env OPEN_BLAS_NUM_THREADS=1
@@ -48,14 +48,14 @@ from clustermatch.methods import mic, distcorr
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 N_REPS = 10
 N_SAMPLES_LIST = [10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000]
 
 # %% [markdown] tags=[]
 # # Paths
 
-# %%
+# %% tags=[]
 assert (
     conf.MANUSCRIPT["BASE_DIR"] is not None and conf.MANUSCRIPT["BASE_DIR"].exists()
 ), "Manuscript dir not set"
@@ -65,24 +65,24 @@ OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "intro"
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Setup code
 
-# %%
+# %% tags=[]
 x = np.random.rand(100)
 y = np.random.rand(100)
 
-# %%
+# %% tags=[]
 cm(x, y)
 
-# %%
+# %% tags=[]
 mic(x, y)
 
-# %%
+# %% tags=[]
 distcorr(x, y)
 
 
-# %%
+# %% tags=[]
 def run_timeit(corr_func, x, y):
     results = []
     for i in range(N_REPS):
@@ -90,17 +90,17 @@ def run_timeit(corr_func, x, y):
     return results
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Run
 
-# %%
+# %% tags=[]
 n_samples_list = []
 
 cm_times = []
 mic_times = []
 distcorr_times = []
 
-# %%
+# %% tags=[]
 for i, n_samples in enumerate(N_SAMPLES_LIST):
     x = np.random.rand(n_samples)
     y = np.random.rand(n_samples)
@@ -115,7 +115,7 @@ for i, n_samples in enumerate(N_SAMPLES_LIST):
 
     n_samples_list.extend([n_samples] * N_REPS)
 
-# %%
+# %% tags=[]
 res = pd.DataFrame(
     {
         "n_samples": n_samples_list,
@@ -125,25 +125,25 @@ res = pd.DataFrame(
     }
 )
 
-# %%
+# %% tags=[]
 res.shape
 
-# %%
+# %% tags=[]
 res.head()
 
-# %%
+# %% tags=[]
 res = pd.melt(res, id_vars=["n_samples"], var_name="method", value_name="time")
 
-# %%
+# %% tags=[]
 res.head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Plot
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Point plot
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.3):
     g = sns.catplot(
         data=res,
@@ -159,10 +159,10 @@ with sns.plotting_context("paper", font_scale=1.3):
     g.ax.set_ylabel("Average time (seconds)")
     g.legend.set_title("Method")
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Line plot
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.3):
     res_thin = res[~res["method"].isin(("mic",))]
 
@@ -174,4 +174,4 @@ with sns.plotting_context("paper", font_scale=1.3):
     ax.legend_.set_title("Method")
     # ax.legend_._loc = 0
 
-# %%
+# %% tags=[]
