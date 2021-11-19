@@ -5,7 +5,6 @@ Contains function that implement the Clustermatch coefficient
 from typing import Iterable
 
 import numpy as np
-# from scipy import stats
 from numpy.typing import NDArray
 from numba import njit, prange
 from numba.typed import List
@@ -82,8 +81,6 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     data_sorted = np.argsort(data, kind="quicksort")
     data_rank = rank(data, data_sorted)
     data_perc = data_rank / data_rank.max()
-    # data_perc = stats.rankdata(data, "average") / len(data)
-    # data_perc_sort_idx = data_perc.argsort()
 
     percentiles = [0.0] + _get_perc_from_k(k) + [1.0]
 
