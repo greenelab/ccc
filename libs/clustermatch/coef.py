@@ -207,15 +207,11 @@ def cdist_parts_main(x: NDArray, y: NDArray) -> NDArray[np.float]:
 
 # jitted versions of cdist_parts_main
 cdist_parts_parallel = njit(
-    copy_func(cdist_parts_main, "cdist_par"),
-    cache=True,
-    parallel=True
+    copy_func(cdist_parts_main, "cdist_par"), cache=True, parallel=True
 )
 
 cdist_parts_not_parallel = njit(
-    copy_func(cdist_parts_main, "cdist_not_par"),
-    cache=True,
-    parallel=False
+    copy_func(cdist_parts_main, "cdist_not_par"), cache=True, parallel=False
 )
 
 
