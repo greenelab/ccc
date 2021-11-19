@@ -84,9 +84,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
 
     percentiles = [0.0] + _get_perc_from_k(k) + [1.0]
 
-    cut_points = np.searchsorted(
-        data_perc[data_sorted], percentiles, side="right"
-    )
+    cut_points = np.searchsorted(data_perc[data_sorted], percentiles, side="right")
 
     current_cluster = 0
     part = np.zeros(data.shape, dtype=np.int16) - 1
@@ -288,12 +286,14 @@ def _cm(
 
     # get matrix of partitions for each object pair
     range_n_clusters = _get_range_n_clusters(X.shape[1], internal_n_clusters)
-    
+
     # store a set of partitions per row (object) in X as a multidimensional array:
     #  - 1st dim: number of objects/rows in X
     #  - 2nd dim: number of partitions per object
     #  - 3rd dim: number of features per object (columns in X)
-    parts = np.zeros((X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16)
+    parts = np.zeros(
+        (X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16
+    )
 
     for idx in prange(X.shape[0]):
         parts[idx] = _get_parts(X[idx], range_n_clusters)
