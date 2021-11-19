@@ -34,12 +34,12 @@
 
 # %% tags=[]
 from timeit import timeit
+
 import numpy as np
+import pandas as pd
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-# from sklearn.preprocessing import minmax_scale
 
 from clustermatch import conf
 from clustermatch.coef import cm
@@ -83,8 +83,11 @@ distcorr(x, y)
 
 
 # %%
-def run_timeit(corr_func, x, y, **kwargs):
-    return timeit(lambda: corr_func(x, y), **kwargs)
+def run_timeit(corr_func, x, y):
+    results = []
+    for i in range(N_REPS):
+        results.append(timeit(lambda: corr_func(x, y), number=1))
+    return results
 
 
 # %% [markdown]
@@ -102,70 +105,73 @@ for i, n_samples in enumerate(N_SAMPLES_LIST):
     x = np.random.rand(n_samples)
     y = np.random.rand(n_samples)
 
-    n_samples_list.append(n_samples)
+    cm_times.extend(run_timeit(cm, x, y))
+    distcorr_times.extend(run_timeit(distcorr, x, y))
 
-    cm_times.append(run_timeit(cm, x, y, number=N_REPS))
-    distcorr_times.append(run_timeit(distcorr, x, y, number=N_REPS))
-
-    if n_samples <= 1000:
-        mic_times.append(run_timeit(mic, x, y, number=N_REPS))
+    if n_samples <= 10000:
+        mic_times.extend(run_timeit(mic, x, y))
     else:
-        mic_times.append(np.nan)
+        mic_times.extend([np.nan] * N_REPS)
+
+    n_samples_list.extend([n_samples] * N_REPS)
 
 # %%
-plt.title("Distance covariance performance comparison")
-plt.xlabel("Number of samples")
-plt.ylabel("Time (seconds)")
-plt.plot(N_SAMPLES_LIST, cm_times, label="cm")
-plt.plot(N_SAMPLES_LIST, mic_times, label="mic")
-plt.plot(N_SAMPLES_LIST, distcorr_times, label="distcorr")
-plt.legend()
-plt.show()
+res = pd.DataFrame(
+    {
+        "n_samples": n_samples_list,
+        "cm": cm_times,
+        "dcor": distcorr_times,
+        "mic": mic_times,
+    }
+)
 
 # %%
+res.shape
+
+# %%
+res.head()
+
+# %%
+res = pd.melt(res, id_vars=["n_samples"], var_name="method", value_name="time")
+
+# %%
+res.head()
 
 # %% [markdown]
-# Multiple CPU, cdist_parts parallel attempt #1
-# * it's a weird, almost no improvement
-
-# %%
-plt.title("Distance covariance performance comparison")
-plt.xlabel("Number of samples")
-plt.ylabel("Time (seconds)")
-plt.plot(N_SAMPLES_LIST, cm_times, label="cm")
-plt.plot(N_SAMPLES_LIST, mic_times, label="mic")
-plt.plot(N_SAMPLES_LIST, distcorr_times, label="distcorr")
-plt.legend()
-plt.show()
-
-# %%
+# # Plot
 
 # %% [markdown]
-# Results with multiple CPU enabled, current clustermatch versino with no extra optimization (should be the same as single CPU):
+# ## Point plot
 
 # %%
-plt.title("Distance covariance performance comparison")
-plt.xlabel("Number of samples")
-plt.ylabel("Time (seconds)")
-plt.plot(N_SAMPLES_LIST, cm_times, label="cm")
-plt.plot(N_SAMPLES_LIST, mic_times, label="mic")
-plt.plot(N_SAMPLES_LIST, distcorr_times, label="distcorr")
-plt.legend()
-plt.show()
-
-# %%
+with sns.plotting_context("paper", font_scale=1.3):
+    g = sns.catplot(
+        data=res,
+        x="n_samples",
+        y="time",
+        hue="method",
+        kind="point",
+        height=5,
+        aspect=1.5,
+        legend_out=False,
+    )
+    g.ax.set_xlabel("Number of samples")
+    g.ax.set_ylabel("Average time (seconds)")
+    g.legend.set_title("Method")
 
 # %% [markdown]
-# Results with only one CPU core:
+# ## Line plot
 
 # %%
-plt.title("Distance covariance performance comparison")
-plt.xlabel("Number of samples")
-plt.ylabel("Time (seconds)")
-plt.plot(N_SAMPLES_LIST, cm_times, label="cm")
-plt.plot(N_SAMPLES_LIST, mic_times, label="mic")
-plt.plot(N_SAMPLES_LIST, distcorr_times, label="distcorr")
-plt.legend()
-plt.show()
+with sns.plotting_context("paper", font_scale=1.3):
+    res_thin = res[~res["method"].isin(("mic",))]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax = sns.lineplot(data=res_thin, x="n_samples", y="time", hue="method", legend=True)
+    sns.despine()
+    ax.set_xlabel("Number of samples")
+    ax.set_ylabel("Average time (seconds)")
+    ax.legend_.set_title("Method")
+    # ax.legend_._loc = 0
 
 # %%
