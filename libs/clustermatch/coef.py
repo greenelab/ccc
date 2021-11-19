@@ -294,7 +294,7 @@ def _cm(
     #  - 3rd dim: number of features per object (columns in X)
     parts = np.zeros((X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16)
 
-    for idx in range(X.shape[0]):
+    for idx in prange(X.shape[0]):
         parts[idx] = _get_parts(X[idx], range_n_clusters)
 
     n = X.shape[0]
