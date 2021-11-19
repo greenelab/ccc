@@ -22,16 +22,16 @@
 # %% [markdown] tags=[]
 # # Remove pycache dir
 
-# %%
+# %% tags=[]
 # !echo ${CODE_DIR}
 
-# %%
+# %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
 
-# %%
+# %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -exec rm -rf {} \;
 
-# %%
+# %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
 
 # %% [markdown] tags=[]
@@ -42,7 +42,7 @@ import numpy as np
 
 from clustermatch.coef import cm
 
-# %%
+# %% tags=[]
 # let numba compile all the code before profiling
 cm(np.random.rand(10), np.random.rand(10))
 

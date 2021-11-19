@@ -1,14 +1,14 @@
-         153 function calls (147 primitive calls) in 2.729 seconds
+         158 function calls (152 primitive calls) in 3.959 seconds
 
    Ordered by: cumulative time
    List reduced from 54 to 50 due to restriction <50>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000    2.729    2.729 {built-in method builtins.exec}
-        1    0.000    0.000    2.729    2.729 <string>:1(<module>)
-        1    0.000    0.000    2.729    2.729 1750096170.py:1(func)
-        1    0.000    0.000    2.729    2.729 coef.py:344(cm)
-        1    2.728    2.728    2.728    2.728 coef.py:249(_cm)
+        1    0.000    0.000    3.959    3.959 {built-in method builtins.exec}
+        1    0.000    0.000    3.959    3.959 <string>:1(<module>)
+        1    0.000    0.000    3.959    3.959 1750096170.py:1(func)
+        1    0.000    0.000    3.959    3.959 coef.py:372(cm)
+        1    3.959    3.959    3.959    3.959 coef.py:267(_cm)
         9    0.000    0.000    0.000    0.000 typedlist.py:341(append)
         1    0.000    0.000    0.000    0.000 typedlist.py:298(_initialise_list)
         2    0.000    0.000    0.000    0.000 abstract.py:60(__call__)
@@ -17,40 +17,40 @@
         2    0.000    0.000    0.000    0.000 functools.py:872(wrapper)
         1    0.000    0.000    0.000    0.000 dispatcher.py:677(typeof_pyval)
         2    0.000    0.000    0.000    0.000 abstract.py:48(_intern)
-        1    0.000    0.000    0.000    0.000 typeof.py:257(_typeof_nb_type)
         2    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 typeof.py:257(_typeof_nb_type)
         1    0.000    0.000    0.000    0.000 containers.py:618(__init__)
         9    0.000    0.000    0.000    0.000 typedlist.py:81(_append)
         6    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
-        2    0.000    0.000    0.000    0.000 functools.py:816(dispatch)
+    12/10    0.000    0.000    0.000    0.000 abstract.py:120(__eq__)
       4/2    0.000    0.000    0.000    0.000 abstract.py:117(__hash__)
-        1    0.000    0.000    0.000    0.000 typeof.py:121(_typeof_int)
-      7/5    0.000    0.000    0.000    0.000 abstract.py:120(__eq__)
+        2    0.000    0.000    0.000    0.000 functools.py:816(dispatch)
         4    0.000    0.000    0.000    0.000 abc.py:117(__instancecheck__)
+        1    0.000    0.000    0.000    0.000 typeof.py:121(_typeof_int)
         1    0.000    0.000    0.000    0.000 typedlist.py:202(__new__)
-       10    0.000    0.000    0.000    0.000 serialize.py:140(_numba_unpickle)
-        1    0.000    0.000    0.000    0.000 utils.py:294(bit_length)
-        2    0.000    0.000    0.000    0.000 coef.py:330(to_numpy)
-        1    0.000    0.000    0.000    0.000 typedlist.py:228(__init__)
-        1    0.000    0.000    0.000    0.000 functions.py:660(__init__)
-       20    0.000    0.000    0.000    0.000 typedlist.py:280(_numba_type_)
-      4/2    0.000    0.000    0.000    0.000 {built-in method builtins.hash}
         4    0.000    0.000    0.000    0.000 {built-in method _abc._abc_instancecheck}
-        1    0.000    0.000    0.000    0.000 {method 'format' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 utils.py:294(bit_length)
+        2    0.000    0.000    0.000    0.000 coef.py:358(to_numpy)
+       10    0.000    0.000    0.000    0.000 serialize.py:140(_numba_unpickle)
+        1    0.000    0.000    0.000    0.000 typedlist.py:228(__init__)
+      4/2    0.000    0.000    0.000    0.000 {built-in method builtins.hash}
+       20    0.000    0.000    0.000    0.000 typedlist.py:280(_numba_type_)
+        1    0.000    0.000    0.000    0.000 functions.py:660(__init__)
         1    0.000    0.000    0.000    0.000 typedlist.py:50(_make_list)
+        1    0.000    0.000    0.000    0.000 {method 'format' of 'str' objects}
         1    0.000    0.000    0.000    0.000 misc.py:47(unliteral)
         2    0.000    0.000    0.000    0.000 weakref.py:415(__getitem__)
         2    0.000    0.000    0.000    0.000 <string>:1(<lambda>)
         9    0.000    0.000    0.000    0.000 typedlist.py:286(_typed)
-        2    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
-        3    0.000    0.000    0.000    0.000 {built-in method __new__ of type object at 0x559cc901f300}
+        3    0.000    0.000    0.000    0.000 {built-in method __new__ of type object at 0x5555664df300}
         1    0.000    0.000    0.000    0.000 {built-in method builtins.any}
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
         6    0.000    0.000    0.000    0.000 abstract.py:95(key)
-        2    0.000    0.000    0.000    0.000 abstract.py:114(__repr__)
-        3    0.000    0.000    0.000    0.000 containers.py:630(key)
-        2    0.000    0.000    0.000    0.000 abstract.py:92(__init__)
         1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        2    0.000    0.000    0.000    0.000 abstract.py:92(__init__)
+        3    0.000    0.000    0.000    0.000 containers.py:630(key)
         3    0.000    0.000    0.000    0.000 functions.py:672(key)
-        1    0.000    0.000    0.000    0.000 {built-in method builtins.hasattr}
+        2    0.000    0.000    0.000    0.000 abstract.py:114(__repr__)
         2    0.000    0.000    0.000    0.000 {built-in method _abc.get_cache_token}
-        1    0.000    0.000    0.000    0.000 {built-in method builtins.bin}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.hasattr}
+        1    0.000    0.000    0.000    0.000 typedlist.py:244(<genexpr>)
