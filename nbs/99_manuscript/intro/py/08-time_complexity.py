@@ -161,7 +161,7 @@ with sns.plotting_context("paper", font_scale=1.3):
     g.ax.set_xlabel("Number of samples")
     g.ax.set_ylabel("Average time (seconds)")
     g.legend.set_title("Method")
-    
+
     plt.savefig(
         OUTPUT_FIGURE_DIR / "time-point_plot.svg",
         # rasterized=True,
@@ -183,7 +183,7 @@ with sns.plotting_context("paper", font_scale=1.3):
     ax.set_xlabel("Number of samples")
     ax.set_ylabel("Average time (seconds)")
     ax.legend_.set_title("Method")
-    
+
     plt.savefig(
         OUTPUT_FIGURE_DIR / "time-line_plot.svg",
         # rasterized=True,
