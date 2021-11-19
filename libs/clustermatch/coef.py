@@ -5,6 +5,7 @@ Contains function that implement the Clustermatch coefficient
 from typing import Iterable
 
 import numpy as np
+# from scipy import stats
 from numpy.typing import NDArray
 from numba import njit, prange
 from numba.typed import List
@@ -42,43 +43,24 @@ def rank(data: NDArray) -> NDArray:
     Returns:
         A 1d array with the ranks of the input data.
     """
-    data_sorted_idx = data.argsort()
-    data_sorted = data[data_sorted_idx]
+    n = len(data)
+    t = np.arange(n)
+    # s = sorted(t, key=data.__getitem__ )
 
-    data_ranks = data_sorted_idx.argsort().astype(np.float64)
+    s = data.argsort()
+    # s = data_sorted_idx.argsort()  #.astype(np.float64)
 
-    # handle ties with the average
-    first_idx = data_sorted_idx[0]
-    first_rank = data_ranks[first_idx]
-    current_rank_group_idxs = [first_idx]
-    current_rank_group = [first_rank]
+    # if not break_ties:
+    t[1:] = np.cumsum(data[s[1:]] != data[s[:-1]])
 
-    for i in range(1, data.shape[0]):
-        current_idx = data_sorted_idx[i]
-        current_rank = data_ranks[current_idx]
-
-        if data_sorted[i] == data_sorted[i - 1]:
-            current_rank_group_idxs.append(current_idx)
-            current_rank_group.append(current_rank)
-
-            if i < (data.shape[0] - 1):
-                continue
-
-        if len(current_rank_group) > 1:
-            assert len(current_rank_group) == len(set(current_rank_group))
-            assert len(current_rank_group_idxs) == len(set(current_rank_group_idxs))
-
-            avg_rank = np.array(current_rank_group).mean()
-            data_ranks[np.array(current_rank_group_idxs)] = avg_rank
-
-        current_rank_group = [current_rank]
-        current_rank_group_idxs = [current_idx]
-
-    return data_ranks + 1
+    r = t.copy()
+    # np.put(r, s, t)
+    r[s] = t
+    return r + 1
 
 
 @njit(cache=True)
-def run_quantile_clustering(data: NDArray, k: int) -> NDArray:
+def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     """
     Performs a simple quantile clustering on one dimensional data (1d). Quantile
     clustering is defined as the procedure that forms clusters in 1d data by
@@ -94,7 +76,9 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray:
     Returns:
         A 1d array with the data partition.
     """
-    data_perc = rank(data) / len(data)
+    data_rank = rank(data)
+    data_perc = data_rank / data_rank.max()
+    # data_perc = stats.rankdata(data, "average") / len(data)
     data_perc_sort_idx = data_perc.argsort()
 
     percentiles = [0.0] + _get_perc_from_k(k) + [1.0]
@@ -104,7 +88,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray:
     )
 
     current_cluster = 0
-    part = np.zeros(data.shape) - 1
+    part = np.zeros(data.shape, dtype=np.int16) - 1
 
     for i in range(len(cut_points) - 1):
         lim1 = cut_points[i]
@@ -113,7 +97,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray:
         part[data_perc_sort_idx[lim1:lim2]] = current_cluster
         current_cluster += 1
 
-    return part.astype(np.uint8)
+    return part
 
 
 @njit(cache=True)
