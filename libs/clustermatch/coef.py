@@ -179,8 +179,7 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]
     return parts
 
 
-@njit(cache=True, parallel=True)
-def cdist_parts(x: NDArray, y: NDArray) -> NDArray[np.float]:
+def cdist_parts_main(x: NDArray, y: NDArray) -> NDArray[np.float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
     for clustering partitions, and instead of a distance it returns the adjusted
@@ -203,6 +202,19 @@ def cdist_parts(x: NDArray, y: NDArray) -> NDArray[np.float]:
             res[i, j] = ari(x[i], y[j])
 
     return res
+
+
+# jitted versions of cdist_parts_main
+cdist_parts_parallel = njit(cdist_parts_main, cache=True, parallel=True)
+cdist_parts_not_parallel = njit(cdist_parts_main, cache=True, parallel=False)
+
+
+@njit(cache=True)
+def cdist_parts(x: NDArray, y: NDArray, parallel: bool = True) -> NDArray[np.float]:
+    if parallel:
+        return cdist_parts_parallel(x, y)
+    else:
+        return cdist_parts_not_parallel(x, y)
 
 
 @njit(cache=True)
@@ -304,7 +316,17 @@ def _cm(
     cm_values[:] = np.nan
 
     max_parts = np.zeros((out_size, 2), dtype=np.uint64)
-    # max_parts[:] = np.nan
+
+    # Below, there are two layers of parallelism: 1) parallel execution across
+    # object pairs (first for loop with prange) and 2) the cdist_parts
+    # function, which also runs several threads to compare partitions with ari.
+    # In 2) we need to disable parallelization in case len(cm_values) > 1,
+    # otherwise these two layers are not "serialized" (they spawn
+    # NUMBA_NUM_THREADS threads each for some reason).
+    # TODO: this should probably be reported in numba as a potential bug
+    # default_n_threads = get_num_threads()
+    # cdist_parts_n_threads = default_n_threads if cm_values.shape[0] == 1 else 1
+    parallelize_cdist = True if cm_values.shape[0] == 1 else False
 
     for idx in prange(cm_values.shape[0]):
         i, j = get_coords_from_index(n, idx)
@@ -315,7 +337,7 @@ def _cm(
         if obji_parts[0, 0] == -1 or objj_parts[0, 0] == -1:
             cm_values[idx] = np.nan
         else:
-            comp_values = cdist_parts(obji_parts, objj_parts)
+            comp_values = cdist_parts(obji_parts, objj_parts, parallelize_cdist)
             max_flat_idx = comp_values.argmax()
             max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
 
