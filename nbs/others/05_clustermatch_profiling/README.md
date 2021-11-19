@@ -14,11 +14,11 @@ below.
 * `07_cm_optimized`:
   * cm function now supports parallelization (from numba)
 
-* `08_cm_optimized`:
-  * this test was not performed since it didn't seem to improve results; I leave
-    it here in case it is tried again in the future
-  * e idea was that the code is exactly the same as in `07_cm_optimized`, but
-    the conda environment contained the package `icc_rt` suggested in the numba
-    documentation
-    [here](https://numba.pydata.org/numba-doc/latest/user/performance-tips.html#intel-svml)
-    to use the Intel SVML library to speed up math operations.
+* `10_cm_optimized`:
+  * optimization for computing ari in parallel (function cdist_parts)
+  * many optimizations in other functions associated to _get_parts, such as rank, run_quantile_clustering, etc.
+  * the idea here is to optimize the single variable pair processing
+
+* `11_cm_optimized`:
+  * after all optimization in 10_cm_optimized, this is a copy of 07_cm_optimized to check
+    if the matrix data input keeps working correctly.
