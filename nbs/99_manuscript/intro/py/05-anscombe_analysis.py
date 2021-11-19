@@ -39,7 +39,7 @@ from clustermatch.coef import cm
 # %% [markdown] tags=[]
 # # Paths
 
-# %%
+# %% tags=[]
 assert (
     conf.MANUSCRIPT["BASE_DIR"] is not None and conf.MANUSCRIPT["BASE_DIR"].exists()
 ), "Manuscript dir not set"
@@ -49,40 +49,40 @@ OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "intro"
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Generate datasets
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Anscombe dataset
 
-# %%
+# %% tags=[]
 datasets_df = sns.load_dataset("anscombe")
 
-# %%
+# %% tags=[]
 datasets_df.shape
 
-# %%
+# %% tags=[]
 datasets_df.head()
 
-# %%
+# %% tags=[]
 datasets_df = datasets_df.assign(
     dataset=datasets_df["dataset"].apply(lambda x: f"Anscombe {x}")
 )
 
-# %%
+# %% tags=[]
 datasets_df.describe()
 
-# %%
+# %% tags=[]
 x_lim = (3, 20)
 y_lim = (3, 13)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Quadratic
 
-# %%
+# %% tags=[]
 rel_name = "quadratic"
 
-# %%
+# %% tags=[]
 np.random.seed(0)
 
 x = minmax_scale(np.random.rand(100), (-10, 10))
@@ -105,13 +105,13 @@ datasets_df = datasets_df.append(
     ignore_index=True,
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Noncoexistence
 
-# %%
+# %% tags=[]
 rel_name = "noncoexistence"
 
-# %%
+# %% tags=[]
 np.random.seed(5)
 
 # x = minmax_scale(np.random.beta(0.5, 0.5, 50), (0.05, 20))
@@ -142,13 +142,13 @@ datasets_df = datasets_df.append(
     ignore_index=True,
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Two lines
 
-# %%
+# %% tags=[]
 rel_name = "two_linear"
 
-# %%
+# %% tags=[]
 np.random.seed(5)
 
 x = minmax_scale(np.random.rand(50), x_lim)
@@ -176,13 +176,13 @@ datasets_df = datasets_df.append(
     ignore_index=True,
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Random / independent
 
-# %%
+# %% tags=[]
 rel_name = "random"
 
-# %%
+# %% tags=[]
 np.random.seed(10)
 
 x = np.random.rand(100)
@@ -203,19 +203,19 @@ datasets_df = datasets_df.append(
     ignore_index=True,
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Create a dictionary with easier access to datasets
 
-# %%
+# %% tags=[]
 datasets = {
     idx: df.drop(columns="dataset") for idx, df in datasets_df.groupby("dataset")
 }
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Plot
 
-# %%
+# %% tags=[]
 def get_cm_line_points(x, y, max_parts, parts):
     # get the clustermatch partitions that maximize the coefficient
     x_max_part = parts[0][max_parts[0]]
@@ -249,7 +249,7 @@ def get_cm_line_points(x, y, max_parts, parts):
     return x_line_points, y_line_points
 
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.8):
     g = sns.FacetGrid(data=datasets_df, col="dataset", col_wrap=4, height=5)
     g.map(sns.scatterplot, "x", "y", s=50, alpha=1)
@@ -300,10 +300,10 @@ with sns.plotting_context("paper", font_scale=1.8):
         facecolor="white",
     )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # **COMPLETE CONCLUSIONS**:
 #
 # 1. more number of internal clusters capture more complex relationships
 # 1. with two clutsers for each variable pair, clustermatch seems to capture linear relationships only
 
-# %%
+# %% tags=[]
