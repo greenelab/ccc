@@ -52,6 +52,9 @@ from clustermatch.methods import mic, distcorr
 N_REPS = 10
 N_SAMPLES_LIST = [10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000]
 
+# %%
+np.random.seed(0)
+
 # %% [markdown] tags=[]
 # # Paths
 
@@ -158,6 +161,14 @@ with sns.plotting_context("paper", font_scale=1.3):
     g.ax.set_xlabel("Number of samples")
     g.ax.set_ylabel("Average time (seconds)")
     g.legend.set_title("Method")
+    
+    plt.savefig(
+        OUTPUT_FIGURE_DIR / "time-point_plot.svg",
+        # rasterized=True,
+        # dpi=300,
+        bbox_inches="tight",
+        facecolor="white",
+    )
 
 # %% [markdown] tags=[]
 # ## Line plot
@@ -172,6 +183,13 @@ with sns.plotting_context("paper", font_scale=1.3):
     ax.set_xlabel("Number of samples")
     ax.set_ylabel("Average time (seconds)")
     ax.legend_.set_title("Method")
-    # ax.legend_._loc = 0
+    
+    plt.savefig(
+        OUTPUT_FIGURE_DIR / "time-line_plot.svg",
+        # rasterized=True,
+        # dpi=300,
+        bbox_inches="tight",
+        facecolor="white",
+    )
 
 # %% tags=[]
