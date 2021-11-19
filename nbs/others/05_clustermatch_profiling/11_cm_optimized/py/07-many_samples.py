@@ -20,12 +20,31 @@
 # Clustermatch run using a larger number of samples.
 
 # %% [markdown] tags=[]
+# # Remove pycache dir
+
+# %%
+# !echo ${CODE_DIR}
+
+# %%
+# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
+
+# %%
+# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -exec rm -rf {} \;
+
+# %%
+# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
+
+# %% [markdown] tags=[]
 # # Modules
 
 # %% tags=[]
 import numpy as np
 
 from clustermatch.coef import cm
+
+# %%
+# let numba compile all the code before profiling
+cm(np.random.rand(10), np.random.rand(10))
 
 # %% [markdown] tags=[]
 # # Data
