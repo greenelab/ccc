@@ -119,6 +119,11 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
     https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_rand_score.html
     See copyright notice at the top of this file.
 
+    Important: this is a Numba jitted function, so it does not have support
+    for arbitrarily large integers as in Python. This means that, for this
+    function, partitions with a large number of objects will produce overflow
+    and return a meaningless ARI.
+
     Args:
         part0: a 1d array with cluster assignments for n objects.
         part1: a 1d array with cluster assignments for n objects.
@@ -129,7 +134,7 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
         match; it could be negative in some cases) and 1.0 (perfect match).
     """
     (tn, fp), (fn, tp) = get_pair_confusion_matrix(part0, part1)
-    tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
+    # tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
 
     # Special cases: empty data or full agreement
     if fn == 0 and fp == 0:
