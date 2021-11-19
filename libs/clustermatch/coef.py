@@ -31,7 +31,7 @@ def _get_perc_from_k(k: int) -> list[float]:
 
 
 @njit(cache=True)
-def rank(data: NDArray) -> NDArray:
+def rank(data: NDArray, sorted_data: NDArray = None) -> NDArray:
     """
     It returns the ranks of a numpy array. It's an implementation of
     scipy.stats.rankdata (method="average") that can be compiled by numba.
@@ -39,24 +39,27 @@ def rank(data: NDArray) -> NDArray:
 
     Args:
         data: a 1d array with numeric data.
+        sorted_data: TODO add it is the sorted array with np.argsort
 
     Returns:
         A 1d array with the ranks of the input data.
     """
-    n = len(data)
-    t = np.arange(n)
-    # s = sorted(t, key=data.__getitem__ )
 
-    s = data.argsort()
-    # s = data_sorted_idx.argsort()  #.astype(np.float64)
+    # TODO: taken from scipy, move to metrics.py and cite license
 
-    # if not break_ties:
-    t[1:] = np.cumsum(data[s[1:]] != data[s[:-1]])
+    arr = np.ravel(np.asarray(data))
+    if sorted_data is None:
+        sorter = np.argsort(arr, kind="quicksort")
+    else:
+        sorter = sorted_data
 
-    r = t.copy()
-    # np.put(r, s, t)
-    r[s] = t
-    return r + 1
+    inv = np.empty(sorter.size, dtype=np.intp)
+    inv[sorter] = np.arange(sorter.size, dtype=np.intp)
+
+    arr = arr[sorter]
+    obs = np.ones(arr.shape[0], dtype=np.bool_)
+    obs[1:] = arr[1:] != arr[:-1]
+    return obs.cumsum()[inv]
 
 
 @njit(cache=True)
@@ -76,15 +79,16 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     Returns:
         A 1d array with the data partition.
     """
-    data_rank = rank(data)
+    data_sorted = np.argsort(data, kind="quicksort")
+    data_rank = rank(data, data_sorted)
     data_perc = data_rank / data_rank.max()
     # data_perc = stats.rankdata(data, "average") / len(data)
-    data_perc_sort_idx = data_perc.argsort()
+    # data_perc_sort_idx = data_perc.argsort()
 
     percentiles = [0.0] + _get_perc_from_k(k) + [1.0]
 
     cut_points = np.searchsorted(
-        data_perc[data_perc_sort_idx], percentiles, side="right"
+        data_perc[data_sorted], percentiles, side="right"
     )
 
     current_cluster = 0
@@ -94,7 +98,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
         lim1 = cut_points[i]
         lim2 = cut_points[i + 1]
 
-        part[data_perc_sort_idx[lim1:lim2]] = current_cluster
+        part[data_sorted[lim1:lim2]] = current_cluster
         current_cluster += 1
 
     return part
