@@ -16,22 +16,22 @@
 # %% [markdown] tags=[]
 # # Description
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Exactly the same code as in `08`, but here I run the notebook in a different machine (desktop).
 
 # %% [markdown] tags=[]
 # # Remove pycache dir
 
-# %%
+# %% tags=[]
 # !echo ${CODE_DIR}
 
-# %%
+# %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
 
-# %%
+# %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -exec rm -rf {} \;
 
-# %%
+# %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
 
 # %% [markdown] tags=[]
@@ -45,7 +45,7 @@ from clustermatch.coef import _cm
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 N_REPS = 10
 
 # %% tags=[]
@@ -54,17 +54,17 @@ np.random.seed(0)
 # %% [markdown] tags=[]
 # # Setup
 
-# %%
+# %% tags=[]
 # let numba compile all the code before profiling
 _cm(np.random.rand(10), np.random.rand(10))
 
 # %% [markdown] tags=[]
 # # Run with `n_samples` small
 
-# %%
+# %% tags=[]
 N_SAMPLES = 100
 
-# %%
+# %% tags=[]
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
@@ -91,10 +91,10 @@ func()
 # %% [markdown] tags=[]
 # # Run with `n_samples` large
 
-# %%
+# %% tags=[]
 N_SAMPLES = 100000
 
-# %%
+# %% tags=[]
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
@@ -118,4 +118,4 @@ func()
 # %% [markdown] tags=[]
 # **UPDATE**
 
-# %%
+# %% tags=[]
