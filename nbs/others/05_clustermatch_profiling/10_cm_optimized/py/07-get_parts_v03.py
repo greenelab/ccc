@@ -24,8 +24,6 @@
 # Here I try a completely new `rank` function.
 # I'm also trying a slightly different `run_quantile_clustering`, given the changes to `rank`.
 # I'm also parallelizing `_get_parts` inside `_cm`.
-#
-# So **be carreful** with this version.
 
 # %% [markdown] tags=[]
 # # Remove pycache dir
