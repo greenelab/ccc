@@ -556,6 +556,35 @@ def test_cm_x_is_pandas_dataframe():
     assert np.issubdtype(cm_value.dtype, np.float)
 
 
+def test_cm_integer_overflow_random():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(1000000)
+    feature1 = np.random.rand(1000000)
+
+    # Run
+    cm_value = cm(feature0, feature1)
+
+    # Validate
+    assert 0.0 <= cm_value <= 0.01
+
+
+def test_cm_integer_overflow_perfect_match():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(1000000)
+
+    # Run
+    cm_value = cm(feature0, feature0)
+
+    # Validate
+    assert cm_value == 1.0
+
+
 def test_get_parts_simple():
     np.random.seed(0)
 
