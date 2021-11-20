@@ -39,7 +39,7 @@ import numpy as np
 from numba import njit
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Given two clustering partitions with k0 and k1 number of clusters each, it
@@ -76,7 +76,7 @@ def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     return cont_mat
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Returns the pair confusion matrix from two clustering partitions. It is an
@@ -111,7 +111,7 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
     return C
 
 
-@njit(cache=True)
+# @njit(cache=True)
 def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
     """
     Computes the adjusted Rand index (ARI) between two clustering partitions.
@@ -134,7 +134,7 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
         match; it could be negative in some cases) and 1.0 (perfect match).
     """
     (tn, fp), (fn, tp) = get_pair_confusion_matrix(part0, part1)
-    # tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
+    tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
 
     # Special cases: empty data or full agreement
     if fn == 0 and fp == 0:

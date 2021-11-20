@@ -2,15 +2,16 @@
 Contains function that implement the Clustermatch coefficient
 (https://doi.org/10.1093/bioinformatics/bty899).
 """
+from concurrent.futures import ThreadPoolExecutor
 from typing import Iterable
 
 import numpy as np
 from numpy.typing import NDArray
-from numba import njit, prange
+from numba import njit, get_num_threads
 from numba.typed import List
 
 from clustermatch.metrics import adjusted_rand_index as ari
-from clustermatch.utils import copy_func
+# from clustermatch.utils import copy_func
 
 
 @njit(cache=True)
@@ -150,7 +151,7 @@ def _get_range_n_clusters(
     return np.array(clusters_range_list, dtype=np.uint8)
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]:
     """
     Given a 1d data array, it computes a partition for each k value in the given
@@ -180,7 +181,7 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]
     return parts
 
 
-def cdist_parts_main(x: NDArray, y: NDArray) -> NDArray[np.float]:
+def cdist_parts(x: NDArray, y: NDArray, n_threads: int = 1) -> NDArray[np.float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
     for clustering partitions, and instead of a distance it returns the adjusted
@@ -198,29 +199,41 @@ def cdist_parts_main(x: NDArray, y: NDArray) -> NDArray[np.float]:
     """
     res = np.zeros((x.shape[0], y.shape[0]))
 
-    for i in prange(res.shape[0]):
-        for j in range(res.shape[1]):
-            res[i, j] = ari(x[i], y[j])
+    with ThreadPoolExecutor(max_workers=n_threads) as executor:
+        inputs = range(res.shape[0])
+
+        def run(i):
+            return np.array([ari(x[i], y[j]) for j in range(res.shape[1])])
+            # for j in range(res.shape[1]):
+            #     res[i, j] = ari(x[i], y[j])
+
+        for idx, ps in zip(inputs, executor.map(run, inputs)):
+            res[idx, :] = ps
+
+    # # TODO add threading here
+    # for i in range(res.shape[0]):
+    #     for j in range(res.shape[1]):
+    #         res[i, j] = ari(x[i], y[j])
 
     return res
 
 
-# jitted versions of cdist_parts_main
-cdist_parts_parallel = njit(
-    copy_func(cdist_parts_main, "cdist_par"), cache=True, parallel=True
-)
+# # jitted versions of cdist_parts_main
+# cdist_parts_parallel = njit(
+#     copy_func(cdist_parts_main, "cdist_par"), cache=True, parallel=True
+# )
+#
+# cdist_parts_not_parallel = njit(
+#     copy_func(cdist_parts_main, "cdist_not_par"), cache=True, parallel=False
+# )
 
-cdist_parts_not_parallel = njit(
-    copy_func(cdist_parts_main, "cdist_not_par"), cache=True, parallel=False
-)
 
-
-@njit(cache=True)
-def cdist_parts(x: NDArray, y: NDArray, parallel: bool = True) -> NDArray[np.float]:
-    if parallel:
-        return cdist_parts_parallel(x, y)
-    else:
-        return cdist_parts_not_parallel(x, y)
+# @njit(cache=True)
+# def cdist_parts(x: NDArray, y: NDArray, parallel: bool = True) -> NDArray[np.float]:
+#     if parallel:
+#         return cdist_parts_parallel(x, y)
+#     else:
+#         return cdist_parts_not_parallel(x, y)
 
 
 @njit(cache=True)
@@ -264,7 +277,7 @@ def unravel_index_2d(flat_index: int, shape: tuple[int]) -> tuple[int]:
     return tuple((res[1], res[0]))
 
 
-@njit(cache=True, parallel=True)
+# @njit(cache=True, parallel=True)
 def _cm(
     x: NDArray, y: NDArray = None, internal_n_clusters: Iterable[int] = None
 ) -> NDArray[np.float]:
@@ -302,6 +315,8 @@ def _cm(
     else:
         raise ValueError("Wrong combination of parameters x and y")
 
+    default_n_threads = get_num_threads()
+
     # get matrix of partitions for each object pair
     range_n_clusters = _get_range_n_clusters(X.shape[1], internal_n_clusters)
 
@@ -313,8 +328,14 @@ def _cm(
         (X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16
     )
 
-    for idx in prange(X.shape[0]):
-        parts[idx] = _get_parts(X[idx], range_n_clusters)
+    with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
+        inputs = range(X.shape[0])
+
+        def run(i):
+            return _get_parts(X[i], range_n_clusters)
+
+        for idx, ps in zip(inputs, executor.map(run, inputs)):
+            parts[idx] = ps
 
     n = X.shape[0]
     out_size = (n * (n - 1)) // 2
@@ -330,11 +351,11 @@ def _cm(
     # otherwise these two layers are not "serialized" (they spawn
     # NUMBA_NUM_THREADS threads each for some reason).
     # TODO: this should probably be reported in numba as a potential bug
-    # default_n_threads = get_num_threads()
     # cdist_parts_n_threads = default_n_threads if cm_values.shape[0] == 1 else 1
-    parallelize_cdist = True if cm_values.shape[0] == 1 else False
+    cdist_parts_n_threads = default_n_threads if cm_values.shape[0] == 1 else 1
 
-    for idx in prange(cm_values.shape[0]):
+    # TODO add threading here
+    for idx in range(cm_values.shape[0]):
         i, j = get_coords_from_index(n, idx)
 
         # get partitions for the pair of objects
@@ -343,7 +364,8 @@ def _cm(
         if obji_parts[0, 0] == -1 or objj_parts[0, 0] == -1:
             cm_values[idx] = np.nan
         else:
-            comp_values = cdist_parts(obji_parts, objj_parts, parallelize_cdist)
+            # TODO add threading here, and nogil to cdist_parts
+            comp_values = cdist_parts(obji_parts, objj_parts, cdist_parts_n_threads)
             max_flat_idx = comp_values.argmax()
             max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
 
