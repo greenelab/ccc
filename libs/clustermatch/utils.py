@@ -3,7 +3,7 @@ General utility functions.
 """
 import re
 import hashlib
-import types
+# import types
 from pathlib import Path
 from subprocess import run
 
@@ -14,20 +14,20 @@ PATTERN_NOT_ALPHANUMERIC = re.compile(r"[^0-9a-zA-Z_]")
 PATTERN_UNDERSCORE_DUPLICATED = re.compile(r"_{2,}")
 
 
-def copy_func(f, name=None):
-    """
-    Copies a python function object into a new function object. It can
-    optionally change its name. Based on https://stackoverflow.com/a/13503277
-    """
-    g = types.FunctionType(
-        f.__code__.replace(co_name=name or f.__name__),
-        f.__globals__,
-        name=name or f.__name__,
-        argdefs=f.__defaults__,
-        closure=f.__closure__,
-    )
-    g.__kwdefaults__ = f.__kwdefaults__
-    return g
+# def copy_func(f, name=None):
+#     """
+#     Copies a python function object into a new function object. It can
+#     optionally change its name. Based on https://stackoverflow.com/a/13503277
+#     """
+#     g = types.FunctionType(
+#         f.__code__.replace(co_name=name or f.__name__),
+#         f.__globals__,
+#         name=name or f.__name__,
+#         argdefs=f.__defaults__,
+#         closure=f.__closure__,
+#     )
+#     g.__kwdefaults__ = f.__kwdefaults__
+#     return g
 
 
 def download_file(url: str, output_file: str):
