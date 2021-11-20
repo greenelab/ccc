@@ -11,6 +11,7 @@ from numba import njit, get_num_threads
 from numba.typed import List
 
 from clustermatch.metrics import adjusted_rand_index as ari
+
 # from clustermatch.utils import copy_func
 
 
