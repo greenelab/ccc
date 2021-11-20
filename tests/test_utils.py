@@ -180,6 +180,8 @@ def test_simplify_string_other_special_chars():
     obs_value = simplify_string(orig_value.lower())
     assert obs_value is not None
     assert obs_value == exp_value
+
+
 #
 #
 # def test_copy_func():
