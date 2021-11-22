@@ -13,6 +13,7 @@ from numba.typed import List
 from clustermatch.pytorch.core import unravel_index_2d
 from clustermatch.sklearn.metrics import adjusted_rand_index as ari
 from clustermatch.scipy.stats import rank
+from clustermatch.utils import chunker
 
 
 @njit(cache=True)
@@ -273,13 +274,12 @@ def _cm(
 
     # cm_values stores the clusermatch coefficients
     n = X.shape[0]
-    out_size = (n * (n - 1)) // 2
-    cm_values = np.empty(out_size)
-    cm_values[:] = np.nan
+    n_comp = (n * (n - 1)) // 2
+    cm_values = np.full(n_comp, np.nan)
 
     # for each object pair being compared, max_parts has the indexes of the
     # partitions that maximimized the ARI
-    max_parts = np.zeros((out_size, 2), dtype=np.uint64)
+    max_parts = np.zeros((n_comp, 2), dtype=np.uint64)
 
     # Below, there are two layers of parallelism: 1) parallel execution across
     # object pairs and 2) the cdist_parts function, which also runs several
@@ -288,34 +288,40 @@ def _cm(
     # object pairs to compare), because parallelization is already performed at
     # this level. Otherwise, more threads than specified by the user are
     # started.
-    cdist_parts_n_threads = default_n_threads if cm_values.shape[0] == 1 else 1
+    cdist_parts_n_threads = default_n_threads if n_comp == 1 else 1
 
     with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
-        inputs = range(cm_values.shape[0])
+        inputs = list(chunker(np.arange(n_comp), int(np.ceil(n_comp / default_n_threads))))
 
-        def run(idx):
-            i, j = get_coords_from_index(n, idx)
+        def run(idx_list):
+            """
+            TODO
+            """
+            n_idxs = len(idx_list)
+            max_ari_list = np.full(n_idxs, np.nan, dtype=float)
+            max_part_idx_list = np.zeros((n_idxs, 2), dtype=np.uint64)
 
-            # get partitions for the pair of objects
-            obji_parts, objj_parts = parts[i], parts[j]
+            for idx, data_idx in enumerate(idx_list):
+                i, j = get_coords_from_index(n, data_idx)
 
-            max_ari = np.nan
-            max_idx = int(0), int(0)
+                # get partitions for the pair of objects
+                obji_parts, objj_parts = parts[i], parts[j]
 
-            # compute ari only if partitions are not marked as "missing"
-            # (negative values)
-            if obji_parts[0, 0] >= -1 and objj_parts[0, 0] >= 0:
-                comp_values = cdist_parts(obji_parts, objj_parts, cdist_parts_n_threads)
-                max_flat_idx = comp_values.argmax()
+                # compute ari only if partitions are not marked as "missing"
+                # (negative values)
+                if obji_parts[0, 0] >= -1 and objj_parts[0, 0] >= 0:
+                    comp_values = cdist_parts(obji_parts, objj_parts, cdist_parts_n_threads)
+                    max_flat_idx = comp_values.argmax()
 
-                max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
-                max_ari = np.max((comp_values[max_idx], 0.0))
+                    max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+                    max_part_idx_list[idx] = max_idx
+                    max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
 
-            return max_ari, max_idx
+            return max_ari_list, max_part_idx_list
 
-        for idx, (max_ari, max_idx) in zip(inputs, executor.map(run, inputs)):
-            cm_values[idx] = max_ari
-            max_parts[idx, :] = max_idx
+        for idx, (max_ari_list, max_part_idx_list) in zip(inputs, executor.map(run, inputs)):
+            cm_values[idx] = max_ari_list
+            max_parts[idx, :] = max_part_idx_list
 
     return cm_values, max_parts, parts
 

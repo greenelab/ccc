@@ -94,3 +94,14 @@ def simplify_string(value: str) -> str:
     value = re.sub(PATTERN_UNDERSCORE_DUPLICATED, "_", value)
 
     return value
+
+
+def chunker(seq, size):
+    """
+    Divides a sequence in chunks according to the given size. For example, if
+    given a list
+        [0,1,2,3,4,5,6,7]
+    and size 3, it will return
+        [[0, 1, 2], [3, 4, 5], [6, 7]]
+    """
+    return (seq[pos : pos + size] for pos in range(0, len(seq), size))
