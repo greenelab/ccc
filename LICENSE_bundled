@@ -1,0 +1,17 @@
+The Clustermatch repository and source distributions bundle a number of libraries that
+are compatibly licensed.  We list these here.
+
+Name: scikit-learn
+Files: libs/clustermatch/sklearn/*
+License: BSD 3-Clause License
+  For details, see the header inside libs/clustermatch/sklearn/metrics.py
+
+Name: SciPy
+Files: libs/clustermatch/scipy/*
+License: BSD 3-Clause License
+  For details, see the header inside libs/clustermatch/scipy/stats.py
+
+Name: PyTorch
+Files: libs/clustermatch/pytorch/*
+License: BSD License
+  For details, see the header inside libs/clustermatch/pytorch/core.py
