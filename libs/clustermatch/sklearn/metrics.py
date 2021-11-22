@@ -1,13 +1,13 @@
 """
 Contains implementations of different metrics in sklearn but optimized for numba.
 
-Some code (indicated in each function) is based on sklearn-learn's code base
+Some code (indicated in each function) is based on scikit-learn's code base
 (https://github.com/scikit-learn), for which the copyright notice and license
 are shown below.
 
 BSD 3-Clause License
 
-Copyright (c) 2007-2021 The sklearn-learn developers.
+Copyright (c) 2007-2021 The scikit-learn developers.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -117,11 +117,6 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
     The code is based on the sklearn implementation here:
     https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_rand_score.html
     See copyright notice at the top of this file.
-
-    Important: this is a Numba jitted function, so it does not have support
-    for arbitrarily large integers as in Python. This means that, for this
-    function, partitions with a large number of objects will produce overflow
-    and return a meaningless ARI.
 
     Args:
         part0: a 1d array with cluster assignments for n objects.
