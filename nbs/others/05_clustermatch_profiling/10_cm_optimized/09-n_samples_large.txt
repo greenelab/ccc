@@ -1,17 +1,17 @@
-         3214 function calls in 4.631 seconds
+         3314 function calls in 4.630 seconds
 
    Ordered by: cumulative time
-   List reduced from 77 to 20 due to restriction <20>
+   List reduced from 85 to 20 due to restriction <20>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000    4.631    4.631 {built-in method builtins.exec}
-        1    0.000    0.000    4.631    4.631 <string>:1(<module>)
-        1    0.000    0.000    4.631    4.631 691993785.py:1(func)
-       10    0.006    0.001    4.631    0.463 coef.py:197(_cm)
-      310    4.616    0.015    4.616    0.015 {method 'acquire' of '_thread.lock' objects}
-       80    0.001    0.000    4.615    0.058 threading.py:280(wait)
-       50    0.000    0.000    4.612    0.092 _base.py:601(result_iterator)
-       30    0.000    0.000    4.612    0.154 _base.py:417(result)
+        1    0.000    0.000    4.630    4.630 {built-in method builtins.exec}
+        1    0.000    0.000    4.630    4.630 <string>:1(<module>)
+        1    0.000    0.000    4.630    4.630 691993785.py:1(func)
+       10    0.006    0.001    4.630    0.463 coef.py:199(_cm)
+      310    4.615    0.015    4.615    0.015 {method 'acquire' of '_thread.lock' objects}
+       80    0.001    0.000    4.614    0.058 threading.py:280(wait)
+       50    0.000    0.000    4.610    0.092 _base.py:601(result_iterator)
+       30    0.000    0.000    4.610    0.154 _base.py:417(result)
        20    0.000    0.000    0.007    0.000 _base.py:572(map)
        20    0.000    0.000    0.007    0.000 _base.py:597(<listcomp>)
        30    0.000    0.000    0.007    0.000 thread.py:155(submit)
