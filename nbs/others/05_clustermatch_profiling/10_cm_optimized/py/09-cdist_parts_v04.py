@@ -78,7 +78,7 @@ def func():
 
 
 # %% tags=[]
-# %%timeit -n1 -r4 func()
+# %%timeit -n1 -r7 func()
 func()
 
 # %% tags=[]
@@ -108,7 +108,7 @@ def func():
 
 
 # %% tags=[]
-# %%timeit -n1 -r4 func()
+# %%timeit -n1 -r7 func()
 func()
 
 # %% tags=[]
