@@ -1,10 +1,26 @@
-         14 function calls in 0.052 seconds
+         3265 function calls in 0.033 seconds
 
    Ordered by: cumulative time
+   List reduced from 77 to 20 due to restriction <20>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000    0.052    0.052 {built-in method builtins.exec}
-        1    0.000    0.000    0.052    0.052 <string>:1(<module>)
-        1    0.000    0.000    0.052    0.052 691993785.py:1(func)
-       10    0.052    0.005    0.052    0.005 coef.py:271(_cm)
-        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.033    0.033 {built-in method builtins.exec}
+        1    0.000    0.000    0.033    0.033 <string>:1(<module>)
+        1    0.000    0.000    0.033    0.033 691993785.py:1(func)
+       10    0.001    0.000    0.033    0.003 coef.py:197(_cm)
+      322    0.028    0.000    0.028    0.000 {method 'acquire' of '_thread.lock' objects}
+       86    0.000    0.000    0.028    0.000 threading.py:280(wait)
+       50    0.000    0.000    0.027    0.001 _base.py:601(result_iterator)
+       30    0.000    0.000    0.026    0.001 _base.py:417(result)
+       20    0.000    0.000    0.004    0.000 _base.py:572(map)
+       20    0.000    0.000    0.004    0.000 _base.py:597(<listcomp>)
+       30    0.000    0.000    0.004    0.000 thread.py:155(submit)
+       30    0.000    0.000    0.004    0.000 thread.py:174(_adjust_thread_count)
+       30    0.000    0.000    0.003    0.000 threading.py:873(start)
+       30    0.000    0.000    0.002    0.000 threading.py:556(wait)
+       20    0.000    0.000    0.001    0.000 _base.py:635(__exit__)
+       20    0.000    0.000    0.001    0.000 thread.py:210(shutdown)
+       30    0.000    0.000    0.001    0.000 threading.py:1021(join)
+       30    0.000    0.000    0.001    0.000 threading.py:1059(_wait_for_tstate_lock)
+       30    0.000    0.000    0.000    0.000 {built-in method _thread.start_new_thread}
+       30    0.000    0.000    0.000    0.000 threading.py:795(__init__)
