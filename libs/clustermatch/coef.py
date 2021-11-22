@@ -291,7 +291,9 @@ def _cm(
     cdist_parts_n_threads = default_n_threads if n_comp == 1 else 1
 
     with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
-        inputs = list(chunker(np.arange(n_comp), int(np.ceil(n_comp / default_n_threads))))
+        inputs = list(
+            chunker(np.arange(n_comp), int(np.ceil(n_comp / default_n_threads)))
+        )
 
         def run(idx_list):
             """
@@ -310,7 +312,9 @@ def _cm(
                 # compute ari only if partitions are not marked as "missing"
                 # (negative values)
                 if obji_parts[0, 0] >= -1 and objj_parts[0, 0] >= 0:
-                    comp_values = cdist_parts(obji_parts, objj_parts, cdist_parts_n_threads)
+                    comp_values = cdist_parts(
+                        obji_parts, objj_parts, cdist_parts_n_threads
+                    )
                     max_flat_idx = comp_values.argmax()
 
                     max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
@@ -319,7 +323,9 @@ def _cm(
 
             return max_ari_list, max_part_idx_list
 
-        for idx, (max_ari_list, max_part_idx_list) in zip(inputs, executor.map(run, inputs)):
+        for idx, (max_ari_list, max_part_idx_list) in zip(
+            inputs, executor.map(run, inputs)
+        ):
             cm_values[idx] = max_ari_list
             max_parts[idx, :] = max_part_idx_list
 
