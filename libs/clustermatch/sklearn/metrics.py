@@ -1,13 +1,13 @@
 """
-Contains implementation of different metrics optimized for numba.
+Contains implementations of different metrics in sklearn but optimized for numba.
 
-Some code (indicated in each function) is based on scikit-learn's code base
+Some code (indicated in each function) is based on sklearn-learn's code base
 (https://github.com/scikit-learn), for which the copyright notice and license
 are shown below.
 
 BSD 3-Clause License
 
-Copyright (c) 2007-2021 The scikit-learn developers.
+Copyright (c) 2007-2021 The sklearn-learn developers.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -111,7 +111,6 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
     return C
 
 
-# @njit(cache=True)
 def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
     """
     Computes the adjusted Rand index (ARI) between two clustering partitions.
