@@ -149,7 +149,8 @@ def cdist_parts(x: NDArray, y: NDArray, n_threads: int = 1) -> NDArray[np.float]
           columns.
         y: a 2d array with m_y clustering partitions in rows and n objects in
           columns.
-        n_threads: TODO
+        n_threads: number of threads to use for parallel computation. It is 1
+          by default.
 
     Returns:
         A 2d array with m_x rows and m_y columns and the ARI between each
@@ -281,12 +282,12 @@ def _cm(
     max_parts = np.zeros((out_size, 2), dtype=np.uint64)
 
     # Below, there are two layers of parallelism: 1) parallel execution across
-    # object pairs (first for loop with prange) and 2) the cdist_parts
-    # function, which also runs several threads to compare partitions with ari.
-    # In 2) we need to disable parallelization in case len(cm_values) > 1,
-    # otherwise these two layers are not "serialized" (they spawn
-    # NUMBA_NUM_THREADS threads each for some reason).
-    # TODO: this should probably be reported in numba as a potential bug
+    # object pairs and 2) the cdist_parts function, which also runs several
+    # threads to compare partitions using ari. In 2) we need to disable
+    # parallelization in case len(cm_values) > 1 (that is, we have several
+    # object pairs to compare), because parallelization is already performed at
+    # this level. Otherwise, more threads than specified by the user are
+    # started.
     cdist_parts_n_threads = default_n_threads if cm_values.shape[0] == 1 else 1
 
     with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
@@ -316,32 +317,13 @@ def _cm(
             cm_values[idx] = max_ari
             max_parts[idx, :] = max_idx
 
-    # # TODO add threading here
-    # for idx in range(cm_values.shape[0]):
-    #     i, j = get_coords_from_index(n, idx)
-    #
-    #     # get partitions for the pair of objects
-    #     obji_parts, objj_parts = parts[i], parts[j]
-    #
-    #     if obji_parts[0, 0] == -1 or objj_parts[0, 0] == -1:
-    #         cm_values[idx] = np.nan
-    #     else:
-    #         # TODO add threading here, and nogil to cdist_parts
-    #         comp_values = cdist_parts(obji_parts, objj_parts, cdist_parts_n_threads)
-    #         max_flat_idx = comp_values.argmax()
-    #         max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
-    #
-    #         max_ari = comp_values[max_idx]
-    #         max_parts[idx, :] = max_idx
-    #
-    #         cm_values[idx] = max_ari if max_ari >= 0.0 else 0.0
-
     return cm_values, max_parts, parts
 
 
 def to_numpy(x):
     """
-    TODO: update
+    Converts x into a numpy array. It is used to convert pandas Series and
+    DataFrames into numpy objects.
     """
     if x is None:
         return x
@@ -368,15 +350,18 @@ def cm(
         x: same as in _cm function.
         y: same as in _cm function.
         internal_n_clusters: same as in _cm function.
-        return_parts: TODO finish
+        return_parts: if True, for each object pair, it returns the partitions
+          that maximized the coefficient.
 
     Returns:
-        TODO: UPDATE
+        If return_parts is False, then if x is 2d, a np.ndarray of size n x n is
+        returned with the coefficient value, where n is the number of rows in x.
+        If only a single coefficient was computed (for example, x and y were
+        given), then a single scalar is returned.
 
-        If x is 2d, then a np.ndarray of size n x n is returned with the
-        coefficient value, where n is the number of rows in x. If only a single
-        coefficient was computed (for example, x and y were given), then a
-        single scalar is returned.
+        If returns_parts is True, then it returns a tuple with 1) the
+        coefficients, 2) the partitions indexes that maximized the coefficient
+        for each object pair, and 3) the partitions for all objects.
     """
 
     # convert list to numba.types.List, since reflection is deprecated:
