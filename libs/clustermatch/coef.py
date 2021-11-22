@@ -136,7 +136,7 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]
     return parts
 
 
-def cdist_parts(x: NDArray, y: NDArray, n_threads: int = 1) -> NDArray[np.float]:
+def cdist_parts(x: NDArray, y: NDArray, n_threads: int = 1) -> NDArray[float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
     for clustering partitions, and instead of a distance it returns the adjusted
@@ -197,7 +197,7 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
 
 def _cm(
     x: NDArray, y: NDArray = None, internal_n_clusters: Iterable[int] = None
-) -> tuple[NDArray[np.float], NDArray[np.uint64], NDArray[np.int16]]:
+) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch coefficient between
     two arrays. This implementation only supports numerical data for
