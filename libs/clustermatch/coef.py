@@ -10,9 +10,9 @@ from numpy.typing import NDArray
 from numba import njit, get_num_threads
 from numba.typed import List
 
-from clustermatch.metrics import adjusted_rand_index as ari
-
-# from clustermatch.utils import copy_func
+from clustermatch.pytorch.core import unravel_index_2d
+from clustermatch.sklearn.metrics import adjusted_rand_index as ari
+from clustermatch.scipy.stats import rank
 
 
 @njit(cache=True)
@@ -30,38 +30,6 @@ def _get_perc_from_k(k: int) -> list[float]:
         A list of percentiles (from 0.0 to 1.0).
     """
     return [(1.0 / k) * i for i in range(1, k)]
-
-
-@njit(cache=True)
-def rank(data: NDArray, sorted_data: NDArray = None) -> NDArray:
-    """
-    It returns the ranks of a numpy array. It's an implementation of
-    scipy.stats.rankdata (method="average") that can be compiled by numba.
-    Ranks start with 1.
-
-    Args:
-        data: a 1d array with numeric data.
-        sorted_data: TODO add it is the sorted array with np.argsort
-
-    Returns:
-        A 1d array with the ranks of the input data.
-    """
-
-    # TODO: taken from scipy, move to metrics.py and cite license
-
-    arr = np.ravel(np.asarray(data))
-    if sorted_data is None:
-        sorter = np.argsort(arr, kind="quicksort")
-    else:
-        sorter = sorted_data
-
-    inv = np.empty(sorter.size, dtype=np.intp)
-    inv[sorter] = np.arange(sorter.size, dtype=np.intp)
-
-    arr = arr[sorter]
-    obs = np.ones(arr.shape[0], dtype=np.bool_)
-    obs[1:] = arr[1:] != arr[:-1]
-    return obs.cumsum()[inv]
 
 
 @njit(cache=True)
@@ -123,33 +91,19 @@ def _get_range_n_clusters(
         A numpy array with integer values representing numbers of clusters.
     """
 
-    # the one in the list is needed for numba to infer the type
-    # clusters_range_list = List([1])
-
     if internal_n_clusters is not None:
-        # clusters_range_list = List()
-        # for x in internal_n_clusters:
-        #     clusters_range_list.append(x)
-
+        # remove k values that are invalid
         clusters_range_list = list(
             set([int(x) for x in internal_n_clusters if 1 < x < n_features])
         )
-        # for x in internal_n_clusters:
-        #     _tmp_list.add(x)
-
-        # keep values larger than one only and remove repeated
-        # clusters_range_list = list(
-        #     set([int(x) for x in clusters_range_list if 1 < x < n_features])
-        # )
     else:
         # default behavior if no internal_n_clusters is given: return range from
         # 2 to sqrt(n_features)
-        # if len(clusters_range_list) == 0:
         n_sqrt = int(np.round(np.sqrt(n_features)))
         n_sqrt = min((n_sqrt, 10))
         clusters_range_list = list(range(2, n_sqrt + 1))
 
-    return np.array(clusters_range_list, dtype=np.uint8)
+    return np.array(clusters_range_list, dtype=np.uint16)
 
 
 @njit(cache=True, nogil=True)
@@ -158,16 +112,16 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]
     Given a 1d data array, it computes a partition for each k value in the given
     range of clusters. This function only supports numerical data, and it
     always runs run_run_quantile_clustering with the different k values.
-
-    TODO: update, return type is int16 AND now removes singletons by assigning -1 to all the partition
+    If partitions with only one cluster are returned (singletons), then the
+    returned array will have negative values.
 
     Args:
         data: a 1d data vector. It is assumed that there are no nans.
         range_n_clusters: a tuple with the number of clusters.
 
     Returns:
-        A numpy array with partitions of data, with length equal to the number
-        of k values given.
+        A numpy array with shape (number of clusters, data rows) with
+        partitions of data.
     """
     parts = np.zeros((len(range_n_clusters), data.shape[0]), dtype=np.int16)
 
@@ -191,12 +145,16 @@ def cdist_parts(x: NDArray, y: NDArray, n_threads: int = 1) -> NDArray[np.float]
         cdist(x, y, metric=ari)
 
     Args:
-        x: a 2d array with m_x clustering partitions in rows and n objects in columns.
-        y: a 2d array with m_y clustering partitions in rows and n objects in columns.
+        x: a 2d array with m_x clustering partitions in rows and n objects in
+          columns.
+        y: a 2d array with m_y clustering partitions in rows and n objects in
+          columns.
+        n_threads: TODO
 
     Returns:
-        A 2d array with m_x rows and m_y columns and the ARI between each partition pair.
-        Each ij entry is equal to ari(x[i], y[j]) for each i and j.
+        A 2d array with m_x rows and m_y columns and the ARI between each
+        partition pair. Each ij entry is equal to ari(x[i], y[j]) for each i
+        and j.
     """
     res = np.zeros((x.shape[0], y.shape[0]))
 
@@ -205,47 +163,22 @@ def cdist_parts(x: NDArray, y: NDArray, n_threads: int = 1) -> NDArray[np.float]
 
         def run(i):
             return np.array([ari(x[i], y[j]) for j in range(res.shape[1])])
-            # for j in range(res.shape[1]):
-            #     res[i, j] = ari(x[i], y[j])
 
         for idx, ps in zip(inputs, executor.map(run, inputs)):
             res[idx, :] = ps
 
-    # # TODO add threading here
-    # for i in range(res.shape[0]):
-    #     for j in range(res.shape[1]):
-    #         res[i, j] = ari(x[i], y[j])
-
     return res
 
 
-# # jitted versions of cdist_parts_main
-# cdist_parts_parallel = njit(
-#     copy_func(cdist_parts_main, "cdist_par"), cache=True, parallel=True
-# )
-#
-# cdist_parts_not_parallel = njit(
-#     copy_func(cdist_parts_main, "cdist_not_par"), cache=True, parallel=False
-# )
-
-
-# @njit(cache=True)
-# def cdist_parts(x: NDArray, y: NDArray, parallel: bool = True) -> NDArray[np.float]:
-#     if parallel:
-#         return cdist_parts_parallel(x, y)
-#     else:
-#         return cdist_parts_not_parallel(x, y)
-
-
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     """
-    Given the number of objects and and index, it returns the row/column position
-    of the pairwise matrix. For example, if there are n_obj objects (such as genes),
-    a condensed 1d array can be created with pairwise comparisons between genes,
-    as well as a squared symmetric matrix. This functions receives the number of objects
-    and the index of the condensed array, and returns the coordiates of the squared symmetric
-    matrix.
+    Given the number of objects and and index, it returns the row/column
+    position of the pairwise matrix. For example, if there are n_obj objects
+    (such as genes), a condensed 1d array can be created with pairwise
+    comparisons between genes, as well as a squared symmetric matrix. This
+    function receives the number of objects and the index of the condensed
+    array, and returns the coordiates of the squared symmetric matrix.
 
     Args:
         n_obj: the number of objects.
@@ -261,27 +194,9 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     return int(x), int(y)
 
 
-@njit(cache=True)
-def unravel_index_2d(flat_index: int, shape: tuple[int]) -> tuple[int]:
-    if len(shape) != 2:
-        raise ValueError("shape has to be of length 2")
-
-    if flat_index >= np.array(shape).prod():
-        raise ValueError("index is out of bounds for array with size")
-
-    res = []
-
-    for size in shape[::-1]:
-        res.append(flat_index % size)
-        flat_index = flat_index // size
-
-    return tuple((res[1], res[0]))
-
-
-# @njit(cache=True, parallel=True)
 def _cm(
     x: NDArray, y: NDArray = None, internal_n_clusters: Iterable[int] = None
-) -> NDArray[np.float]:
+) -> tuple[NDArray[np.float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch coefficient between
     two arrays. This implementation only supports numerical data for
@@ -297,14 +212,29 @@ def _cm(
           clusters used to split x and y.
 
     Returns:
-        TODO: UPDATE
-        - the value returns is always between 0 and 1
-        - if there is no variation in at least one of the two variables to be
-        compared, the coefficient is nan
+        A tuple containing three arrays:
 
-        A 1d condensed array of pairwise coefficients. It has size (n * (n - 1))
-        / 2, where n is the number of columns in x and y (for example, the
-        number of samples for genes).
+        cm_values: a 1d condensed array of pairwise coefficients. It has size
+            (n * (n - 1)) / 2, where n is the number of columns in x and y (for
+            example, the number of samples for genes).
+            The Clustermatch coefficient is always between 0 and 1 (inclusive).
+            If any of the two variables being compared has no variation (all
+            values are the same), the coefficient is not defined (np.nan).
+
+        max_parts: an array with n * (n - 1)) / 2 rows (one for each object
+            pair) and two columns. It has the indexes pointing to the partitions
+            (parts, see below) for each object that maximized the ARI. If
+            cm_values[idx} is nan, then max_parts[idx] will be meaningless.
+
+        parts: a 3d array that contains all the internal partitions generated
+            for each object in data. parts[i] has the partitions for object i,
+            whereas parts[i,j] accesses the partition j generated for object i.
+            The third dimension is the number of columns in X. For example, if
+            you want to access the pair of partitions that maximized the
+            Clustermatch coefficient given x and y (a pair of objects), then
+            max_parts[0] and max_parts[1] have the partition indexes for parts,
+            respectively: parts[0][max_parts[0]] points to the partition for x,
+            and parts[1][max_parts[1]] points to the partition for y.
     """
     if x.ndim == 1 and y is not None:
         assert x.shape == y.shape
@@ -321,7 +251,8 @@ def _cm(
     # get matrix of partitions for each object pair
     range_n_clusters = _get_range_n_clusters(X.shape[1], internal_n_clusters)
 
-    # store a set of partitions per row (object) in X as a multidimensional array:
+    # store a set of partitions per row (object) in X as a multidimensional
+    # array:
     #  - 1st dim: number of objects/rows in X
     #  - 2nd dim: number of partitions per object
     #  - 3rd dim: number of features per object (columns in X)
@@ -329,6 +260,7 @@ def _cm(
         (X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16
     )
 
+    # pre-compute the internal partitions for each object in parallel
     with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
         inputs = range(X.shape[0])
 
@@ -338,11 +270,14 @@ def _cm(
         for idx, ps in zip(inputs, executor.map(run, inputs)):
             parts[idx] = ps
 
+    # cm_values stores the clusermatch coefficients
     n = X.shape[0]
     out_size = (n * (n - 1)) // 2
     cm_values = np.empty(out_size)
     cm_values[:] = np.nan
 
+    # for each object pair being compared, max_parts has the indexes of the
+    # partitions that maximimized the ARI
     max_parts = np.zeros((out_size, 2), dtype=np.uint64)
 
     # Below, there are two layers of parallelism: 1) parallel execution across
@@ -352,28 +287,54 @@ def _cm(
     # otherwise these two layers are not "serialized" (they spawn
     # NUMBA_NUM_THREADS threads each for some reason).
     # TODO: this should probably be reported in numba as a potential bug
-    # cdist_parts_n_threads = default_n_threads if cm_values.shape[0] == 1 else 1
     cdist_parts_n_threads = default_n_threads if cm_values.shape[0] == 1 else 1
 
-    # TODO add threading here
-    for idx in range(cm_values.shape[0]):
-        i, j = get_coords_from_index(n, idx)
+    with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
+        inputs = range(cm_values.shape[0])
 
-        # get partitions for the pair of objects
-        obji_parts, objj_parts = parts[i], parts[j]
+        def run(idx):
+            i, j = get_coords_from_index(n, idx)
 
-        if obji_parts[0, 0] == -1 or objj_parts[0, 0] == -1:
-            cm_values[idx] = np.nan
-        else:
-            # TODO add threading here, and nogil to cdist_parts
-            comp_values = cdist_parts(obji_parts, objj_parts, cdist_parts_n_threads)
-            max_flat_idx = comp_values.argmax()
-            max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+            # get partitions for the pair of objects
+            obji_parts, objj_parts = parts[i], parts[j]
 
-            max_ari = comp_values[max_idx]
+            max_ari = np.nan
+            max_idx = int(0), int(0)
+
+            # compute ari only if partitions are not marked as "missing"
+            # (negative values)
+            if obji_parts[0, 0] >= -1 and objj_parts[0, 0] >= 0:
+                comp_values = cdist_parts(obji_parts, objj_parts, cdist_parts_n_threads)
+                max_flat_idx = comp_values.argmax()
+
+                max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+                max_ari = np.max((comp_values[max_idx], 0.0))
+
+            return max_ari, max_idx
+
+        for idx, (max_ari, max_idx) in zip(inputs, executor.map(run, inputs)):
+            cm_values[idx] = max_ari
             max_parts[idx, :] = max_idx
 
-            cm_values[idx] = max_ari if max_ari >= 0.0 else 0.0
+    # # TODO add threading here
+    # for idx in range(cm_values.shape[0]):
+    #     i, j = get_coords_from_index(n, idx)
+    #
+    #     # get partitions for the pair of objects
+    #     obji_parts, objj_parts = parts[i], parts[j]
+    #
+    #     if obji_parts[0, 0] == -1 or objj_parts[0, 0] == -1:
+    #         cm_values[idx] = np.nan
+    #     else:
+    #         # TODO add threading here, and nogil to cdist_parts
+    #         comp_values = cdist_parts(obji_parts, objj_parts, cdist_parts_n_threads)
+    #         max_flat_idx = comp_values.argmax()
+    #         max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+    #
+    #         max_ari = comp_values[max_idx]
+    #         max_parts[idx, :] = max_idx
+    #
+    #         cm_values[idx] = max_ari if max_ari >= 0.0 else 0.0
 
     return cm_values, max_parts, parts
 

@@ -1,9 +1,7 @@
 from random import shuffle
 
-import pytest
 import numpy as np
 import pandas as pd
-from scipy import stats
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
 
@@ -13,101 +11,9 @@ from clustermatch.coef import (
     run_quantile_clustering,
     _get_perc_from_k,
     _get_parts,
-    rank,
     cdist_parts,
     get_coords_from_index,
-    unravel_index_2d,
 )
-
-
-def test_rank_no_duplicates():
-    data = np.array([0, 10, 1, 5, 7, 8, -5, -2])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_one_duplicate_group():
-    data = np.array([0, 10, 1, 5, 7, 8, 1, -2])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_one_duplicate_group_with_more_elements():
-    data = np.array([0, 10, 1, 1, 7, 8, 1, -2])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_one_duplicate_group_at_beginning():
-    data = np.array([0, 0, 1, -10, 7, 8, 9.4, -2])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_one_duplicate_group_at_beginning_with_more_elements():
-    data = np.array([0.13, 0.13, 0.13, 1, -10, 7, 8, 9.4, -2])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_one_duplicate_group_at_beginning_are_smallest():
-    data = np.array([0, 10, 1.5, -99.5, -99.5, -99.5, 5, 7, 8, -5, -2])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_one_duplicate_group_at_end():
-    data = np.array([0, 1, -10, 7, 8, 9.4, -2.5, -2.5])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_one_duplicate_group_at_end_with_more_elements():
-    data = np.array([0, 1, -10, 7, 8, 9.4, -12.5, -12.5, -12.5])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_one_duplicate_group_at_end_is_the_largest():
-    data = np.array([0, 1, -10, 7, 8, 9.4, 120.5, 120.5, 120.5])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
-
-
-def test_rank_all_are_duplicates():
-    data = np.array([1.5, 1.5, 1.5, 1.5])
-
-    expected_ranks = stats.rankdata(data, "dense")
-    observed_ranks = rank(data)
-
-    np.testing.assert_array_equal(observed_ranks, expected_ranks)
 
 
 def test_get_perc_from_k_with_k_less_than_two():
@@ -824,90 +730,6 @@ def test_cm_values_equal_to_original_implementation():
         expected_corr_matrix,
         corr_mat,
     )
-
-
-def test_unravel_index_2d_square_simple():
-    shape = (2, 2)
-    assert unravel_index_2d(0, shape) == (0, 0)
-    assert unravel_index_2d(1, shape) == (0, 1)
-    assert unravel_index_2d(2, shape) == (1, 0)
-    assert unravel_index_2d(3, shape) == (1, 1)
-
-
-def test_unravel_index_2d_rect_simple():
-    shape = (2, 3)
-    assert unravel_index_2d(0, shape) == (0, 0)
-    assert unravel_index_2d(1, shape) == (0, 1)
-    assert unravel_index_2d(2, shape) == (0, 2)
-    assert unravel_index_2d(3, shape) == (1, 0)
-    assert unravel_index_2d(4, shape) == (1, 1)
-    assert unravel_index_2d(5, shape) == (1, 2)
-
-    shape = (1, 4)
-    assert unravel_index_2d(0, shape) == (0, 0)
-    assert unravel_index_2d(1, shape) == (0, 1)
-    assert unravel_index_2d(2, shape) == (0, 2)
-    assert unravel_index_2d(3, shape) == (0, 3)
-
-    shape = (4, 1)
-    assert unravel_index_2d(0, shape) == (0, 0)
-    assert unravel_index_2d(1, shape) == (1, 0)
-    assert unravel_index_2d(2, shape) == (2, 0)
-    assert unravel_index_2d(3, shape) == (3, 0)
-
-
-def test_unravel_index_2d_square0():
-    x = np.array([[0, 7], [-5, 6.999]])
-    x_max_idx = np.argmax(x, axis=None)
-    assert x_max_idx == 1
-
-    expected_idx = np.unravel_index(x_max_idx, x.shape)
-    observed_idx = unravel_index_2d(x_max_idx, x.shape)
-
-    assert expected_idx == observed_idx == (0, 1)
-
-
-def test_unravel_index_2d_square1():
-    x = np.array([[0, 7], [-5, 7.01]])
-    x_max_idx = np.argmax(x, axis=None)
-    assert x_max_idx == 3
-
-    expected_idx = np.unravel_index(x_max_idx, x.shape)
-    observed_idx = unravel_index_2d(x_max_idx, x.shape)
-
-    assert expected_idx == observed_idx == (1, 1)
-
-
-def test_unravel_index_2d_square_all_equal():
-    x = np.array([[7.0, 7.0], [7.0, 7.0]])
-    x_max_idx = np.argmax(x, axis=None)
-    assert x_max_idx == 0
-
-    expected_idx = np.unravel_index(x_max_idx, x.shape)
-    observed_idx = unravel_index_2d(x_max_idx, x.shape)
-
-    assert expected_idx == observed_idx == (0, 0)
-
-
-def test_unravel_index_2d_rect():
-    x = np.array([[0, 7, -5.6], [8.1, 6.999, 0]])
-    x_max_idx = np.argmax(x, axis=None)
-    assert x_max_idx == 3
-
-    expected_idx = np.unravel_index(x_max_idx, x.shape)
-    observed_idx = unravel_index_2d(x_max_idx, x.shape)
-
-    assert expected_idx == observed_idx == (1, 0)
-
-
-def test_unravel_index_index_out_of_bounds():
-    with pytest.raises(ValueError):
-        unravel_index_2d(6, (2, 3))
-
-
-def test_unravel_index_non_2d():
-    with pytest.raises(ValueError):
-        unravel_index_2d(0, (2, 3, 4))
 
 
 def test_cm_return_parts_quadratic():
