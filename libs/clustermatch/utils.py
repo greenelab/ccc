@@ -104,4 +104,4 @@ def chunker(seq, size):
     and size 3, it will return
         [[0, 1, 2], [3, 4, 5], [6, 7]]
     """
-    return (seq[pos : pos + size] for pos in range(0, len(seq), size))
+    return (seq[pos : pos + size] for pos in range(0, len(seq), size))  # noqa: E203
