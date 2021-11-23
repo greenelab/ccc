@@ -43,7 +43,9 @@ options = [
 GENERAL["N_JOBS"] = next(int(opt) for opt in options if opt is not None)
 
 options = [
-    m if (m := os.environ.get("CM_N_JOBS_LOW")) is not None and m.strip() != "" else None,
+    m
+    if (m := os.environ.get("CM_N_JOBS_LOW")) is not None and m.strip() != ""
+    else None,
     getattr(settings, "N_JOBS_LOW", None),
     GENERAL["N_JOBS"],
 ]
