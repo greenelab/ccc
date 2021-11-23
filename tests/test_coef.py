@@ -3,7 +3,6 @@ from random import shuffle
 
 import numpy as np
 import pandas as pd
-from numba.typed import List
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
 
