@@ -23,14 +23,7 @@ else
 fi
 
 echo "  Root dir: ${ROOT_DIR}"
-
-if [ -z "${CM_MANUSCRIPT_DIR}" ]; then
-  echo "  ERROR: manuscript directory is not set"
-  exit 1
-fi
-
 echo "  Manuscript dir: ${CM_MANUSCRIPT_DIR}"
-
 echo "  CPU cores: ${CM_N_JOBS}"
 
 echo ""
