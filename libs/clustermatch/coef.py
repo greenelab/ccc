@@ -16,7 +16,7 @@ from clustermatch.scipy.stats import rank
 from clustermatch.utils import chunker
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def _get_perc_from_k(k: int) -> list[float]:
     """
     It returns the percentiles (from 0.0 to 1.0) that separate the data into k
@@ -33,7 +33,7 @@ def _get_perc_from_k(k: int) -> list[float]:
     return [(1.0 / k) * i for i in range(1, k)]
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     """
     Performs a simple quantile clustering on one dimensional data (1d). Quantile
@@ -71,7 +71,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     return part
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def _get_range_n_clusters(
     n_features: int, internal_n_clusters: Iterable[int] = None
 ) -> NDArray[np.uint8]:
@@ -161,10 +161,20 @@ def cdist_parts(x: NDArray, y: NDArray, n_threads: int = 1) -> NDArray[float]:
     res = np.zeros((x.shape[0], y.shape[0]))
 
     with ThreadPoolExecutor(max_workers=n_threads) as executor:
-        inputs = range(res.shape[0])
+        # inputs = range(res.shape[0])
+        inputs = list(
+            chunker(np.arange(res.shape[0]), int(np.ceil(res.shape[0] / n_threads)))
+        )
 
-        def run(i):
-            return np.array([ari(x[i], y[j]) for j in range(res.shape[1])])
+        def run(idxs):
+            aris = np.full((len(idxs), res.shape[1]), np.nan, dtype=float)
+
+            for i, idx in enumerate(idxs):
+                for j in range(res.shape[1]):
+                    aris[i, j] = ari(x[idx], y[j])
+            # return np.array([ari(x[idx], y[j]) for j in range(res.shape[1])])
+
+            return aris
 
         for idx, ps in zip(inputs, executor.map(run, inputs)):
             res[idx, :] = ps

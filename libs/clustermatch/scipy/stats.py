@@ -62,7 +62,7 @@ from numba import njit
 from numpy.typing import NDArray
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def rank(data: NDArray, sorted_data_idx: NDArray = None) -> NDArray:
     """
     It returns the ranks of a numpy array. It's an implementation based on
