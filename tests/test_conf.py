@@ -108,3 +108,18 @@ def test_conf_with_manuscript_dir():
     assert "CONTENT_DIR" in conf.MANUSCRIPT
     assert conf.MANUSCRIPT["CONTENT_DIR"] is not None
     assert conf.MANUSCRIPT["CONTENT_DIR"] != ""
+
+
+@mock.patch.dict(os.environ, {"CM_N_JOBS": ""})
+def test_conf_cm_n_jobs_is_empty_string():
+    from clustermatch import conf
+    import importlib
+
+    importlib.reload(conf)
+
+    assert conf.GENERAL is not None
+    assert len(conf.GENERAL) > 0
+    assert conf.GENERAL["N_JOBS"] is not None
+    assert conf.GENERAL["N_JOBS"] > 0
+    assert conf.GENERAL["N_JOBS_LOW"] is not None
+    assert conf.GENERAL["N_JOBS_LOW"] > 0
