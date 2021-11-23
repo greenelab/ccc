@@ -345,7 +345,9 @@ def cm(
         map_func = executor.map
         if cdist_parts_enable_threading:
             map_func = map
-            cdist_func = lambda x, y: cdist_parts_parallel(x, y, executor)
+
+            def cdist_func(x, y):
+                return cdist_parts_parallel(x, y, executor)
         else:
             cdist_func = cdist_parts_basic
 
