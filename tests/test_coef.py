@@ -12,8 +12,9 @@ from clustermatch.coef import (
     run_quantile_clustering,
     _get_perc_from_k,
     _get_parts,
-    cdist_parts,
     get_coords_from_index,
+    cdist_parts_basic,
+    cdist_parts_parallel,
 )
 
 
@@ -285,8 +286,6 @@ def test_cm_basic():
 
     # Run
     cm_value = cm(feature0, feature1)
-
-    # Validate
     assert cm_value is not None
     assert isinstance(cm_value, float)
 
@@ -473,8 +472,6 @@ def test_cm_integer_overflow_random():
 
     # Run
     cm_value = cm(feature0, feature1)
-
-    # Validate
     assert 0.0 <= cm_value <= 0.01
 
 
@@ -487,8 +484,6 @@ def test_cm_integer_overflow_perfect_match():
 
     # Run
     cm_value = cm(feature0, feature0)
-
-    # Validate
     assert cm_value == 1.0
 
 
@@ -546,16 +541,18 @@ def test_cdist_parts_one_vs_one():
     expected_cdist = cdist(parts0, parts1, metric=ari)
     np.testing.assert_array_equal(expected_cdist, np.array([[1.0]]))
 
+    # basic version (one thread)
+    observed_cdist = cdist_parts_basic(parts0, parts1)
+    np.testing.assert_array_equal(observed_cdist, expected_cdist)
+
     # with one thread
     with ThreadPoolExecutor(max_workers=1) as executor:
-        observed_cdist = cdist_parts(parts0, parts1, executor)
-
+        observed_cdist = cdist_parts_parallel(parts0, parts1, executor)
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
     # with two threads
     with ThreadPoolExecutor(max_workers=2) as executor:
-        observed_cdist = cdist_parts(parts0, parts1, executor)
-
+        observed_cdist = cdist_parts_parallel(parts0, parts1, executor)
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
 
@@ -577,16 +574,18 @@ def test_cdist_parts_one_vs_one_dissimilar():
     expected_cdist = cdist(parts0, parts1, metric=ari)
     np.testing.assert_array_equal(expected_cdist, np.array([[-0.022727272727272728]]))
 
-    # with one threads
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        observed_cdist = cdist_parts(parts0, parts1, executor)
+    # basic version (one thread)
+    observed_cdist = cdist_parts_basic(parts0, parts1)
+    np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
+    # with one thread
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        observed_cdist = cdist_parts_parallel(parts0, parts1, executor)
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
     # with two threads
     with ThreadPoolExecutor(max_workers=2) as executor:
-        observed_cdist = cdist_parts(parts0, parts1, executor)
-
+        observed_cdist = cdist_parts_parallel(parts0, parts1, executor)
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
 
@@ -616,16 +615,18 @@ def test_cdist_parts_one_vs_two():
         ),
     )
 
+    # basic version (one thread)
+    observed_cdist = cdist_parts_basic(parts0, parts1)
+    np.testing.assert_array_equal(observed_cdist, expected_cdist)
+
     # with one thread
     with ThreadPoolExecutor(max_workers=1) as executor:
-        observed_cdist = cdist_parts(parts0, parts1, executor)
-
+        observed_cdist = cdist_parts_parallel(parts0, parts1, executor)
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
     # with two threads
     with ThreadPoolExecutor(max_workers=2) as executor:
-        observed_cdist = cdist_parts(parts0, parts1, executor)
-
+        observed_cdist = cdist_parts_parallel(parts0, parts1, executor)
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
 
@@ -657,16 +658,18 @@ def test_cdist_parts_two_vs_two():
         ),
     )
 
+    # basic version (one thread)
+    observed_cdist = cdist_parts_basic(parts0, parts1)
+    np.testing.assert_array_equal(observed_cdist, expected_cdist)
+
     # with one thread
     with ThreadPoolExecutor(max_workers=1) as executor:
-        observed_cdist = cdist_parts(parts0, parts1, executor)
-
+        observed_cdist = cdist_parts_parallel(parts0, parts1, executor)
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
     # with two threads
     with ThreadPoolExecutor(max_workers=2) as executor:
-        observed_cdist = cdist_parts(parts0, parts1, executor)
-
+        observed_cdist = cdist_parts_parallel(parts0, parts1, executor)
     np.testing.assert_array_equal(observed_cdist, expected_cdist)
 
 

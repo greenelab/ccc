@@ -2,7 +2,7 @@
 Contains function that implement the Clustermatch coefficient
 (https://doi.org/10.1093/bioinformatics/bty899).
 """
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable
 
 import numpy as np
@@ -137,9 +137,7 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]
     return parts
 
 
-def cdist_parts(
-    x: NDArray, y: NDArray, executor: ThreadPoolExecutor
-) -> NDArray[float]:
+def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
     for clustering partitions, and instead of a distance it returns the adjusted
@@ -152,8 +150,6 @@ def cdist_parts(
           columns.
         y: a 2d array with m_y clustering partitions in rows and n objects in
           columns.
-        executor: TODO number of threads to use for parallel computation. It is 1
-          by default.
 
     Returns:
         A 2d array with m_x rows and m_y columns and the ARI between each
@@ -162,23 +158,31 @@ def cdist_parts(
     """
     res = np.zeros((x.shape[0], y.shape[0]))
 
+    for i in range(res.shape[0]):
+        for j in range(res.shape[1]):
+            res[i, j] = ari(x[i], y[j])
+
+    return res
+
+
+def cdist_parts_parallel(
+    x: NDArray, y: NDArray, executor: ThreadPoolExecutor
+) -> NDArray[float]:
+    """
+    TODO
+    """
+    res = np.zeros((x.shape[0], y.shape[0]))
+
     inputs = list(
         chunker(
-            np.arange(res.shape[0]), 1  # int(np.ceil(res.shape[0] / executor._max_workers))
+            np.arange(res.shape[0]), 1
         )
     )
 
-    def run(idxs):
-        aris = np.full((len(idxs), res.shape[1]), np.nan, dtype=float)
-
-        for i, idx in enumerate(idxs):
-            for j in range(res.shape[1]):
-                aris[i, j] = ari(x[idx], y[j])
-
-        return aris
-
-    for idx, ps in zip(inputs, executor.map(run, inputs)):
-        res[idx, :] = ps
+    tasks = {executor.submit(cdist_parts_basic, x[idxs], y): idxs for idxs in inputs}
+    for t in as_completed(tasks):
+        idx = tasks[t]
+        res[idx, :] = t.result()
 
     return res
 
@@ -278,39 +282,39 @@ def _cm(
     n_comp = (n * (n - 1)) // 2
     cm_values = np.full(n_comp, np.nan)
 
-    # Below, there are two layers of parallelism: 1) parallel execution across
-    # object pairs and 2) the cdist_parts function, which also runs several
-    # threads to compare partitions using ari. In 2) we need to disable
-    # parallelization in case len(cm_values) > 1 (that is, we have several
-    # object pairs to compare), because parallelization is already performed at
-    # this level. Otherwise, more threads than specified by the user are
-    # started.
-    cdist_parts_n_threads = default_n_threads if n_comp == 1 else 1
+    # for each object pair being compared, max_parts has the indexes of the
+    # partitions that maximimized the ARI
+    max_parts = np.zeros((n_comp, 2), dtype=np.uint64)
 
-    with ThreadPoolExecutor(
-        max_workers=default_n_threads
-    ) as outer_executor, ThreadPoolExecutor(
-        max_workers=cdist_parts_n_threads
-    ) as inner_executor:
+    with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
         # pre-compute the internal partitions for each object in parallel
         inputs = range(X.shape[0])
 
-        def run(i):
+        def compute_parts(i):
             return _get_parts(X[i], range_n_clusters)
 
-        for idx, ps in zip(inputs, outer_executor.map(run, inputs)):
+        for idx, ps in zip(inputs, executor.map(compute_parts, inputs)):
             parts[idx] = ps
 
-        # for each object pair being compared, max_parts has the indexes of the
-        # partitions that maximimized the ARI
-        max_parts = np.zeros((n_comp, 2), dtype=np.uint64)
+        # Below, there are two layers of parallelism: 1) parallel execution
+        # across object pairs and 2) the cdist_parts function, which also runs
+        # several threads to compare partitions using ari. In 2) we need to
+        # disable parallelization in case len(cm_values) > 1 (that is, we have
+        # several object pairs to compare), because parallelization is already
+        # performed at this level. Otherwise, more threads than specified by the
+        # user are started.
+        cdist_parts_enable_threading = True if n_comp == 1 else False
+
+        cdist_func = None
+        map_func = executor.map
+        if cdist_parts_enable_threading:
+            map_func = map
+            cdist_func = lambda x, y: cdist_parts_parallel(x, y, executor)
+        else:
+            cdist_func = cdist_parts_basic
 
         # compute coefficients
-        inputs = list(
-            chunker(np.arange(n_comp), int(np.ceil(n_comp / default_n_threads)))
-        )
-
-        def run(idx_list):
+        def compute_coef(idx_list):
             """
             TODO
             """
@@ -327,7 +331,10 @@ def _cm(
                 # compute ari only if partitions are not marked as "missing"
                 # (negative values)
                 if obji_parts[0, 0] >= -1 and objj_parts[0, 0] >= 0:
-                    comp_values = cdist_parts(obji_parts, objj_parts, inner_executor)
+                    comp_values = cdist_func(
+                        obji_parts,
+                        objj_parts,
+                    )
                     max_flat_idx = comp_values.argmax()
 
                     max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
@@ -337,8 +344,14 @@ def _cm(
             return max_ari_list, max_part_idx_list
 
         # iterate over all chunks of object pairs and compute the coefficient
+        inputs = list(
+            chunker(
+                np.arange(n_comp), 1
+            )
+        )
+
         for idx, (max_ari_list, max_part_idx_list) in zip(
-            inputs, outer_executor.map(run, inputs)
+            inputs, map_func(compute_coef, inputs)
         ):
             cm_values[idx] = max_ari_list
             max_parts[idx, :] = max_part_idx_list
