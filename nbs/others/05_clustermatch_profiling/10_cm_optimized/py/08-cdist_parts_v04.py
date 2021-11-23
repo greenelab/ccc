@@ -78,21 +78,16 @@ y = np.random.rand(N_SAMPLES)
 # %% tags=[]
 def func():
     for i in range(N_REPS):
-        # py_func accesses the original python function, not the numba-optimized one
-        # this is needed to be able to profile the function
         _cm(x, y)
 
 
 # %% tags=[]
-# %%timeit -n1 -r7 func()
+# %%timeit func()
 func()
 
 # %% tags=[]
 # %%prun -s cumulative -l 20 -T 08-n_samples_small.txt
 func()
-
-# %% [markdown] tags=[]
-# **UPDATE**
 
 # %% [markdown] tags=[]
 # # Run with `n_samples` large
@@ -108,20 +103,15 @@ y = np.random.rand(N_SAMPLES)
 # %% tags=[]
 def func():
     for i in range(N_REPS):
-        # py_func accesses the original python function, not the numba-optimized one
-        # this is needed to be able to profile the function
         _cm(x, y)
 
 
 # %% tags=[]
-# %%timeit -n1 -r7 func()
+# %%timeit func()
 func()
 
 # %% tags=[]
 # %%prun -s cumulative -l 20 -T 08-n_samples_large.txt
 func()
-
-# %% [markdown] tags=[]
-# **UPDATE**
 
 # %%
