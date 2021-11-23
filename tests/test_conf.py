@@ -16,8 +16,12 @@ def test_conf_module_load():
     assert conf.__file__ is not None
 
 
+@mock.patch.dict(os.environ, {}, clear=True)
 def test_conf_entries():
     from clustermatch import conf
+    import importlib
+
+    importlib.reload(conf)
 
     assert conf.ROOT_DIR is not None
     assert conf.ROOT_DIR != ""
@@ -48,10 +52,10 @@ def test_conf_main():
     assert "CM_GENERAL_N_JOBS" in t["print_vars"]
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("win"),
-    reason="exporting variables is only supported in non-Windows platforms",
-)
+# @pytest.mark.skipif(
+#     sys.platform.startswith("win"),
+#     reason="exporting variables is only supported in non-Windows platforms",
+# )
 def test_conf_export_variables():
     from pathlib import Path
     import subprocess
@@ -67,7 +71,7 @@ def test_conf_export_variables():
     assert r.returncode == 0
     r_output = r.stdout.decode("utf-8")
     assert r_output is not None
-    assert len(r_output) > 10
+    assert len(r_output) > 8, r_output
     assert r_output.count("export ") > 5
 
     # check variable
@@ -80,7 +84,7 @@ def test_conf_export_variables():
     assert r.returncode == 0
     r_output = r.stdout.decode("utf-8").strip()
     assert r_output is not None
-    assert len(r_output) > 10
+    assert len(r_output) > 8, r_output
     assert r_output.startswith("/")
 
     # check dict variable
