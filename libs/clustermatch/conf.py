@@ -36,14 +36,14 @@ GENERAL["LOG_CONFIG_FILE"] = Path(
 
 # CPU usage
 options = [
-    os.environ.get("CM_N_JOBS"),
+    m if (m := os.environ.get("CM_N_JOBS")) is not None and m.strip() != "" else None,
     getattr(settings, "N_JOBS", None),
     1,
 ]
 GENERAL["N_JOBS"] = next(int(opt) for opt in options if opt is not None)
 
 options = [
-    os.environ.get("CM_N_JOBS_LOW"),
+    m if (m := os.environ.get("CM_N_JOBS_LOW")) is not None and m.strip() != "" else None,
     getattr(settings, "N_JOBS_LOW", None),
     GENERAL["N_JOBS"],
 ]
