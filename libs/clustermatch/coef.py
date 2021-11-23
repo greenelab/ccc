@@ -295,6 +295,9 @@ def cm(
 
     default_n_threads = get_num_threads()
 
+    if internal_n_clusters is not None:
+        internal_n_clusters = List(internal_n_clusters)
+
     # get matrix of partitions for each object pair
     range_n_clusters = _get_range_n_clusters(X.shape[1], internal_n_clusters)
 
