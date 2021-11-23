@@ -52,10 +52,10 @@ def test_conf_main():
     assert "CM_GENERAL_N_JOBS" in t["print_vars"]
 
 
-# @pytest.mark.skipif(
-#     sys.platform.startswith("win"),
-#     reason="exporting variables is only supported in non-Windows platforms",
-# )
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="exporting variables is only supported in non-Windows platforms",
+)
 def test_conf_export_variables():
     from pathlib import Path
     import subprocess
