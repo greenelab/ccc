@@ -348,6 +348,7 @@ def cm(
 
             def cdist_func(x, y):
                 return cdist_parts_parallel(x, y, executor)
+
         else:
             cdist_func = cdist_parts_basic
 
