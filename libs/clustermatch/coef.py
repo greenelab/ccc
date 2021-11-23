@@ -173,11 +173,7 @@ def cdist_parts_parallel(
     """
     res = np.zeros((x.shape[0], y.shape[0]))
 
-    inputs = list(
-        chunker(
-            np.arange(res.shape[0]), 1
-        )
-    )
+    inputs = list(chunker(np.arange(res.shape[0]), 1))
 
     tasks = {executor.submit(cdist_parts_basic, x[idxs], y): idxs for idxs in inputs}
     for t in as_completed(tasks):
@@ -211,8 +207,26 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     return int(x), int(y)
 
 
-def _cm(
-    x: NDArray, y: NDArray = None, internal_n_clusters: Iterable[int] = None
+def to_numpy(x):
+    """
+    Converts x into a numpy array. It is used to convert pandas Series and
+    DataFrames into numpy objects.
+    """
+    if x is None:
+        return x
+
+    func = getattr(x, "to_numpy", None)
+    if not callable(func):
+        return x
+
+    return x.to_numpy()
+
+
+def cm(
+    x: NDArray,
+    y: NDArray = None,
+    internal_n_clusters: Iterable[int] = None,
+    return_parts: bool = False,
 ) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch coefficient between
@@ -227,32 +241,48 @@ def _cm(
           the coefficient between x and y.
         internal_n_clusters: a list of integer values indicating the number of
           clusters used to split x and y.
+        return_parts: if True, for each object pair, it returns the partitions
+          that maximized the coefficient.
 
     Returns:
-        A tuple containing three arrays:
+        If return_parts is False, only Clustermatch coefficients are returned.
+        In that case, if x is 2d, a np.ndarray of size n x n is
+        returned with the coefficient values, where n is the number of rows in x.
+        If only a single coefficient was computed (for example, x and y were
+        given as 1d arrays each), then a single scalar is returned.
 
-        cm_values: a 1d condensed array of pairwise coefficients. It has size
-            (n * (n - 1)) / 2, where n is the number of columns in x and y (for
-            example, the number of samples for genes).
-            The Clustermatch coefficient is always between 0 and 1 (inclusive).
-            If any of the two variables being compared has no variation (all
-            values are the same), the coefficient is not defined (np.nan).
+        If returns_parts is True, then it returns a tuple with three values:
+        1) the
+        coefficients, 2) the partitions indexes that maximized the coefficient
+        for each object pair, and 3) the partitions for all objects.
+
+        cm_values: if x is 2d, then it is a 1d condensed array of pairwise
+            coefficients. It has size (n * (n - 1)) / 2, where n is the number
+            of rows in x. If x and y are given, and they are 1d, then this is a
+            scalar. The Clustermatch coefficient is always between 0 and 1
+            (inclusive). If any of the two variables being compared has no
+            variation (all values are the same), the coefficient is not defined
+            (np.nan).
 
         max_parts: an array with n * (n - 1)) / 2 rows (one for each object
-            pair) and two columns. It has the indexes pointing to the partitions
-            (parts, see below) for each object that maximized the ARI. If
-            cm_values[idx} is nan, then max_parts[idx] will be meaningless.
+            pair) and two columns. It has the indexes pointing to each object's
+            partition (parts, see below) that maximized the ARI. If
+            cm_values[idx] is nan, then max_parts[idx] will be meaningless.
 
         parts: a 3d array that contains all the internal partitions generated
             for each object in data. parts[i] has the partitions for object i,
-            whereas parts[i,j] accesses the partition j generated for object i.
-            The third dimension is the number of columns in X. For example, if
-            you want to access the pair of partitions that maximized the
-            Clustermatch coefficient given x and y (a pair of objects), then
-            max_parts[0] and max_parts[1] have the partition indexes for parts,
-            respectively: parts[0][max_parts[0]] points to the partition for x,
-            and parts[1][max_parts[1]] points to the partition for y.
+            whereas parts[i,j] has the partition j generated for object i. The
+            third dimension is the number of columns in x (if 2d) or elements in
+            x/y (if 1d). For example, if you want to access the pair of
+            partitions that maximized the Clustermatch coefficient given x and y
+            (a pair of objects), then max_parts[0] and max_parts[1] have the
+            partition indexes in parts, respectively: parts[0][max_parts[0]]
+            points to the partition for x, and parts[1][max_parts[1]] points to
+            the partition for y.
     """
+    x = to_numpy(x)
+    y = to_numpy(y)
+
     if x.ndim == 1 and y is not None:
         assert x.shape == y.shape
         X = np.zeros((2, x.shape[0]))
@@ -344,79 +374,13 @@ def _cm(
             return max_ari_list, max_part_idx_list
 
         # iterate over all chunks of object pairs and compute the coefficient
-        inputs = list(
-            chunker(
-                np.arange(n_comp), 1
-            )
-        )
+        inputs = list(chunker(np.arange(n_comp), 1))
 
         for idx, (max_ari_list, max_part_idx_list) in zip(
             inputs, map_func(compute_coef, inputs)
         ):
             cm_values[idx] = max_ari_list
             max_parts[idx, :] = max_part_idx_list
-
-    return cm_values, max_parts, parts
-
-
-def to_numpy(x):
-    """
-    Converts x into a numpy array. It is used to convert pandas Series and
-    DataFrames into numpy objects.
-    """
-    if x is None:
-        return x
-
-    func = getattr(x, "to_numpy", None)
-    if not callable(func):
-        return x
-
-    return x.to_numpy()
-
-
-def cm(
-    x: NDArray,
-    y: NDArray = None,
-    internal_n_clusters: Iterable[int] = None,
-    return_parts: bool = False,
-):
-    """
-    This function is a wrapper over _cm, a not-jitted (numba) function that can
-    return different value types according to the input given (this is a problem
-    with numba).
-
-    Args:
-        x: same as in _cm function.
-        y: same as in _cm function.
-        internal_n_clusters: same as in _cm function.
-        return_parts: if True, for each object pair, it returns the partitions
-          that maximized the coefficient.
-
-    Returns:
-        If return_parts is False, then if x is 2d, a np.ndarray of size n x n is
-        returned with the coefficient value, where n is the number of rows in x.
-        If only a single coefficient was computed (for example, x and y were
-        given), then a single scalar is returned.
-
-        If returns_parts is True, then it returns a tuple with 1) the
-        coefficients, 2) the partitions indexes that maximized the coefficient
-        for each object pair, and 3) the partitions for all objects.
-    """
-
-    # convert list to numba.types.List, since reflection is deprecated:
-    # https://numba.pydata.org/numba-doc/latest/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
-    n_clusters = None
-
-    x = to_numpy(x)
-    y = to_numpy(y)
-
-    if internal_n_clusters is not None:
-        n_clusters = List()
-        for k in internal_n_clusters:
-            n_clusters.append(k)
-
-    # run optimized _cm function
-    cm_values, max_parts, parts = _cm(x, y, n_clusters)
 
     # return an array of values or a single scalar
     if cm_values.shape[0] == 1:
