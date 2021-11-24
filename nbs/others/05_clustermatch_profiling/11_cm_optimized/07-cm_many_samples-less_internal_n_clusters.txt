@@ -1,56 +1,56 @@
-         930 function calls (924 primitive calls) in 0.604 seconds
+         1047 function calls (1037 primitive calls) in 0.570 seconds
 
    Ordered by: cumulative time
-   List reduced from 132 to 50 due to restriction <50>
+   List reduced from 134 to 50 due to restriction <50>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000    0.604    0.604 {built-in method builtins.exec}
-        1    0.000    0.000    0.604    0.604 <string>:1(<module>)
-        1    0.000    0.000    0.604    0.604 2695477961.py:1(func)
-        1    0.000    0.000    0.604    0.604 coef.py:225(cm)
-       26    0.000    0.000    0.602    0.023 threading.py:280(wait)
-       81    0.601    0.007    0.601    0.007 {method 'acquire' of '_thread.lock' objects}
-       18    0.000    0.000    0.601    0.033 _base.py:601(result_iterator)
-       16    0.000    0.000    0.601    0.038 _base.py:417(result)
-        2    0.000    0.000    0.001    0.001 _base.py:572(map)
-        2    0.000    0.000    0.001    0.001 _base.py:597(<listcomp>)
-       16    0.000    0.000    0.001    0.000 thread.py:155(submit)
-       16    0.000    0.000    0.001    0.000 thread.py:174(_adjust_thread_count)
-        3    0.000    0.000    0.001    0.000 threading.py:873(start)
-        3    0.000    0.000    0.001    0.000 threading.py:556(wait)
+        1    0.000    0.000    0.570    0.570 {built-in method builtins.exec}
+        1    0.000    0.000    0.570    0.570 <string>:1(<module>)
+        1    0.000    0.000    0.570    0.570 2695477961.py:1(func)
+        1    0.000    0.000    0.570    0.570 coef.py:252(cm)
+       26    0.000    0.000    0.568    0.022 threading.py:280(wait)
+       79    0.568    0.007    0.568    0.007 {method 'acquire' of '_thread.lock' objects}
+       20    0.000    0.000    0.558    0.028 _base.py:601(result_iterator)
+       18    0.000    0.000    0.558    0.031 _base.py:417(result)
+        2    0.000    0.000    0.011    0.005 _base.py:572(map)
+        2    0.000    0.000    0.011    0.005 _base.py:597(<listcomp>)
+       18    0.000    0.000    0.011    0.001 thread.py:155(submit)
+       18    0.000    0.000    0.010    0.001 thread.py:174(_adjust_thread_count)
+        3    0.000    0.000    0.010    0.003 threading.py:873(start)
+        3    0.000    0.000    0.010    0.003 threading.py:556(wait)
         2    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
         1    0.000    0.000    0.000    0.000 _base.py:635(__exit__)
         1    0.000    0.000    0.000    0.000 thread.py:210(shutdown)
         3    0.000    0.000    0.000    0.000 threading.py:1021(join)
-        3    0.000    0.000    0.000    0.000 threading.py:1059(_wait_for_tstate_lock)
         4    0.000    0.000    0.000    0.000 typedlist.py:341(append)
-       16    0.000    0.000    0.000    0.000 threading.py:404(acquire)
+        3    0.000    0.000    0.000    0.000 threading.py:1059(_wait_for_tstate_lock)
+       18    0.000    0.000    0.000    0.000 threading.py:404(acquire)
         1    0.000    0.000    0.000    0.000 typedlist.py:298(_initialise_list)
-        2    0.000    0.000    0.000    0.000 abstract.py:60(__call__)
+      6/2    0.000    0.000    0.000    0.000 coef.py:225(get_chunks)
+       18    0.000    0.000    0.000    0.000 _base.py:317(__init__)
+       22    0.000    0.000    0.000    0.000 threading.py:228(__init__)
         3    0.000    0.000    0.000    0.000 {built-in method _thread.start_new_thread}
-       35    0.000    0.000    0.000    0.000 threading.py:256(__enter__)
-       16    0.000    0.000    0.000    0.000 _base.py:317(__init__)
-       20    0.000    0.000    0.000    0.000 threading.py:228(__init__)
-        3    0.000    0.000    0.000    0.000 threading.py:795(__init__)
         2    0.000    0.000    0.000    0.000 typeof.py:25(typeof)
-        1    0.000    0.000    0.000    0.000 typedlist.py:270(_parse_arg)
-        2    0.000    0.000    0.000    0.000 abstract.py:48(_intern)
+        2    0.000    0.000    0.000    0.000 abstract.py:60(__call__)
+        3    0.000    0.000    0.000    0.000 threading.py:795(__init__)
         2    0.000    0.000    0.000    0.000 functools.py:872(wrapper)
-        1    0.000    0.000    0.000    0.000 numeric.py:289(full)
-        2    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
-       13    0.000    0.000    0.000    0.000 {method '_acquire_restore' of '_thread.RLock' objects}
-        1    0.000    0.000    0.000    0.000 dispatcher.py:677(typeof_pyval)
-       35    0.000    0.000    0.000    0.000 threading.py:259(__exit__)
-       13    0.000    0.000    0.000    0.000 threading.py:271(_is_owned)
+       39    0.000    0.000    0.000    0.000 threading.py:256(__enter__)
+        1    0.000    0.000    0.000    0.000 typedlist.py:270(_parse_arg)
         3    0.000    0.000    0.000    0.000 threading.py:985(_stop)
-       13    0.000    0.000    0.000    0.000 {method '_release_save' of '_thread.RLock' objects}
+        1    0.000    0.000    0.000    0.000 numeric.py:289(full)
+       39    0.000    0.000    0.000    0.000 threading.py:259(__exit__)
+        1    0.000    0.000    0.000    0.000 dispatcher.py:677(typeof_pyval)
+        2    0.000    0.000    0.000    0.000 abstract.py:48(_intern)
+       28    0.000    0.000    0.000    0.000 utils.py:107(<genexpr>)
+        2    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+       31    0.000    0.000    0.000    0.000 {built-in method _thread.allocate_lock}
+       18    0.000    0.000    0.000    0.000 thread.py:41(__init__)
+       12    0.000    0.000    0.000    0.000 threading.py:268(_acquire_restore)
+        6    0.000    0.000    0.000    0.000 utils.py:99(chunker)
         1    0.000    0.000    0.000    0.000 parallel.py:596(get_num_threads)
         1    0.000    0.000    0.000    0.000 typeof.py:257(_typeof_nb_type)
+        1    0.000    0.000    0.000    0.000 typedlist.py:228(__init__)
+        1    0.000    0.000    0.000    0.000 typeof.py:121(_typeof_int)
+        3    0.000    0.000    0.000    0.000 weakref.py:428(__setitem__)
         1    0.000    0.000    0.000    0.000 containers.py:618(__init__)
-        1    0.000    0.000    0.000    0.000 typedlist.py:202(__new__)
-        1    0.000    0.000    0.000    0.000 coef.py:74(_get_range_n_clusters)
-        1    0.000    0.000    0.000    0.000 thread.py:117(__init__)
-        3    0.000    0.000    0.000    0.000 threading.py:521(__init__)
-       17    0.000    0.000    0.000    0.000 {method 'put' of '_queue.SimpleQueue' objects}
-        1    0.000    0.000    0.000    0.000 parallel.py:373(_launch_threads)
-        3    0.000    0.000    0.000    0.000 threading.py:768(_maintain_shutdown_locks)
+       14    0.000    0.000    0.000    0.000 {method '_acquire_restore' of '_thread.RLock' objects}
