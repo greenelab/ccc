@@ -227,6 +227,7 @@ def cm(
     y: NDArray = None,
     internal_n_clusters: Iterable[int] = None,
     return_parts: bool = False,
+    n_chunks_threads_ratio: int = 10,
 ) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch coefficient between
@@ -243,6 +244,7 @@ def cm(
           clusters used to split x and y.
         return_parts: if True, for each object pair, it returns the partitions
           that maximized the coefficient.
+        n_chunks_threads_ratio: TODO
 
     Returns:
         If return_parts is False, only Clustermatch coefficients are returned.
@@ -293,6 +295,7 @@ def cm(
     else:
         raise ValueError("Wrong combination of parameters x and y")
 
+    # get number of cores to use
     default_n_threads = get_num_threads()
 
     if internal_n_clusters is not None:
@@ -324,14 +327,20 @@ def cm(
 
     with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
         # pre-compute the internal partitions for each object in parallel
-        inputs = range(X.shape[0])
+        inputs = list(
+            chunker(
+                np.arange(n),
+                int(np.ceil(n / (default_n_threads * n_chunks_threads_ratio))),
+            )
+        )
 
-        def compute_parts(i):
-            return _get_parts(X[i], range_n_clusters)
+        def compute_parts(idxs):
+            return np.array([_get_parts(X[i], range_n_clusters) for i in idxs])
 
         for idx, ps in zip(inputs, executor.map(compute_parts, inputs)):
             parts[idx] = ps
 
+        # TODO update comment below
         # Below, there are two layers of parallelism: 1) parallel execution
         # across object pairs and 2) the cdist_parts function, which also runs
         # several threads to compare partitions using ari. In 2) we need to
@@ -384,7 +393,10 @@ def cm(
 
         # iterate over all chunks of object pairs and compute the coefficient
         inputs = list(
-            chunker(np.arange(n_comp), int(np.ceil(n_comp / (default_n_threads * 2))))
+            chunker(
+                np.arange(n_comp),
+                int(np.ceil(n_comp / (default_n_threads * n_chunks_threads_ratio))),
+            )
         )
 
         for idx, (max_ari_list, max_part_idx_list) in zip(
