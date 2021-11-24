@@ -22,7 +22,7 @@
 # %% [markdown] tags=[]
 # # Disable numba
 
-# %%
+# %% tags=[]
 # %env NUMBA_DISABLE_JIT=1
 
 # %% [markdown] tags=[]
@@ -70,10 +70,10 @@ cm(np.random.rand(10), np.random.rand(10))
 # %% [markdown] tags=[]
 # ## `n_samples=50`
 
-# %%
+# %% tags=[]
 N_SAMPLES = 50
 
-# %%
+# %% tags=[]
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
@@ -95,10 +95,10 @@ func()
 # %% [markdown] tags=[]
 # ## `n_samples=100`
 
-# %%
+# %% tags=[]
 N_SAMPLES = 100
 
-# %%
+# %% tags=[]
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
@@ -120,10 +120,10 @@ func()
 # %% [markdown] tags=[]
 # ## `n_samples=500`
 
-# %%
+# %% tags=[]
 N_SAMPLES = 500
 
-# %%
+# %% tags=[]
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
@@ -145,10 +145,10 @@ func()
 # %% [markdown] tags=[]
 # ## `n_samples=1000`
 
-# %%
+# %% tags=[]
 N_SAMPLES = 1000
 
-# %%
+# %% tags=[]
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
@@ -173,10 +173,10 @@ func()
 # %% [markdown] tags=[]
 # ## `n_samples=50000`
 
-# %%
+# %% tags=[]
 N_SAMPLES = 50000
 
-# %%
+# %% tags=[]
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
@@ -198,7 +198,7 @@ func()
 # %% [markdown] tags=[]
 # ## `n_samples=100000`
 
-# %%
+# %% tags=[]
 N_SAMPLES = 100000
 
 # %% tags=[]
@@ -220,4 +220,4 @@ func()
 # %%prun -s cumulative -l 20 -T 10-n_samples_large_100000.txt
 func()
 
-# %%
+# %% tags=[]
