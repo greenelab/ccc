@@ -61,10 +61,13 @@ cm(np.random.rand(10), np.random.rand(10))
 # %% [markdown] tags=[]
 # # Run with `n_samples` small
 
-# %% tags=[]
-N_SAMPLES = 100
+# %% [markdown] tags=[]
+# ## `n_samples=50`
 
-# %% tags=[]
+# %%
+N_SAMPLES = 50
+
+# %%
 x = np.random.rand(N_SAMPLES)
 y = np.random.rand(N_SAMPLES)
 
@@ -80,13 +83,116 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 20 -T 09-n_samples_small.txt
+# %%prun -s cumulative -l 20 -T 09-n_samples_small_50.txt
+func()
+
+# %% [markdown] tags=[]
+# ## `n_samples=100`
+
+# %%
+N_SAMPLES = 100
+
+# %%
+x = np.random.rand(N_SAMPLES)
+y = np.random.rand(N_SAMPLES)
+
+
+# %% tags=[]
+def func():
+    for i in range(N_REPS):
+        cm(x, y)
+
+
+# %% tags=[]
+# %%timeit func()
+func()
+
+# %% tags=[]
+# %%prun -s cumulative -l 20 -T 09-n_samples_small_100.txt
+func()
+
+# %% [markdown] tags=[]
+# ## `n_samples=500`
+
+# %%
+N_SAMPLES = 500
+
+# %%
+x = np.random.rand(N_SAMPLES)
+y = np.random.rand(N_SAMPLES)
+
+
+# %% tags=[]
+def func():
+    for i in range(N_REPS):
+        cm(x, y)
+
+
+# %% tags=[]
+# %%timeit func()
+func()
+
+# %% tags=[]
+# %%prun -s cumulative -l 20 -T 09-n_samples_small_500.txt
+func()
+
+# %% [markdown] tags=[]
+# ## `n_samples=1000`
+
+# %%
+N_SAMPLES = 1000
+
+# %%
+x = np.random.rand(N_SAMPLES)
+y = np.random.rand(N_SAMPLES)
+
+
+# %% tags=[]
+def func():
+    for i in range(N_REPS):
+        cm(x, y)
+
+
+# %% tags=[]
+# %%timeit func()
+func()
+
+# %% tags=[]
+# %%prun -s cumulative -l 20 -T 09-n_samples_small_1000.txt
 func()
 
 # %% [markdown] tags=[]
 # # Run with `n_samples` large
 
+# %% [markdown] tags=[]
+# ## `n_samples=50000`
+
+# %%
+N_SAMPLES = 50000
+
+# %%
+x = np.random.rand(N_SAMPLES)
+y = np.random.rand(N_SAMPLES)
+
+
 # %% tags=[]
+def func():
+    for i in range(N_REPS):
+        cm(x, y)
+
+
+# %% tags=[]
+# %%timeit func()
+func()
+
+# %% tags=[]
+# %%prun -s cumulative -l 20 -T 09-n_samples_large_50000.txt
+func()
+
+# %% [markdown] tags=[]
+# ## `n_samples=100000`
+
+# %%
 N_SAMPLES = 100000
 
 # %% tags=[]
@@ -105,7 +211,7 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 20 -T 09-n_samples_large.txt
+# %%prun -s cumulative -l 20 -T 09-n_samples_large_100000.txt
 func()
 
-# %% tags=[]
+# %%
