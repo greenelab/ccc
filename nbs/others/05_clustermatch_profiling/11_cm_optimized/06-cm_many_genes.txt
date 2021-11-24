@@ -1,56 +1,56 @@
-         5691807 function calls (5691801 primitive calls) in 462.036 seconds
+         22900 function calls (22894 primitive calls) in 438.395 seconds
 
    Ordered by: cumulative time
-   List reduced from 133 to 50 due to restriction <50>
+   List reduced from 132 to 50 due to restriction <50>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000  462.036  462.036 {built-in method builtins.exec}
-        1    0.000    0.000  462.036  462.036 <string>:1(<module>)
-        1    0.005    0.005  462.036  462.036 1750096170.py:1(func)
-        1    4.843    4.843  462.032  462.032 coef.py:225(cm)
-   125252    0.498    0.000  453.995    0.004 _base.py:601(result_iterator)
-   125250    0.798    0.000  453.460    0.004 _base.py:417(result)
-   242258    0.882    0.000  452.810    0.002 threading.py:280(wait)
-   734001  451.373    0.001  451.373    0.001 {method 'acquire' of '_thread.lock' objects}
-        2    0.000    0.000    3.158    1.579 _base.py:572(map)
-        2    0.089    0.044    3.158    1.579 _base.py:597(<listcomp>)
-   125250    0.328    0.000    3.069    0.000 thread.py:155(submit)
-   125250    0.250    0.000    1.409    0.000 _base.py:317(__init__)
-   125250    0.122    0.000    1.229    0.000 thread.py:174(_adjust_thread_count)
-   125254    0.787    0.000    1.159    0.000 threading.py:228(__init__)
-   125250    0.340    0.000    1.092    0.000 threading.py:404(acquire)
-   125250    0.372    0.000    0.372    0.000 threading.py:82(RLock)
-   250503    0.150    0.000    0.290    0.000 threading.py:256(__enter__)
-   250503    0.169    0.000    0.226    0.000 threading.py:259(__exit__)
-   117517    0.180    0.000    0.180    0.000 {method '_acquire_restore' of '_thread.RLock' objects}
-   125250    0.105    0.000    0.105    0.000 {method '__enter__' of '_thread.RLock' objects}
-   117517    0.075    0.000    0.075    0.000 {method '_release_save' of '_thread.RLock' objects}
-   242263    0.074    0.000    0.074    0.000 {built-in method _thread.allocate_lock}
-   124741    0.045    0.000    0.072    0.000 threading.py:271(_is_owned)
-   124741    0.045    0.000    0.059    0.000 threading.py:265(_release_save)
-   124741    0.037    0.000    0.053    0.000 threading.py:268(_acquire_restore)
-   125250    0.052    0.000    0.052    0.000 _base.py:387(__get_result)
-   125250    0.051    0.000    0.051    0.000 thread.py:41(__init__)
-   125254    0.046    0.000    0.046    0.000 {method '__exit__' of '_thread.RLock' objects}
-   375757    0.045    0.000    0.045    0.000 {method '__exit__' of '_thread.lock' objects}
-   242258    0.042    0.000    0.042    0.000 {method 'append' of 'collections.deque' objects}
-   125250    0.038    0.000    0.038    0.000 {method 'pop' of 'list' objects}
-   249476    0.037    0.000    0.037    0.000 {built-in method time.monotonic}
-   125253    0.035    0.000    0.035    0.000 {method '__enter__' of '_thread.lock' objects}
-   124751    0.033    0.000    0.033    0.000 utils.py:107(<genexpr>)
-   117517    0.027    0.000    0.027    0.000 {method '_is_owned' of '_thread.RLock' objects}
-   125251    0.018    0.000    0.018    0.000 {method 'put' of '_queue.SimpleQueue' objects}
-   124738    0.017    0.000    0.017    0.000 {method 'remove' of 'collections.deque' objects}
-   124741    0.014    0.000    0.014    0.000 {built-in method builtins.len}
-   124744    0.013    0.000    0.013    0.000 {method 'release' of '_thread.lock' objects}
+        1    0.000    0.000  438.395  438.395 {built-in method builtins.exec}
+        1    0.000    0.000  438.395  438.395 <string>:1(<module>)
+        1    0.000    0.000  438.395  438.395 1750096170.py:1(func)
+        1    0.007    0.007  438.394  438.394 coef.py:225(cm)
+      508    0.001    0.000  438.376    0.863 _base.py:601(result_iterator)
+      506    0.002    0.000  438.374    0.866 _base.py:417(result)
+      994    0.003    0.000  438.373    0.441 threading.py:280(wait)
+     2993  438.369    0.146  438.369    0.146 {method 'acquire' of '_thread.lock' objects}
+        2    0.000    0.000    0.011    0.005 _base.py:572(map)
+        2    0.000    0.000    0.010    0.005 _base.py:597(<listcomp>)
+      506    0.001    0.000    0.010    0.000 thread.py:155(submit)
+      506    0.000    0.000    0.007    0.000 thread.py:174(_adjust_thread_count)
+      506    0.001    0.000    0.006    0.000 threading.py:404(acquire)
+     1015    0.003    0.000    0.003    0.000 threading.py:256(__enter__)
+      506    0.001    0.000    0.002    0.000 _base.py:317(__init__)
+      510    0.001    0.000    0.001    0.000 threading.py:228(__init__)
         2    0.001    0.000    0.001    0.000 {built-in method numpy.zeros}
-        3    0.000    0.000    0.000    0.000 threading.py:873(start)
-        3    0.000    0.000    0.000    0.000 threading.py:556(wait)
-        1    0.000    0.000    0.000    0.000 numeric.py:289(full)
-        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(copyto)
-        1    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
-        1    0.000    0.000    0.000    0.000 typedlist.py:228(__init__)
+     1015    0.001    0.000    0.001    0.000 threading.py:259(__exit__)
+      493    0.000    0.000    0.000    0.000 {method '_acquire_restore' of '_thread.RLock' objects}
         1    0.000    0.000    0.000    0.000 _base.py:635(__exit__)
         1    0.000    0.000    0.000    0.000 thread.py:210(shutdown)
-        9    0.000    0.000    0.000    0.000 typedlist.py:341(append)
         3    0.000    0.000    0.000    0.000 threading.py:1021(join)
+        3    0.000    0.000    0.000    0.000 threading.py:873(start)
+        3    0.000    0.000    0.000    0.000 threading.py:1059(_wait_for_tstate_lock)
+      506    0.000    0.000    0.000    0.000 _base.py:387(__get_result)
+      501    0.000    0.000    0.000    0.000 threading.py:268(_acquire_restore)
+      506    0.000    0.000    0.000    0.000 {method '__enter__' of '_thread.RLock' objects}
+      501    0.000    0.000    0.000    0.000 threading.py:271(_is_owned)
+      999    0.000    0.000    0.000    0.000 {built-in method _thread.allocate_lock}
+        3    0.000    0.000    0.000    0.000 threading.py:556(wait)
+      501    0.000    0.000    0.000    0.000 threading.py:265(_release_save)
+      506    0.000    0.000    0.000    0.000 threading.py:82(RLock)
+      509    0.000    0.000    0.000    0.000 {method '__enter__' of '_thread.lock' objects}
+     1525    0.000    0.000    0.000    0.000 {method '__exit__' of '_thread.lock' objects}
+      506    0.000    0.000    0.000    0.000 thread.py:41(__init__)
+      493    0.000    0.000    0.000    0.000 {method '_release_save' of '_thread.RLock' objects}
+        9    0.000    0.000    0.000    0.000 typedlist.py:341(append)
+      995    0.000    0.000    0.000    0.000 {built-in method time.monotonic}
+      506    0.000    0.000    0.000    0.000 {method 'pop' of 'list' objects}
+      994    0.000    0.000    0.000    0.000 {method 'append' of 'collections.deque' objects}
+      510    0.000    0.000    0.000    0.000 {method '__exit__' of '_thread.RLock' objects}
+        1    0.000    0.000    0.000    0.000 typedlist.py:298(_initialise_list)
+      493    0.000    0.000    0.000    0.000 {method '_is_owned' of '_thread.RLock' objects}
+        1    0.000    0.000    0.000    0.000 numeric.py:289(full)
+        1    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
+      507    0.000    0.000    0.000    0.000 {method 'put' of '_queue.SimpleQueue' objects}
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(copyto)
+        1    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        3    0.000    0.000    0.000    0.000 {built-in method _thread.start_new_thread}
+      498    0.000    0.000    0.000    0.000 {method 'remove' of 'collections.deque' objects}
