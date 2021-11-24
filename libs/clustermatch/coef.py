@@ -383,7 +383,9 @@ def cm(
             return max_ari_list, max_part_idx_list
 
         # iterate over all chunks of object pairs and compute the coefficient
-        inputs = list(chunker(np.arange(n_comp), 1))
+        inputs = list(
+            chunker(np.arange(n_comp), int(np.ceil(n_comp / (default_n_threads * 2))))
+        )
 
         for idx, (max_ari_list, max_part_idx_list) in zip(
             inputs, map_func(compute_coef, inputs)
