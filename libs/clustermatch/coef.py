@@ -3,7 +3,7 @@ Contains function that implement the Clustermatch coefficient
 (https://doi.org/10.1093/bioinformatics/bty899).
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Iterable
+from typing import Iterable, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -222,12 +222,39 @@ def to_numpy(x):
     return x.to_numpy()
 
 
+def get_chunks(
+    iterable: Union[int, Iterable], n_threads: int, ratio: float = 1
+) -> Iterable[Iterable[int]]:
+    """
+    TODO
+    """
+    if isinstance(iterable, int):
+        iterable = np.arange(iterable)
+
+    n = len(iterable)
+    expected_n_chunks = n_threads * ratio
+
+    res = list(chunker(iterable, int(np.ceil(n / expected_n_chunks))))
+
+    while len(res) < expected_n_chunks <= n:
+        # look for an element in res that can be split in two
+        idx = 0
+        while len(res[idx]) == 1:
+            idx = idx + 1
+
+        new_chunk = get_chunks(res[idx], 2)
+        res[idx] = new_chunk[0]
+        res.insert(idx + 1, new_chunk[1])
+
+    return res
+
+
 def cm(
     x: NDArray,
     y: NDArray = None,
     internal_n_clusters: Iterable[int] = None,
     return_parts: bool = False,
-    n_chunks_threads_ratio: int = 10,
+    n_chunks_threads_ratio: int = 3,
 ) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch coefficient between
@@ -327,12 +354,7 @@ def cm(
 
     with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
         # pre-compute the internal partitions for each object in parallel
-        inputs = list(
-            chunker(
-                np.arange(n),
-                int(np.ceil(n / (default_n_threads * n_chunks_threads_ratio))),
-            )
-        )
+        inputs = get_chunks(n, default_n_threads, n_chunks_threads_ratio)
 
         def compute_parts(idxs):
             return np.array([_get_parts(X[i], range_n_clusters) for i in idxs])
@@ -392,12 +414,7 @@ def cm(
             return max_ari_list, max_part_idx_list
 
         # iterate over all chunks of object pairs and compute the coefficient
-        inputs = list(
-            chunker(
-                np.arange(n_comp),
-                int(np.ceil(n_comp / (default_n_threads * n_chunks_threads_ratio))),
-            )
-        )
+        inputs = get_chunks(n_comp, default_n_threads, n_chunks_threads_ratio)
 
         for idx, (max_ari_list, max_part_idx_list) in zip(
             inputs, map_func(compute_coef, inputs)
