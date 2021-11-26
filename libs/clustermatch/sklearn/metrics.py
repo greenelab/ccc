@@ -36,10 +36,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import numpy as np
-from numba.core.extending import register_jitable
+from numba import njit
 
 
-@register_jitable(cache=True)
+@njit(cache=True, nogil=True)
 def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Given two clustering partitions with k0 and k1 number of clusters each, it
@@ -76,7 +76,7 @@ def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     return cont_mat
 
 
-@register_jitable(cache=True)
+@njit(cache=True, nogil=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Returns the pair confusion matrix from two clustering partitions. It is an
@@ -111,7 +111,6 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
     return C
 
 
-@register_jitable(cache=True)
 def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
     """
     Computes the adjusted Rand index (ARI) between two clustering partitions.
@@ -141,3 +140,59 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
         return 1.0
 
     return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
+
+
+@njit(cache=True, nogil=True)
+def get_num_pairs(n):
+    return (n * (n - 1)) // 2
+
+
+@njit(cache=True, nogil=True)
+def adjusted_rand_index_permutation_model(
+    part0: np.ndarray, part1: np.ndarray
+) -> float:
+    """
+    Alternative implementation of adjusted Rand index (ARI) that can be compiled
+    with numba and does not overflow with large number of objects (approx n >
+    100000). The formulat for ARI is the one in Wikipedia, with some
+    simplifications to avoid multiplying very large numbers (see comments
+    below).
+    """
+    # name of variables follow notations of contingency matrix in Wikipedia's
+    # page about ARI:
+    #   - n is the number of objects
+    #   - nij, ais and bis denote the elements of contingency matrix $n_{ij}$
+    #   - suffix _k2 means pairs of objects for the prefix. For example, n_k2 is
+    #     $n \choose 2$.
+
+    n = part0.shape[0]
+    contingency = get_contingency_matrix(part0, part1).astype(np.uint64)
+
+    n_k2 = get_num_pairs(n)
+    sum_nij_k2 = np.sum(get_num_pairs(np.ravel(contingency)))
+
+    ais = np.sum(contingency, axis=1)
+    ais_k2 = get_num_pairs(ais)
+    sum_ais_k2 = np.sum(ais_k2)
+
+    bis = np.sum(contingency, axis=0)
+    bis_k2 = get_num_pairs(bis)
+    sum_bis_k2 = np.sum(bis_k2)
+
+    # the numerator in ARI's formula has a part (summand) that is:
+    #   sum(a_i choose 2) * sum(b_i choose 2) / n choose 2
+    # (see Wikipedia's Adjusted Rand index page for more details)
+    # here, instead of performing the multiplication of the sums first, which
+    # could lead to very large numbers that can overflow, I divide by
+    # (n choose 2) first, to avoid doing first the multiplication of potentially
+    # two very large numbers.
+    component_1 = (sum_ais_k2 / n_k2) * sum_bis_k2
+    # commented out below is the default formula
+    # component_1 = (sum_ais_k2 * sum_bis_k2) / n_k2
+
+    component_0 = 0.5 * (sum_ais_k2 + sum_bis_k2)
+
+    numerator = sum_nij_k2 - component_1
+    denominator = component_0 - component_1
+
+    return numerator / denominator
