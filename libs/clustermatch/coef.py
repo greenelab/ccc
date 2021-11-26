@@ -6,8 +6,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable, Union
 
 import numpy as np
+from numba.core.extending import register_jitable
 from numpy.typing import NDArray
-from numba import njit, get_num_threads
+from numba import njit, get_num_threads, prange
 from numba.typed import List
 
 from clustermatch.pytorch.core import unravel_index_2d
@@ -137,6 +138,7 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]
     return parts
 
 
+@register_jitable(cache=True, parallel=True)
 def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
@@ -158,11 +160,16 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
     """
     res = np.zeros((x.shape[0], y.shape[0]))
 
-    for i in range(res.shape[0]):
+    for i in prange(res.shape[0]):
         for j in range(res.shape[1]):
             res[i, j] = ari(x[i], y[j])
 
     return res
+
+
+@njit(cache=True)
+def cdist_parts_parallel_compiled(x: NDArray, y: NDArray) -> NDArray[float]:
+    return cdist_parts_basic(x, y)
 
 
 def cdist_parts_parallel(

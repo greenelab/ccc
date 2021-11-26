@@ -36,10 +36,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import numpy as np
-from numba import njit
+from numba.core.extending import register_jitable
 
 
-@njit(cache=True, nogil=True)
+@register_jitable(cache=True)
 def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Given two clustering partitions with k0 and k1 number of clusters each, it
@@ -76,7 +76,7 @@ def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     return cont_mat
 
 
-@njit(cache=True, nogil=True)
+@register_jitable(cache=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Returns the pair confusion matrix from two clustering partitions. It is an
@@ -111,6 +111,7 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
     return C
 
 
+@register_jitable(cache=True)
 def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
     """
     Computes the adjusted Rand index (ARI) between two clustering partitions.
