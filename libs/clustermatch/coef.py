@@ -400,16 +400,18 @@ def cm(
 
                 # compute ari only if partitions are not marked as "missing"
                 # (negative values)
-                if obji_parts[0, 0] >= -1 and objj_parts[0, 0] >= 0:
-                    comp_values = cdist_func(
-                        obji_parts,
-                        objj_parts,
-                    )
-                    max_flat_idx = comp_values.argmax()
+                if obji_parts[0, 0] < 0 or objj_parts[0, 0] < 0:
+                    continue
 
-                    max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
-                    max_part_idx_list[idx] = max_idx
-                    max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
+                comp_values = cdist_func(
+                    obji_parts,
+                    objj_parts,
+                )
+                max_flat_idx = comp_values.argmax()
+
+                max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+                max_part_idx_list[idx] = max_idx
+                max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
 
             return max_ari_list, max_part_idx_list
 
