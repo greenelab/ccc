@@ -3,6 +3,7 @@ General utility functions.
 """
 import re
 import hashlib
+import types
 
 from pathlib import Path
 from subprocess import run
@@ -105,3 +106,19 @@ def chunker(seq, size):
         [[0, 1, 2], [3, 4, 5], [6, 7]]
     """
     return (seq[pos : pos + size] for pos in range(0, len(seq), size))  # noqa: E203
+
+
+def copy_func(f, name=None):
+    """
+    Copies a python function object into a new function object. It can
+    optionally change its name. Based on https://stackoverflow.com/a/13503277
+    """
+    g = types.FunctionType(
+        f.__code__.replace(co_name=name or f.__name__),
+        f.__globals__,
+        name=name or f.__name__,
+        argdefs=f.__defaults__,
+        closure=f.__closure__,
+    )
+    g.__kwdefaults__ = f.__kwdefaults__
+    return g

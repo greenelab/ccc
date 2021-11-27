@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from clustermatch.utils import simplify_string
+from clustermatch.utils import simplify_string, copy_func
 
 
 def test_utils_module_load():
@@ -180,3 +180,30 @@ def test_simplify_string_other_special_chars():
     obs_value = simplify_string(orig_value.lower())
     assert obs_value is not None
     assert obs_value == exp_value
+
+
+def test_copy_func():
+    def myfunc(x, y):
+        return x + y
+
+    assert myfunc(7, 13) == 20
+    assert "myfunc" in str(myfunc)
+
+    new_func = copy_func(myfunc)
+    assert new_func(7, 13) == 20
+    assert myfunc != new_func
+    assert "myfunc" in str(new_func)
+
+
+def test_copy_func_new_name():
+    def myfunc(x, y):
+        return x + y
+
+    assert myfunc(7, 13) == 20
+    assert "myfunc" in str(myfunc)
+
+    new_func = copy_func(myfunc, "new_func")
+    assert new_func(7, 13) == 20
+    assert myfunc != new_func
+    assert "myfunc" not in str(new_func)
+    assert "new_func" in str(new_func)

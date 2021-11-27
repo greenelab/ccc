@@ -6,15 +6,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable, Union
 
 import numpy as np
-from numba.core.extending import register_jitable
 from numpy.typing import NDArray
 from numba import njit, get_num_threads, prange
 from numba.typed import List
 
 from clustermatch.pytorch.core import unravel_index_2d
-from clustermatch.sklearn.metrics import adjusted_rand_index as ari
+from clustermatch.sklearn.metrics import adjusted_rand_index_permutation_model as ari
+# from clustermatch.sklearn.metrics import adjusted_rand_index as ari
 from clustermatch.scipy.stats import rank
-from clustermatch.utils import chunker
+from clustermatch.utils import chunker, copy_func
 
 
 @njit(cache=True, nogil=True)
@@ -138,7 +138,7 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]
     return parts
 
 
-@register_jitable(cache=True, parallel=True)
+# @register_jitable(cache=True, parallel=True)
 def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
@@ -167,12 +167,25 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
     return res
 
 
+# jitted versions of cdist_parts_main
+cdist_parts_parallel = njit(
+    copy_func(cdist_parts_basic, "cdist_par"), cache=True, parallel=True
+)
+
+cdist_parts_not_parallel = njit(
+    copy_func(cdist_parts_basic, "cdist_not_par"), cache=True, parallel=False
+)
+
+
 @njit(cache=True)
-def cdist_parts_parallel_compiled(x: NDArray, y: NDArray) -> NDArray[float]:
-    return cdist_parts_basic(x, y)
+def cdist_parts(x: NDArray, y: NDArray, parallel: bool = True) -> NDArray[float]:
+    if parallel:
+        return cdist_parts_parallel(x, y)
+    else:
+        return cdist_parts_not_parallel(x, y)
 
 
-def cdist_parts_parallel(
+def cdist_parts_parallel_python(
     x: NDArray, y: NDArray, executor: ThreadPoolExecutor
 ) -> NDArray[float]:
     """
@@ -279,7 +292,7 @@ def get_chunks(
     return res
 
 
-def cm(
+def cm_python(
     x: NDArray,
     y: NDArray = None,
     internal_n_clusters: Iterable[int] = None,
@@ -412,7 +425,7 @@ def cm(
             map_func = map
 
             def cdist_func(x, y):
-                return cdist_parts_parallel(x, y, executor)
+                return cdist_parts_parallel_python(x, y, executor)
 
         else:
             cdist_func = cdist_parts_basic
@@ -473,6 +486,196 @@ def cm(
             max_parts[idx, :] = max_part_idx_list
 
     # return an array of values or a single scalar, depending on the input data
+    if cm_values.shape[0] == 1:
+        if return_parts:
+            return cm_values[0], max_parts[0], parts
+        else:
+            return cm_values[0]
+
+    if return_parts:
+        return cm_values, max_parts, parts
+    else:
+        return cm_values
+
+
+@njit(cache=True, parallel=True)
+def _cm(
+    x: NDArray, y: NDArray = None, internal_n_clusters: Iterable[int] = None
+) -> NDArray[float]:
+    """
+    This is the main function that computes the Clustermatch coefficient between
+    two arrays. This implementation only supports numerical data for
+    optimization purposes, but the original implementation can also work with
+    categorical data (https://github.com/sinc-lab/clustermatch).
+
+    Args:
+        x: an 1d or 2d numerical array with the data. NaN are not supported.
+          If it is 2d, then the coefficient is computed for each pair of rows.
+        y: an optional 1d numerical array. If x is 1d and y is given, it computes
+          the coefficient between x and y.
+        internal_n_clusters: a list of integer values indicating the number of
+          clusters used to split x and y.
+
+    Returns:
+        The function returns a tuple with three elements:
+
+        cm_values: if x is 2d, then it is a 1d condensed array of pairwise
+            coefficients. It has size (n * (n - 1)) / 2, where n is the number
+            of rows in x. If x and y are given, and they are 1d, then this is a
+            scalar. The Clustermatch coefficient is always between 0 and 1
+            (inclusive). If any of the two variables being compared has no
+            variation (all values are the same), the coefficient is not defined
+            (np.nan).
+
+        max_parts: an array with n * (n - 1)) / 2 rows (one for each object
+            pair) and two columns. It has the indexes pointing to each object's
+            partition (parts, see below) that maximized the ARI. If
+            cm_values[idx] is nan, then max_parts[idx] will be meaningless.
+
+        parts: a 3d array that contains all the internal partitions generated
+            for each object in data. parts[i] has the partitions for object i,
+            whereas parts[i,j] has the partition j generated for object i. The
+            third dimension is the number of columns in x (if 2d) or elements in
+            x/y (if 1d). For example, if you want to access the pair of
+            partitions that maximized the Clustermatch coefficient given x and y
+            (a pair of objects), then max_parts[0] and max_parts[1] have the
+            partition indexes in parts, respectively: parts[0][max_parts[0]]
+            points to the partition for x, and parts[1][max_parts[1]] points to
+            the partition for y.
+    """
+    if x.ndim == 1 and y is not None:
+        assert x.shape == y.shape
+        X = np.zeros((2, x.shape[0]))
+        X[0, :] = x
+        X[1, :] = y
+    elif x.ndim == 2:
+        X = x
+    else:
+        raise ValueError("Wrong combination of parameters x and y")
+
+    # get matrix of partitions for each object pair
+    range_n_clusters = _get_range_n_clusters(X.shape[1], internal_n_clusters)
+
+    # store a set of partitions per row (object) in X as a multidimensional
+    # array:
+    #  - 1st dim: number of objects/rows in X
+    #  - 2nd dim: number of partitions per object
+    #  - 3rd dim: number of features per object (columns in X)
+    parts = np.zeros(
+        (X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16
+    )
+
+    for idx in prange(X.shape[0]):
+        parts[idx] = _get_parts(X[idx], range_n_clusters)
+
+    n = X.shape[0]
+    n_comp = (n * (n - 1)) // 2
+    cm_values = np.full(n_comp, np.nan)
+
+    # for each object pair being compared, max_parts has the indexes of the
+    # partitions that maximimized the ARI
+    max_parts = np.zeros((n_comp, 2), dtype=np.uint64)
+
+    # Below, there are two layers of parallelism: 1) parallel execution across
+    # object pairs (first for loop with prange) and 2) the cdist_parts
+    # function, which also runs several threads to compare partitions with ari.
+    # In 2) we need to disable parallelization in case len(cm_values) > 1,
+    # otherwise these two layers are not "serialized" (they spawn
+    # NUMBA_NUM_THREADS threads each for some reason).
+    parallelize_cdist = True if n_comp == 1 else False
+
+    for idx in prange(cm_values.shape[0]):
+        i, j = get_coords_from_index(n, idx)
+
+        # get partitions for the pair of objects
+        obji_parts, objj_parts = parts[i], parts[j]
+
+        # compute ari only if partitions are not marked as "missing"
+        # (negative values)
+        if obji_parts[0, 0] >= 0 and objj_parts[0, 0] >= 0:
+            comp_values = cdist_parts(obji_parts, objj_parts, parallelize_cdist)
+
+            max_flat_idx = comp_values.argmax()
+            max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+
+            max_ari = comp_values[max_idx]
+            max_parts[idx] = max_idx
+            cm_values[idx] = max_ari if max_ari >= 0.0 else 0.0
+
+    return cm_values, max_parts, parts
+
+
+def cm(
+    x: NDArray,
+    y: NDArray = None,
+    internal_n_clusters: Iterable[int] = None,
+    return_parts: bool = False,
+):
+    """
+    This function is a wrapper over _cm, a not-jitted (numba) function that can
+    return different value types according to the input given (this is a problem
+    with numba).
+
+    Args:
+        x: same as in _cm function.
+        y: same as in _cm function.
+        internal_n_clusters: same as in _cm function.
+        return_parts: if True, for each object pair, it returns the partitions
+          that maximized the coefficient.
+
+    Returns:
+        If return_parts is False, only Clustermatch coefficients are returned.
+        In that case, if x is 2d, a np.ndarray of size n x n is
+        returned with the coefficient values, where n is the number of rows in x.
+        If only a single coefficient was computed (for example, x and y were
+        given as 1d arrays each), then a single scalar is returned.
+
+        If returns_parts is True, then it returns a tuple with three values:
+        1) the
+        coefficients, 2) the partitions indexes that maximized the coefficient
+        for each object pair, and 3) the partitions for all objects.
+
+        cm_values: if x is 2d, then it is a 1d condensed array of pairwise
+            coefficients. It has size (n * (n - 1)) / 2, where n is the number
+            of rows in x. If x and y are given, and they are 1d, then this is a
+            scalar. The Clustermatch coefficient is always between 0 and 1
+            (inclusive). If any of the two variables being compared has no
+            variation (all values are the same), the coefficient is not defined
+            (np.nan).
+
+        max_parts: an array with n * (n - 1)) / 2 rows (one for each object
+            pair) and two columns. It has the indexes pointing to each object's
+            partition (parts, see below) that maximized the ARI. If
+            cm_values[idx] is nan, then max_parts[idx] will be meaningless.
+
+        parts: a 3d array that contains all the internal partitions generated
+            for each object in data. parts[i] has the partitions for object i,
+            whereas parts[i,j] has the partition j generated for object i. The
+            third dimension is the number of columns in x (if 2d) or elements in
+            x/y (if 1d). For example, if you want to access the pair of
+            partitions that maximized the Clustermatch coefficient given x and y
+            (a pair of objects), then max_parts[0] and max_parts[1] have the
+            partition indexes in parts, respectively: parts[0][max_parts[0]]
+            points to the partition for x, and parts[1][max_parts[1]] points to
+            the partition for y.
+    """
+
+    # convert list to numba.types.List, since reflection is deprecated:
+    # https://numba.pydata.org/numba-doc/latest/reference/deprecation.html#deprecation-of-reflection-for-list-and-set-types
+    n_clusters = None
+
+    x = to_numpy(x)
+    y = to_numpy(y)
+
+    if internal_n_clusters is not None:
+        n_clusters = List()
+        for k in internal_n_clusters:
+            n_clusters.append(k)
+
+    # run optimized _cm function
+    cm_values, max_parts, parts = _cm(x, y, n_clusters)
+
+    # return an array of values or a single scalar
     if cm_values.shape[0] == 1:
         if return_parts:
             return cm_values[0], max_parts[0], parts
