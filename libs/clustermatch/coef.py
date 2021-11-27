@@ -12,6 +12,7 @@ from numba.typed import List
 
 from clustermatch.pytorch.core import unravel_index_2d
 from clustermatch.sklearn.metrics import adjusted_rand_index_permutation_model as ari
+
 # from clustermatch.sklearn.metrics import adjusted_rand_index as ari
 from clustermatch.scipy.stats import rank
 from clustermatch.utils import chunker, copy_func
