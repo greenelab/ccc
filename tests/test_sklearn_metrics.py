@@ -99,6 +99,8 @@ def test_adjusted_rand_index_random_partitions_same_k():
     part0 = np.random.randint(0, maxk0 + 1, n)
     part1 = np.random.randint(0, maxk1 + 1, n)
 
+    # warning: the sklearn's ari implementation can overflow in older versions
+    # when n is large
     expected_ari = sklearn_ari(part0, part1)
 
     observed_ari = adjusted_rand_index(part0, part1)
@@ -116,6 +118,8 @@ def test_adjusted_rand_index_random_partitions_k0_greater_k1():
     part0 = np.random.randint(0, maxk0 + 1, n)
     part1 = np.random.randint(0, maxk1 + 1, n)
 
+    # warning: the sklearn's ari implementation can overflow in older versions
+    # when n is large
     expected_ari = sklearn_ari(part0, part1)
 
     observed_ari = adjusted_rand_index(part0, part1)
