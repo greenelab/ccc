@@ -35,7 +35,7 @@
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
 
 # %% tags=[]
-# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -exec rm -rf {} \;
+# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -prune -exec rm -rf {} \;
 
 # %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
