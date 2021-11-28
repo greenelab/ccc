@@ -17,7 +17,9 @@
 # # Description
 
 # %% [markdown] tags=[]
-# Clustermatch run using a larger number of samples.
+# Similar as `07` but with numba disabled to compare with a pure Python implementation.
+#
+# Here I had to reduce the number of `n_genes`, since it takes too much otherwise.
 
 # %% [markdown] tags=[]
 # # Disable numba
@@ -35,7 +37,7 @@
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
 
 # %% tags=[]
-# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -exec rm -rf {} \;
+# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -prune -exec rm -rf {} \;
 
 # %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print

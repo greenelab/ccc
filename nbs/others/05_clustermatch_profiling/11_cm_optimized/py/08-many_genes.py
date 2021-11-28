@@ -17,7 +17,9 @@
 # # Description
 
 # %% [markdown] tags=[]
-# Same as `06` but with numba disabled.
+# Similar as `06` but with numba disabled to compare with a pure Python implementation.
+#
+# Here I had to reduce the number of `n_genes`, since it takes too much otherwise.
 
 # %% [markdown] tags=[]
 # # Disable numba
@@ -35,7 +37,7 @@
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
 
 # %% tags=[]
-# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -exec rm -rf {} \;
+# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -prune -exec rm -rf {} \;
 
 # %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
@@ -56,7 +58,7 @@ cm(np.random.rand(10), np.random.rand(10))
 # # Data
 
 # %% tags=[]
-n_genes, n_samples = 500, 1000
+n_genes, n_samples = 50, 1000
 
 # %% tags=[]
 np.random.seed(0)
