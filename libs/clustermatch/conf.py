@@ -58,9 +58,12 @@ GENERAL["N_JOBS_LOW"] = next(int(opt) for opt in options if opt is not None)
 MANUSCRIPT = {}
 MANUSCRIPT["BASE_DIR"] = os.environ.get("CM_MANUSCRIPT_DIR", settings.MANUSCRIPT_DIR)
 if MANUSCRIPT["BASE_DIR"] is not None:
+    # convert to Path
+    MANUSCRIPT["BASE_DIR"] = Path(MANUSCRIPT["BASE_DIR"]).resolve()
+
     # these paths are specific to manubot
-    MANUSCRIPT["CONTENT_DIR"] = Path(MANUSCRIPT["BASE_DIR"], "content").resolve()
-    MANUSCRIPT["FIGURES_DIR"] = Path(MANUSCRIPT["CONTENT_DIR"], "images").resolve()
+    MANUSCRIPT["CONTENT_DIR"] = MANUSCRIPT["BASE_DIR"] / "content"
+    MANUSCRIPT["FIGURES_DIR"] = MANUSCRIPT["CONTENT_DIR"] / "images"
 
 
 #
