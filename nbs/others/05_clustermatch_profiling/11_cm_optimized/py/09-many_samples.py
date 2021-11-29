@@ -18,8 +18,6 @@
 
 # %% [markdown] tags=[]
 # Similar as `07` but with numba disabled to compare with a pure Python implementation.
-#
-# Here I had to reduce the number of `n_genes`, since it takes too much otherwise.
 
 # %% [markdown] tags=[]
 # # Disable numba
@@ -88,6 +86,9 @@ func()
 func()
 
 
+# %% [markdown]
+# These results are just slightly worse than the numba-compiled version (notebook `07`).
+
 # %% [markdown] tags=[]
 # # With reduced `internal_n_clusters`
 
@@ -104,5 +105,8 @@ func()
 # %% tags=[]
 # %%prun -s cumulative -l 50 -T 09-cm_many_samples-less_internal_n_clusters.txt
 func()
+
+# %% [markdown]
+# These results are slightly better than the numba-compiled version (notebook `07`), which is surprising. In the future, it would be interesting to disable threading here to get accurate profiling results to debug this issue.
 
 # %% tags=[]
