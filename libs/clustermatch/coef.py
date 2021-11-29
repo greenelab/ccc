@@ -169,7 +169,15 @@ def cdist_parts_parallel(
     x: NDArray, y: NDArray, executor: ThreadPoolExecutor
 ) -> NDArray[float]:
     """
-    TODO
+    It parallelizes cdist_parts_basic function.
+
+    Args:
+        x: same as in cdist_parts_basic
+        y: same as in cdist_parts_basic
+        executor: an pool executor where jobs will be submitted.
+
+    Results:
+        Same as in cdist_parts_basic.
     """
     res = np.zeros((x.shape[0], y.shape[0]))
 
@@ -226,7 +234,22 @@ def get_chunks(
     iterable: Union[int, Iterable], n_threads: int, ratio: float = 1
 ) -> Iterable[Iterable[int]]:
     """
-    TODO
+    It splits elements in an iterable in chunks according to the number of
+    CPU cores available for parallel processing.
+
+    Args:
+        iterable: an iterable to be split in chunks. If it is an integer, it
+            will split the iterable given by np.arange(iterable).
+        n_threads: number of threads available for parallelization.
+        ratio: a ratio that allows to increase the number of splits given
+            n_threads. For example, with ratio=1, the function will just split
+            the iterable in n_threads chunks. If ratio is larger than 1, then
+            it will split in n_threads * ratio chunks.
+
+    Results:
+        Another iterable with chunks according to the arguments given. For
+        example, if iterable is [0, 1, 2, 3, 4, 5] and n_threads is 2, it will
+        return [[0, 1, 2], [3, 4, 5]].
     """
     if isinstance(iterable, int):
         iterable = np.arange(iterable)
@@ -262,6 +285,9 @@ def cm(
     optimization purposes, but the original implementation can also work with
     categorical data (https://github.com/sinc-lab/clustermatch).
 
+    To control the number of threads used, set the NUMBA_NUM_THREADS variable
+    to an integer. For example, NUMBA_NUM_THREADS=2 will use 2 cores.
+
     Args:
         x: an 1d or 2d numerical array with the data. NaN are not supported.
           If it is 2d, then the coefficient is computed for each pair of rows.
@@ -271,7 +297,9 @@ def cm(
           clusters used to split x and y.
         return_parts: if True, for each object pair, it returns the partitions
           that maximized the coefficient.
-        n_chunks_threads_ratio: TODO
+        n_chunks_threads_ratio: allows to modify how pairwise comparisons are
+          split across different threads. It's given as the ratio parameter of
+          function get_chunks.
 
     Returns:
         If return_parts is False, only Clustermatch coefficients are returned.
@@ -362,14 +390,13 @@ def cm(
         for idx, ps in zip(inputs, executor.map(compute_parts, inputs)):
             parts[idx] = ps
 
-        # TODO update comment below
         # Below, there are two layers of parallelism: 1) parallel execution
-        # across object pairs and 2) the cdist_parts function, which also runs
-        # several threads to compare partitions using ari. In 2) we need to
-        # disable parallelization in case len(cm_values) > 1 (that is, we have
-        # several object pairs to compare), because parallelization is already
-        # performed at this level. Otherwise, more threads than specified by the
-        # user are started.
+        # across object pairs and 2) the cdist_parts_parallel function, which
+        # also runs several threads to compare partitions using ari. In 2) we
+        # need to disable parallelization in case len(cm_values) > 1 (that is,
+        # we have several object pairs to compare), because parallelization is
+        # already performed at this level. Otherwise, more threads than
+        # specified by the user are started.
         cdist_parts_enable_threading = True if n_comp == 1 else False
 
         cdist_func = None
@@ -386,7 +413,19 @@ def cm(
         # compute coefficients
         def compute_coef(idx_list):
             """
-            TODO
+            Given a list of indexes representing each a pair of
+            objects/rows/genes, it computes the Clustermatch coefficient for
+            each of them. This function is supposed to be used to parallelize
+            processing.
+
+            Args:
+                idx_list: a list of indexes (integers), each of them
+                  representing a pair of objects.
+
+            Returns:
+                Returns a tuple with two arrays. These two arrays are the same
+                  arrays returned by the main cm function (cm_values and
+                  max_parts) but for a subset of the data.
             """
             n_idxs = len(idx_list)
             max_ari_list = np.full(n_idxs, np.nan, dtype=float)
@@ -403,6 +442,8 @@ def cm(
                 if obji_parts[0, 0] < 0 or objj_parts[0, 0] < 0:
                     continue
 
+                # compare all partitions of one object to the all the partitions
+                # of the other object, and get the maximium ARI
                 comp_values = cdist_func(
                     obji_parts,
                     objj_parts,
@@ -424,7 +465,7 @@ def cm(
             cm_values[idx] = max_ari_list
             max_parts[idx, :] = max_part_idx_list
 
-    # return an array of values or a single scalar
+    # return an array of values or a single scalar, depending on the input data
     if cm_values.shape[0] == 1:
         if return_parts:
             return cm_values[0], max_parts[0], parts
