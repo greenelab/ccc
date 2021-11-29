@@ -301,9 +301,9 @@ with sns.plotting_context("paper", font_scale=1.8):
     )
 
 # %% [markdown] tags=[]
-# **COMPLETE CONCLUSIONS**:
+# **Takeaways**:
 #
-# 1. more number of internal clusters capture more complex relationships
-# 1. with two clutsers for each variable pair, clustermatch seems to capture linear relationships only
+# 1. When the number of internal clusters (separated by red lines) is higher, Clustermatch is able to capture more complex relationships.
+# 1. With two internal clusters (Anscombe I, II and III) for each variable pair, Clustermatch seems to capture linear relationships. However, two clusters also capture noncoexistence relationships.
 
 # %% tags=[]
