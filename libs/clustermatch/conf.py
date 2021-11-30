@@ -65,6 +65,15 @@ if MANUSCRIPT["BASE_DIR"] is not None:
     MANUSCRIPT["CONTENT_DIR"] = MANUSCRIPT["BASE_DIR"] / "content"
     MANUSCRIPT["FIGURES_DIR"] = MANUSCRIPT["CONTENT_DIR"] / "images"
 
+#
+# General configurations
+#
+GENE_SELECTION_STRATEGY_NAME_PATTERN = r"(?P<gene_sel_strategy>[0-9a-z_]+)"
+GTEX_TISSUE_NAME_PATTERN = r"(?P<tissue>[0-9a-z_]+)"
+CORRELATION_METHOD_PATTERN = r"(?P<corr_method>[0-9a-z_]+)"
+CLUSTERING_METHOD_PATTERN = r"(?P<clust_method>[0-9a-zA-Z]+)"
+ENRICH_FUNCTION_PATTERN = r"(?P<enrich_func>[A-Za-z_]+)"
+ENRICH_FUNCTION_PARAMS_PATTERN = r"(?P<enrich_params>[0-9A-Za-z_]+)"
 
 #
 # GTEx
@@ -85,10 +94,16 @@ GTEX["N_TISSUES"] = 54
 # Results
 GTEX["RESULTS_DIR"] = Path(RESULTS_DIR, "gtex_v8").resolve()
 
+## Gene selection
 GTEX["GENE_SELECTION_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_selection").resolve()
+
+## Similarity matrices
 GTEX["SIMILARITY_MATRICES_DIR"] = Path(
     GTEX["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
+GTEX[
+    "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
+] = "gtex_v8_data_{tissue}-{gene_sel_strategy}-{corr_method}.pkl"
 
 
 #
@@ -109,9 +124,13 @@ RECOUNT2["DATA_FILE"] = Path(
 # Results
 RECOUNT2["RESULTS_DIR"] = Path(RESULTS_DIR, "recount2").resolve()
 
+## Similarity matrices
 RECOUNT2["SIMILARITY_MATRICES_DIR"] = Path(
     RECOUNT2["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
+RECOUNT2[
+    "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
+] = "recount_data_prep_PLIER-{corr_method}.pkl"
 
 
 if __name__ == "__main__":
