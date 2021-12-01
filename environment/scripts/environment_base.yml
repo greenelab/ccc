@@ -29,4 +29,5 @@ dependencies:
   - seaborn
   - tabulate
   - tqdm
+  - upsetplot
 
