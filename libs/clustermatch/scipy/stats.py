@@ -96,4 +96,4 @@ def rank(data: NDArray, sorted_data_idx: NDArray = None) -> NDArray:
     count[:-1] = obs_nz
     count[-1] = len(obs)
 
-    return .5 * (count[dense] + count[dense - 1] + 1)
+    return 0.5 * (count[dense] + count[dense - 1] + 1)
