@@ -52,7 +52,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     """
     data_sorted = np.argsort(data, kind="quicksort")
     data_rank = rank(data, data_sorted)
-    data_perc = data_rank / data_rank.max()
+    data_perc = data_rank / len(data)
 
     percentiles = [0.0] + _get_perc_from_k(k) + [1.0]
 
