@@ -66,7 +66,7 @@ from numpy.typing import NDArray
 def rank(data: NDArray, sorted_data_idx: NDArray = None) -> NDArray:
     """
     It returns the ranks of a numpy array. It's an implementation based on
-    scipy.stats.rankdata (method="dense") that can be compiled by numba.
+    scipy.stats.rankdata (method="average") that can be compiled by numba.
 
     Args:
         data: a 1d array with numeric data.
@@ -89,4 +89,11 @@ def rank(data: NDArray, sorted_data_idx: NDArray = None) -> NDArray:
     arr = arr[sorter]
     obs = np.ones(arr.shape[0], dtype=np.bool_)
     obs[1:] = arr[1:] != arr[:-1]
-    return obs.cumsum()[inv]
+    dense = obs.cumsum()[inv]
+
+    obs_nz = np.nonzero(obs)[0]
+    count = np.zeros(obs_nz.shape[0] + 1, dtype=np.int64)
+    count[:-1] = obs_nz
+    count[-1] = len(obs)
+
+    return .5 * (count[dense] + count[dense - 1] + 1)
