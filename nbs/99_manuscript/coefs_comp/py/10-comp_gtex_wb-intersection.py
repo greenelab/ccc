@@ -238,12 +238,16 @@ df_r_data.shape
 gene_pairs_by_cats = from_indicators(categories, data=df_r_data)
 
 # %%
+gene_pairs_by_cats
+
+# %%
 fig = plt.figure(figsize=(18, 5))
 
 plot(
     gene_pairs_by_cats,
     show_counts=True,
     sort_categories_by=None,
+    # sort_by=None,
     # show_percentages=True,
     # min_subset_size=2,
     element_size=None,
@@ -309,6 +313,114 @@ plot(
     gene_pairs_by_cats,
     show_counts=True,
     sort_categories_by=None,
+    # show_percentages=True,
+    # min_subset_size=2,
+    element_size=None,
+    fig=fig,
+)
+
+# %% [markdown]
+# ### Attemp with Casey's suggestions
+
+# %%
+df_r_data = df_plot
+
+# %%
+df_r_data.shape
+
+# %%
+gene_pairs_by_cats = from_indicators(categories, data=df_r_data)
+
+# %%
+gene_pairs_by_cats
+
+# %%
+gene_pairs_by_cats = gene_pairs_by_cats.sort_index()
+
+# %%
+_tmp_index = gene_pairs_by_cats.index.unique().to_frame(False)
+display(_tmp_index)
+
+# %%
+_tmp_index[_tmp_index.sum(axis=1) == 3]
+
+# %%
+_tmp_index.apply(lambda x: x[0:3].sum() == 0, axis=1)
+
+# %%
+# agreements on top
+_tmp_index.loc[
+    _tmp_index[
+        _tmp_index.apply(lambda x: x.sum() > 1, axis=1)
+        & _tmp_index.apply(lambda x: x[0:3].sum() == 0, axis=1)
+        & _tmp_index.apply(lambda x: 3 > x[3:].sum() > 1, axis=1)
+    ].index
+].apply(tuple, axis=1).to_numpy()
+
+# %%
+# agreements on bottom
+_tmp_index.loc[
+    _tmp_index[
+        _tmp_index.apply(lambda x: x.sum() > 1, axis=1)
+        & _tmp_index.apply(lambda x: 3 > x[0:3].sum() > 1, axis=1)
+        & _tmp_index.apply(lambda x: x[3:].sum() == 0, axis=1)
+    ].index
+].apply(tuple, axis=1).to_numpy()
+
+# %%
+# diagreements
+_tmp_index.loc[
+    _tmp_index[
+        _tmp_index.apply(lambda x: x.sum() > 1, axis=1)
+        & _tmp_index.apply(lambda x: x[0:3].sum() > 0, axis=1)
+        & _tmp_index.apply(lambda x: x[3:].sum() > 0, axis=1)
+    ].index
+].apply(tuple, axis=1).to_numpy()
+
+# %%
+# order subsets
+gene_pairs_by_cats = gene_pairs_by_cats.loc[
+    [
+        # pairs not included in categories:
+        # (False, False, False, False, False, False),
+        # full agreements:
+        (True, True, True, False, False, False),
+        (False, False, False, True, True, True),
+        # agreements on top
+        (False, False, False, False, True, True),
+        (False, False, False, True, False, True),
+        (False, False, False, True, True, False),
+        # agreements on bottom
+        (False, True, True, False, False, False),
+        (True, False, True, False, False, False),
+        (True, True, False, False, False, False),
+        # diagreements
+        ## pearson
+        (False, False, True, False, True, False),
+        (True, False, False, False, True, False),
+        (True, False, True, False, True, False),
+        ## spearman
+        (False, True, False, True, False, False),
+        ## clustermatch
+        (False, True, False, True, False, True),
+        (False, True, False, False, False, True),
+        (True, False, False, False, False, True),
+        (True, True, False, False, False, True),
+    ]
+]
+
+# %%
+# assert gene_pairs_by_cats.shape[0] == df_r_data.shape[0]
+# assert np.array_equal(gene_pairs_by_cats.index.unique(), _tmp_index)
+
+# %%
+fig = plt.figure(figsize=(18, 5))
+
+plot(
+    gene_pairs_by_cats,
+    show_counts=True,
+    sort_categories_by=None,
+    sort_by=None,
     # show_percentages=True,
     # min_subset_size=2,
     element_size=None,
@@ -664,74 +776,5 @@ gene1[gene1 <= gene1.quantile(q)] = 0
 gene1[gene1 > gene1.quantile(q)] = 1
 
 cm(gene0, gene1)
-
-# %%
-
-# %%
-_tmp_df = df_r_data[
-    ~(df_r_data["clustermatch_higher"])
-    & ~(df_r_data["spearman_higher"])
-    & (df_r_data["pearson_higher"])
-    & (df_r_data["clustermatch_lower"])
-    & ~(df_r_data["spearman_lower"])
-    & ~(df_r_data["pearson_lower"])
-]
-display(_tmp_df)
-
-# %%
-# gene0, gene1 = _tmp_df.iloc[1].name
-gene0, gene1 = "ENSG00000185482.7", "ENSG00000111245.14"
-display((gene0, gene1))
-
-gene0_symbol, gene1_symbol = gene_map[gene0], gene_map[gene1]
-display((gene0_symbol, gene1_symbol))
-
-_pearson, _spearman, _clustermatch = df.loc[
-    (gene0, gene1), ["pearson", "spearman", "clustermatch"]
-].tolist()
-
-# %%
-_title = f"Clustermatch: {_clustermatch:.2f}\nPearson/Spearman: {_pearson:.2f}/{_spearman:.2f}"
-
-# %%
-p = sns.jointplot(
-    data=gene_expr_df.T,
-    x=gene0,
-    y=gene1,
-    kind="hex",
-    bins="log",
-    # ylim=(0, 500),
-)
-
-gene_x_id = p.ax_joint.get_xlabel()
-gene_x_symbol = gene_map[gene_x_id]
-p.ax_joint.set_xlabel(f"{gene_x_id}\n{gene_x_symbol}")
-
-gene_y_id = p.ax_joint.get_ylabel()
-gene_y_symbol = gene_map[gene_y_id]
-p.ax_joint.set_ylabel(f"{gene_y_id}\n{gene_y_symbol}")
-
-p.fig.suptitle(_title)
-
-# %%
-p = sns.scatterplot(
-    data=gene_expr_df.T,
-    x=gene0,
-    y=gene1,
-    # kind="hex",
-    # bins="log",
-    # ylim=(0, 500),
-)
-# p.set_ylim(0, 100)
-
-gene_x_id = p.get_xlabel()
-gene_x_symbol = gene_map[gene_x_id]
-p.set_xlabel(f"{gene_x_id}\n{gene_x_symbol}")
-
-gene_y_id = p.get_ylabel()
-gene_y_symbol = gene_map[gene_y_id]
-p.set_ylabel(f"{gene_y_id}\n{gene_y_symbol}")
-
-p.set_title(_title)
 
 # %%
