@@ -90,4 +90,4 @@ func()
 # %% [markdown] tags=[]
 # **CONCLUSIONS:** compared with notebook `06` (which has 500 rows (`n_genes`) instead of 50 here), this one would have taken 2.80 hours for 500 rows based on this results. Whereas the numba-compiled version took ~7 minutes.
 
-# %%
+# %% tags=[]

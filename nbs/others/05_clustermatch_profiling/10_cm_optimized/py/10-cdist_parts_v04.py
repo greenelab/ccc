@@ -167,7 +167,7 @@ func()
 # %%prun -s cumulative -l 20 -T 10-n_samples_small_1000.txt
 func()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # **CONCLUSION:** as expected, with relatively small samples, the numba-compiled version (`09-cdist_parts_v04`) performs much better than the non-compiled one.
 
 # %% [markdown] tags=[]
@@ -223,7 +223,7 @@ func()
 # %%prun -s cumulative -l 20 -T 10-n_samples_large_100000.txt
 func()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # **CONCLUSION:** this is unexpected. With very large samples, the python version performs better! Something to look at in the future. The profiling file for 100,000 samples () shows that the `cdist_parts_parallel` is taking more time in the numba-compiled version than in the python version. Maybe the compiled ARI implementation could be improved in these cases with large samples.
 
 # %% tags=[]

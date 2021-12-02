@@ -1,26 +1,26 @@
-         9636 function calls in 4.604 seconds
+         9634 function calls in 4.652 seconds
 
    Ordered by: cumulative time
    List reduced from 120 to 20 due to restriction <20>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000    4.604    4.604 {built-in method builtins.exec}
-        1    0.000    0.000    4.604    4.604 <string>:1(<module>)
-        1    0.000    0.000    4.604    4.604 1517976664.py:1(func)
-       10    0.005    0.000    4.604    0.460 coef.py:252(cm)
-      892    4.578    0.005    4.578    0.005 {method 'acquire' of '_thread.lock' objects}
-      221    0.001    0.000    4.578    0.021 threading.py:280(wait)
-       10    0.001    0.000    3.123    0.312 coef.py:387(compute_coef)
-       10    0.000    0.000    3.122    0.312 coef.py:380(cdist_func)
-       10    0.001    0.000    3.122    0.312 coef.py:168(cdist_parts_parallel)
-      120    0.000    0.000    3.113    0.026 threading.py:556(wait)
-      100    0.001    0.000    3.113    0.031 _base.py:201(as_completed)
-      110    0.000    0.000    1.465    0.013 _base.py:417(result)
-       30    0.000    0.000    1.465    0.049 _base.py:601(result_iterator)
+        1    0.000    0.000    4.652    4.652 {built-in method builtins.exec}
+        1    0.000    0.000    4.652    4.652 <string>:1(<module>)
+        1    0.000    0.000    4.652    4.652 1517976664.py:1(func)
+       10    0.005    0.001    4.652    0.465 coef.py:275(cm)
+      221    0.001    0.000    4.626    0.021 threading.py:280(wait)
+      892    4.626    0.005    4.626    0.005 {method 'acquire' of '_thread.lock' objects}
+       10    0.001    0.000    3.121    0.312 coef.py:414(compute_coef)
+       10    0.000    0.000    3.120    0.312 coef.py:407(cdist_func)
+       10    0.001    0.000    3.119    0.312 coef.py:168(cdist_parts_parallel)
+      120    0.000    0.000    3.110    0.026 threading.py:556(wait)
+      100    0.001    0.000    3.110    0.031 _base.py:201(as_completed)
+      110    0.000    0.000    1.516    0.014 _base.py:417(result)
+       30    0.000    0.000    1.516    0.051 _base.py:601(result_iterator)
+       10    0.004    0.000    0.008    0.001 coef.py:186(<dictcomp>)
       110    0.001    0.000    0.008    0.000 thread.py:155(submit)
-       10    0.004    0.000    0.008    0.001 coef.py:178(<dictcomp>)
-      110    0.001    0.000    0.006    0.000 thread.py:174(_adjust_thread_count)
+      110    0.000    0.000    0.006    0.000 thread.py:174(_adjust_thread_count)
        30    0.000    0.000    0.004    0.000 threading.py:873(start)
        10    0.000    0.000    0.004    0.000 _base.py:572(map)
        10    0.000    0.000    0.004    0.000 _base.py:597(<listcomp>)
-       10    0.000    0.000    0.003    0.000 _base.py:635(__exit__)
+       50    0.003    0.000    0.003    0.000 {built-in method numpy.zeros}
