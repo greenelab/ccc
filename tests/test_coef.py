@@ -1053,3 +1053,51 @@ def test_get_chunks_iterable():
     assert len(cs) == 10
     assert set(map(len, cs)) == {1}
     assert {x for i in cs for x in i} == set(iterable)
+
+
+def test_cm_data_is_binary_evenly_distributed():
+    # Prepare
+    np.random.seed(0)
+
+    # two features with a quadratic relationship
+    feature0 = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0])
+    feature1 = np.random.rand(10)
+
+    # Run
+    cm_value, max_parts, parts = cm(
+        feature0, feature1, internal_n_clusters=[2], return_parts=True
+    )
+
+    # Validate
+    assert cm_value < 0.05
+
+    assert parts is not None
+    assert len(parts) == 2
+    assert parts[0].shape == (1, 10)
+
+    # the partition should separate true from false values in data
+    assert ari(parts[0][0], feature0) == 1.0
+
+
+def test_cm_data_is_binary_not_evenly_distributed():
+    # Prepare
+    np.random.seed(0)
+
+    # two features with a quadratic relationship
+    feature0 = np.array([1, 1, 1, 1, 1, 1, 1, 1, 0, 0])
+    feature1 = np.random.rand(10)
+
+    # Run
+    cm_value, max_parts, parts = cm(
+        feature0, feature1, internal_n_clusters=[2], return_parts=True
+    )
+
+    # Validate
+    assert cm_value < 0.05
+
+    assert parts is not None
+    assert len(parts) == 2
+    assert parts[0].shape == (1, 10)
+
+    # the partition should separate true from false values in data
+    assert ari(parts[0][0], feature0) == 1.0
