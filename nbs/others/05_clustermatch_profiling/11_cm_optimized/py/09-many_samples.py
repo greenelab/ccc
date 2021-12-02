@@ -86,7 +86,7 @@ func()
 func()
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # These results are just slightly worse than the numba-compiled version (notebook `07`).
 
 # %% [markdown] tags=[]
@@ -106,7 +106,7 @@ func()
 # %%prun -s cumulative -l 50 -T 09-cm_many_samples-less_internal_n_clusters.txt
 func()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # These results are slightly better than the numba-compiled version (notebook `07`), which is surprising. In the future, it would be interesting to disable threading here to get accurate profiling results to debug this issue.
 
 # %% tags=[]
