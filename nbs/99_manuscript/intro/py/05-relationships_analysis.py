@@ -80,7 +80,7 @@ y_lim = (3, 13)
 # ## Quadratic
 
 # %% tags=[]
-rel_name = "quadratic"
+rel_name = "Quadratic"
 
 # %% tags=[]
 np.random.seed(0)
@@ -109,7 +109,7 @@ datasets_df = datasets_df.append(
 # ## Noncoexistence
 
 # %% tags=[]
-rel_name = "noncoexistence"
+rel_name = "Noncoexistence"
 
 # %% tags=[]
 np.random.seed(5)
@@ -146,7 +146,7 @@ datasets_df = datasets_df.append(
 # ## Two lines
 
 # %% tags=[]
-rel_name = "two_linear"
+rel_name = "Two lines"
 
 # %% tags=[]
 np.random.seed(5)
@@ -180,7 +180,7 @@ datasets_df = datasets_df.append(
 # ## Random / independent
 
 # %% tags=[]
-rel_name = "random"
+rel_name = "Random/independent"
 
 # %% tags=[]
 np.random.seed(10)
