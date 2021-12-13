@@ -222,7 +222,11 @@ def plot_gene_pair(
     #     (gene0, gene1), ["pearson", "spearman", "clustermatch"]
     # ].tolist()
 
-    # _title = f"Clustermatch: {_clustermatch:.2f}\nPearson/Spearman: {_pearson:.2f}/{_spearman:.2f}"
+    _clustermatch = cm(tissue_data[gene0], tissue_data[gene1])
+    _pearson = pearsonr(tissue_data[gene0], tissue_data[gene1])[0]
+    _spearman = spearmanr(tissue_data[gene0], tissue_data[gene1])[0]
+
+    _title = f"{tissue_name}\nClustermatch: {_clustermatch:.2f}\nPearson/Spearman: {_pearson:.2f}/{_spearman:.2f}"
 
     other_args = {
         "kind": kind,  # if hue is None else "scatter",
@@ -250,7 +254,7 @@ def plot_gene_pair(
     gene_y_symbol = gene_map[gene_y_id]
     p.ax_joint.set_ylabel(f"{gene_y_id}\n{gene_y_symbol}")
 
-    # p.fig.suptitle(_title)
+    p.fig.suptitle(_title)
 
     return tissue_data
 
