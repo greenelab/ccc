@@ -217,6 +217,11 @@ datasets = {
 
 # %% tags=[]
 def get_cm_line_points(x, y, max_parts, parts):
+    """
+    Given two data vectors (x and y) and the max_parts and parts
+    returned from calling cm, this function returns two arrays with
+    scalars to draw the lines that separates clusters in x and y.
+    """
     # get the clustermatch partitions that maximize the coefficient
     x_max_part = parts[0][max_parts[0]]
     x_unique_k = {}
@@ -253,7 +258,6 @@ def get_cm_line_points(x, y, max_parts, parts):
 with sns.plotting_context("paper", font_scale=1.8):
     g = sns.FacetGrid(data=datasets_df, col="dataset", col_wrap=4, height=5)
     g.map(sns.scatterplot, "x", "y", s=50, alpha=1)
-    # g.map(plot_func, "x", "y", s=50, alpha=1)
     g.set_titles(row_template="{row_name}", col_template="{col_name}")
 
     for ds, ax in g.axes_dict.items():
@@ -267,8 +271,6 @@ with sns.plotting_context("paper", font_scale=1.8):
         # clustermatch
         c, max_parts, parts = cm(x, y, return_parts=True)
         c = cm(x, y)
-        if c < 0.0:
-            c = 0.0
 
         x_line_points, y_line_points = get_cm_line_points(x, y, max_parts, parts)
         for yp in y_line_points:
@@ -290,8 +292,6 @@ with sns.plotting_context("paper", font_scale=1.8):
             horizontalalignment="right",
         )
 
-    # g.set(yticks=[], xticks=[])
-
     plt.savefig(
         OUTPUT_FIGURE_DIR / "relationships.svg",
         # rasterized=True,
@@ -302,6 +302,10 @@ with sns.plotting_context("paper", font_scale=1.8):
 
 # %% [markdown] tags=[]
 # **Takeaways**:
+#
+# A more detailed explanation of this figure is present in this PR: https://github.com/greenelab/clustermatch-gene-expr-manuscript/pull/3
+#
+# Some points:
 #
 # 1. When the number of internal clusters (separated by red lines) is higher, Clustermatch is able to capture more complex relationships.
 # 1. With two internal clusters (Anscombe I, II and III) for each variable pair, Clustermatch seems to capture linear relationships. However, two clusters also capture noncoexistence relationships.
