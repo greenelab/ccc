@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# It generates datasets showing different relationship types to compare correlation coefficients.
+# It generates datasets showing different relationship types between pairs of variables (for instance, a linear or quadratic pattern) and then compares different correlation coefficients.
 
 # %% [markdown] tags=[]
 # # Modules
