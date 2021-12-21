@@ -25,7 +25,7 @@
 # %% tags=[]
 import pandas as pd
 import numpy as np
-
+from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -83,6 +83,16 @@ df.shape
 
 # %%
 df.head()
+
+# %% [markdown] tags=[]
+# ## Data stats
+
+# %%
+df.describe().applymap(str)
+
+# %%
+# skewness
+df.apply(lambda x: stats.skew(x))
 
 # %% [markdown]
 # # Histogram plot
@@ -142,6 +152,8 @@ with sns.plotting_context("talk", font_scale=1.1):
 
     ax.set_xticks(np.linspace(0, 1, 10 + 1))
     ax.set_yticks(np.linspace(0, 100, 10 + 1))
+    
+    ax.set_ylabel("Percent of gene pairs")
 
     x_lim = ax.get_xlim()
     ax.hlines(
@@ -196,6 +208,18 @@ def jointplot(data, x, y, bins=None):
     Function based on Seaborn's jointplot, but without marginal plots.
     """
 
+    # compute correlations
+    x_values = df[x].to_numpy()
+    y_values = df[y].to_numpy()
+    r = stats.pearsonr(x_values, y_values)[0]
+    rs = stats.spearmanr(x_values, y_values)[0]
+    c = cm(x_values, y_values)
+    xy_corr = {
+        "pearson": r,
+        "spearman": rs,
+        "clustermatch": c,
+    }
+    
     grid = sns.JointGrid(
         data=data,
         x=x,
@@ -227,6 +251,20 @@ def jointplot(data, x, y, bins=None):
     # remove marginal axes
     grid.ax_marg_x.set_visible(False)
     grid.ax_marg_y.set_visible(False)
+    
+    # add text box for the statistics
+    ax = grid.ax_joint
+    stats = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
+    bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.15)
+    ax.text(
+        0.25,
+        0.80,
+        stats,
+        fontsize=12,
+        bbox=bbox,
+        transform=ax.transAxes,
+        horizontalalignment="right",
+    )
 
     return grid
 
