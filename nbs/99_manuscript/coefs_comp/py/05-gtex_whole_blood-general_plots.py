@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from clustermatch.coef import cm
+from clustermatch.plots import plot_histogram, plot_cumulative_histogram, jointplot
 from clustermatch import conf
 
 # %% [markdown] tags=[]
@@ -41,6 +42,10 @@ from clustermatch import conf
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
+
+# %%
+# this is used for the cumulative histogram
+GENE_PAIRS_PERCENT = 0.70
 
 # %% [markdown] tags=[]
 # # Paths
@@ -103,26 +108,7 @@ df.apply(lambda x: stats.skew(x))
 
 # %%
 with sns.plotting_context("talk", font_scale=1.0):
-    fig, ax = plt.subplots(figsize=(10, 7))
-
-    ax = sns.histplot(
-        data=df,
-        stat="density",
-        bins=100,
-        common_bins=True,
-        common_norm=False,
-        kde=True,
-        ax=ax,
-    )
-    sns.despine(ax=ax)
-
-    ax.set_xticks(np.linspace(0, 1, 10 + 1))
-
-    plt.savefig(
-        OUTPUT_FIGURE_DIR / "dist-histograms.svg",
-        bbox_inches="tight",
-        facecolor="white",
-    )
+    plot_histogram(df, output_dir=OUTPUT_FIGURE_DIR)
 
 # %% [markdown]
 # Coefficients' values distribute very differently. Clustermatch is skewed to the left, whereas Pearson and specially Spearman seem more uniform.
@@ -134,168 +120,28 @@ with sns.plotting_context("talk", font_scale=1.0):
 # I include also a cumulative histogram without specifying `bins`.
 
 # %%
-_percent = 0.70
-_coef_at_percent = df.quantile(_percent)
-display(_coef_at_percent)
-
-# %%
-with sns.plotting_context("talk", font_scale=1.1):
-    fig, ax = plt.subplots(figsize=(10, 7))
-
-    ax = sns.histplot(
-        data=df,
-        element="step",
-        fill=False,
-        stat="percent",
-        common_norm=False,
-        cumulative=True,
-        legend=False,
-        ax=ax,
-    )
-    sns.despine(ax=ax)
-
-    ax.set_xticks(np.linspace(0, 1, 10 + 1))
-    ax.set_yticks(np.linspace(0, 100, 10 + 1))
-
-    ax.set_ylabel("Percent of gene pairs")
-
-    x_lim = ax.get_xlim()
-    ax.hlines(
-        y=_percent * 100,
-        xmin=x_lim[0],
-        xmax=_coef_at_percent["spearman"],
-        color="gray",
-        linestyle="dotted",
-    )
-    ax.vlines(
-        x=_coef_at_percent["clustermatch"],
-        ymin=0,
-        ymax=_percent * 100,
-        color="gray",
-        linestyle="dotted",
-    )
-    ax.vlines(
-        x=_coef_at_percent["pearson"],
-        ymin=0,
-        ymax=_percent * 100,
-        color="gray",
-        linestyle="dotted",
-    )
-    ax.vlines(
-        x=_coef_at_percent["spearman"],
-        ymin=0,
-        ymax=_percent * 100,
-        color="gray",
-        linestyle="dotted",
-    )
-
-    ax.set_xlim(x_lim)
-
-    plt.savefig(
-        OUTPUT_FIGURE_DIR / "dist-cum_histograms.svg",
-        bbox_inches="tight",
-        facecolor="white",
-    )
+with sns.plotting_context("talk", font_scale=1.0):
+    plot_cumulative_histogram(df, GENE_PAIRS_PERCENT, output_dir=OUTPUT_FIGURE_DIR)
 
 # %% [markdown]
 # # Joint plots comparing each coefficient
 
 # %%
-import matplotlib as mpl
-from matplotlib.colors import LogNorm
-from seaborn.distributions import _freedman_diaconis_bins
-
-
-# %%
-def jointplot(data, x, y, bins=None):
-    """
-    Function based on Seaborn's jointplot, but without marginal plots.
-    """
-
-    # compute correlations
-    x_values = df[x].to_numpy()
-    y_values = df[y].to_numpy()
-    r = stats.pearsonr(x_values, y_values)[0]
-    rs = stats.spearmanr(x_values, y_values)[0]
-    c = cm(x_values, y_values)
-    xy_corr = {
-        "pearson": r,
-        "spearman": rs,
-        "clustermatch": c,
-    }
-
-    grid = sns.JointGrid(
-        data=data,
-        x=x,
-        y=y,
-    )
-
-    color = "C0"
-    color_rgb = mpl.colors.colorConverter.to_rgb(color)
-    colors = [sns.utils.set_hls_values(color_rgb, l=l) for l in np.linspace(1, 0, 12)]
-    cmap = sns.palettes.blend_palette(colors, as_cmap=True)
-
-    x_bins = min(_freedman_diaconis_bins(grid.x), 50)
-    y_bins = min(_freedman_diaconis_bins(grid.y), 50)
-    gridsize = int(np.mean([x_bins, y_bins]))
-
-    joint_kws = {
-        "bins": bins,
-    }
-
-    joint_kws.setdefault("gridsize", gridsize)
-    joint_kws.setdefault("cmap", cmap)
-    joint_kws.setdefault("rasterized", True)
-
-    grid.plot_joint(
-        plt.hexbin,
-        **joint_kws,
-    )
-
-    # remove marginal axes
-    grid.ax_marg_x.set_visible(False)
-    grid.ax_marg_y.set_visible(False)
-
-    # add text box for the statistics
-    ax = grid.ax_joint
-    corr_vals = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
-    bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.15)
-    ax.text(
-        0.25,
-        0.80,
-        corr_vals,
-        fontsize=12,
-        bbox=bbox,
-        transform=ax.transAxes,
-        horizontalalignment="right",
-    )
-
-    return grid
-
-
-# %%
 with sns.plotting_context("talk", font_scale=1.0):
-    g = jointplot(
+    jointplot(
         data=df,
         x="pearson",
         y="clustermatch",
-        bins="log",
-    )
-
-    g.savefig(
-        OUTPUT_FIGURE_DIR / "dist-clustermatch_vs_pearson.svg",
-        bbox_inches="tight",
-        dpi=300,
-        facecolor="white",
     )
 
 # %%
 with sns.plotting_context("talk", font_scale=1.0):
+    x, y = "spearman", "clustermatch"
+
     g = jointplot(
         data=df,
-        x="spearman",
-        y="clustermatch",
-        bins="log",
+        x=x,
+        y=y,
     )
 
     sns.despine(ax=g.ax_joint, left=True)
@@ -303,7 +149,7 @@ with sns.plotting_context("talk", font_scale=1.0):
     g.ax_joint.set_ylabel(None)
 
     g.savefig(
-        OUTPUT_FIGURE_DIR / "dist-clustermatch_vs_spearman.svg",
+        OUTPUT_FIGURE_DIR / f"dist-{x}_vs_{y}.svg",
         bbox_inches="tight",
         dpi=300,
         facecolor="white",
@@ -311,18 +157,10 @@ with sns.plotting_context("talk", font_scale=1.0):
 
 # %%
 with sns.plotting_context("talk", font_scale=1.0):
-    g = jointplot(
+    jointplot(
         data=df,
         x="spearman",
         y="pearson",
-        bins="log",
-    )
-
-    g.savefig(
-        OUTPUT_FIGURE_DIR / "dist-spearman_vs_pearson.svg",
-        bbox_inches="tight",
-        dpi=300,
-        facecolor="white",
     )
 
 # %%
