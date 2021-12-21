@@ -51,7 +51,9 @@ assert (
 ), "Manuscript dir not set"
 
 # %% tags=[]
-OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / f"gtex_{GTEX_TISSUE}"
+OUTPUT_FIGURE_DIR = (
+    conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / f"gtex_{GTEX_TISSUE}"
+)
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
@@ -154,7 +156,7 @@ with sns.plotting_context("talk", font_scale=1.1):
 
     ax.set_xticks(np.linspace(0, 1, 10 + 1))
     ax.set_yticks(np.linspace(0, 100, 10 + 1))
-    
+
     ax.set_ylabel("Percent of gene pairs")
 
     x_lim = ax.get_xlim()
@@ -221,7 +223,7 @@ def jointplot(data, x, y, bins=None):
         "spearman": rs,
         "clustermatch": c,
     }
-    
+
     grid = sns.JointGrid(
         data=data,
         x=x,
@@ -253,7 +255,7 @@ def jointplot(data, x, y, bins=None):
     # remove marginal axes
     grid.ax_marg_x.set_visible(False)
     grid.ax_marg_y.set_visible(False)
-    
+
     # add text box for the statistics
     ax = grid.ax_joint
     corr_vals = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
