@@ -26,12 +26,9 @@
 
 # %% tags=[]
 import pandas as pd
-import numpy as np
 from scipy import stats
-import matplotlib.pyplot as plt
 import seaborn as sns
 
-from clustermatch.coef import cm
 from clustermatch.plots import plot_histogram, plot_cumulative_histogram, jointplot
 from clustermatch import conf
 
@@ -132,6 +129,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         data=df,
         x="pearson",
         y="clustermatch",
+        output_dir=OUTPUT_FIGURE_DIR,
     )
 
 # %%
@@ -161,6 +159,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         data=df,
         x="spearman",
         y="pearson",
+        output_dir=OUTPUT_FIGURE_DIR,
     )
 
 # %%

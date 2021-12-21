@@ -129,6 +129,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         data=df,
         x="pearson",
         y="clustermatch",
+        output_dir=OUTPUT_FIGURE_DIR,
     )
 
 # %%
@@ -158,6 +159,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         data=df,
         x="spearman",
         y="pearson",
+        output_dir=OUTPUT_FIGURE_DIR,
     )
 
 # %%
