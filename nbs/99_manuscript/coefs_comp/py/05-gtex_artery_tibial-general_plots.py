@@ -35,12 +35,12 @@ from clustermatch import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "artery_tibial"
 GENE_SEL_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # this is used for the cumulative histogram
 GENE_PAIRS_PERCENT = 0.70
 
@@ -81,49 +81,49 @@ assert INPUT_FILE.exists()
 # %% [markdown] tags=[]
 # # Data
 
-# %%
+# %% tags=[]
 df = pd.read_pickle(INPUT_FILE)
 
-# %%
+# %% tags=[]
 df.shape
 
-# %%
+# %% tags=[]
 df.head()
 
 # %% [markdown] tags=[]
 # ## Data stats
 
-# %%
+# %% tags=[]
 df.describe().applymap(str)
 
-# %%
+# %% tags=[]
 # skewness
 df.apply(lambda x: stats.skew(x))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Histogram plot
 
-# %%
+# %% tags=[]
 with sns.plotting_context("talk", font_scale=1.0):
     plot_histogram(df, output_dir=OUTPUT_FIGURE_DIR)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Coefficients' values distribute very differently. Clustermatch is skewed to the left, whereas Pearson and specially Spearman seem more uniform.
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Cumulative histogram plot
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # I include also a cumulative histogram without specifying `bins`.
 
-# %%
+# %% tags=[]
 with sns.plotting_context("talk", font_scale=1.0):
     plot_cumulative_histogram(df, GENE_PAIRS_PERCENT, output_dir=OUTPUT_FIGURE_DIR)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Joint plots comparing each coefficient
 
-# %%
+# %% tags=[]
 with sns.plotting_context("talk", font_scale=1.0):
     jointplot(
         data=df,
@@ -132,7 +132,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         output_dir=OUTPUT_FIGURE_DIR,
     )
 
-# %%
+# %% tags=[]
 with sns.plotting_context("talk", font_scale=1.0):
     x, y = "spearman", "clustermatch"
 
@@ -153,7 +153,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         facecolor="white",
     )
 
-# %%
+# %% tags=[]
 with sns.plotting_context("talk", font_scale=1.0):
     jointplot(
         data=df,
@@ -162,4 +162,4 @@ with sns.plotting_context("talk", font_scale=1.0):
         output_dir=OUTPUT_FIGURE_DIR,
     )
 
-# %%
+# %% tags=[]
