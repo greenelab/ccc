@@ -17,7 +17,9 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# It analyzes how correlation coefficients intersect on different gene pairs. Basically, I take the top gene pairs with the maximum correlation coefficient according to Pearson, Spearman and Clustermatch, and also the equivalent set with the minimum coefficient values, and then compare how these sets intersect each other.
+#
+# After identifying different intersection sets, I plot some gene pairs to see what's being captured or not by each coefficient.
 
 # %% [markdown] tags=[]
 # # Modules
@@ -26,14 +28,12 @@
 import pandas as pd
 import numpy as np
 
-# from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import seaborn as sns
+from upsetplot import plot, from_indicators
 
-# from sklearn.preprocessing import minmax_scale
-
+from clustermatch.plots import MyUpSet
 from clustermatch import conf
-from clustermatch.coef import cm
 
 # %% [markdown] tags=[]
 # # Settings
@@ -42,6 +42,12 @@ from clustermatch.coef import cm
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
+
+# %%
+# this specificies the threshold to compare coefficients (see below).
+# it basically takes the top Q_DIFF coefficient values for gene pairs
+# and compare with the bottom Q_DIFF of the other coefficients
+Q_DIFF = 0.30
 
 # %% [markdown] tags=[]
 # # Paths
@@ -52,7 +58,9 @@ assert (
 ), "Manuscript dir not set"
 
 # %% tags=[]
-OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp"
+OUTPUT_FIGURE_DIR = (
+    conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / f"gtex_{GTEX_TISSUE}"
+)
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
@@ -126,17 +134,12 @@ df.shape
 df.head()
 
 # %%
+# show quantiles
 df.apply(lambda x: x.quantile(np.linspace(0.20, 1.0, 20)))
 
-# %% [markdown]
-# # Intersection plot
-
-# %%
-from upsetplot import plot, from_indicators
-
 
 # %% [markdown]
-# ## Prepare data
+# # Prepare data for plotting
 
 # %%
 def get_lower_upper_quantile(method_name, q):
@@ -155,23 +158,19 @@ assert _tmp0 == _tmp.iloc[0]
 assert _tmp1 == _tmp.iloc[1]
 
 # %%
-# TODO: move this to Settings
-_q_diff = 0.30
-
-clustermatch_lq, clustermatch_hq = get_lower_upper_quantile("clustermatch", _q_diff)
+clustermatch_lq, clustermatch_hq = get_lower_upper_quantile("clustermatch", Q_DIFF)
 display((clustermatch_lq, clustermatch_hq))
 
-pearson_lq, pearson_hq = get_lower_upper_quantile("pearson", _q_diff)
+pearson_lq, pearson_hq = get_lower_upper_quantile("pearson", Q_DIFF)
 display((pearson_lq, pearson_hq))
 
-spearman_lq, spearman_hq = get_lower_upper_quantile("spearman", _q_diff)
+spearman_lq, spearman_hq = get_lower_upper_quantile("spearman", Q_DIFF)
 display((spearman_lq, spearman_hq))
 
 # %%
 pearson_higher = df["pearson"] >= pearson_hq
 display(pearson_higher.sum())
 
-# %%
 pearson_lower = df["pearson"] <= pearson_lq
 display(pearson_lower.sum())
 
@@ -179,7 +178,6 @@ display(pearson_lower.sum())
 spearman_higher = df["spearman"] >= spearman_hq
 display(spearman_higher.sum())
 
-# %%
 spearman_lower = df["spearman"] <= spearman_lq
 display(spearman_lower.sum())
 
@@ -187,12 +185,11 @@ display(spearman_lower.sum())
 clustermatch_higher = df["clustermatch"] >= clustermatch_hq
 display(clustermatch_higher.sum())
 
-# %%
 clustermatch_lower = df["clustermatch"] <= clustermatch_lq
 display(clustermatch_lower.sum())
 
 # %% [markdown]
-# ## Plot
+# # UpSet plot
 
 # %%
 df_plot = pd.DataFrame(
@@ -213,20 +210,32 @@ df_plot = pd.concat([df_plot, df], axis=1)
 df_plot
 
 # %%
+assert not df_plot.isna().any().any()
+
+# %%
+df_plot = df_plot.rename(
+    columns={
+        "pearson_higher": "Pearson (high)",
+        "pearson_lower": "Pearson (low)",
+        "spearman_higher": "Spearman (high)",
+        "spearman_lower": "Spearman (low)",
+        "clustermatch_higher": "Clustermatch (high)",
+        "clustermatch_lower": "Clustermatch (low)",
+    }
+)
+
+# %%
 categories = sorted(
-    [x for x in df_plot.columns if "_" in x],
+    [x for x in df_plot.columns if " (" in x],
     reverse=True,
-    key=lambda x: x.split("_")[1] + "_" + x.split("_")[0],
+    key=lambda x: x.split(" (")[1] + " (" + x.split(" (")[0],
 )
 
 # %%
 categories
 
 # %% [markdown]
-# ## Python - UpSet
-
-# %% [markdown]
-# ### All subsets
+# ## All subsets (original full plot)
 
 # %%
 df_r_data = df_plot
@@ -243,84 +252,87 @@ gene_pairs_by_cats
 # %%
 fig = plt.figure(figsize=(18, 5))
 
-plot(
+g = plot(
     gene_pairs_by_cats,
     show_counts=True,
     sort_categories_by=None,
-    # sort_by=None,
-    # show_percentages=True,
-    # min_subset_size=2,
     element_size=None,
     fig=fig,
 )
 
 # %% [markdown]
-# ### Remove subsets of size one
-
-# %%
-# remove cases that are found only in one group
-df_r_data = df_plot[df_plot[categories].sum(axis=1) > 1]
-display(df_r_data.shape)
-
-# %%
-df_r_data.shape
-
-# %%
-gene_pairs_by_cats = from_indicators(categories, data=df_r_data)
-
-# %%
-fig = plt.figure(figsize=(15, 5))
-
-plot(
-    gene_pairs_by_cats,
-    show_counts=True,
-    sort_categories_by=None,
-    # show_percentages=True,
-    # min_subset_size=2,
-    element_size=None,
-    fig=fig,
-)
+# ## Remove subsets of size one
 
 # %% [markdown]
-# ### Remove non-interesting subsets
+# I leave this part commented out just in case it is useful in the future.
 
 # %%
-lower_columns = [x for x in categories if x.endswith("_lower")]
-display(lower_columns)
-
-higher_columns = [x for x in categories if x.endswith("_higher")]
-display(higher_columns)
+# # remove cases that are found only in one group
+# df_r_data = df_plot[df_plot[categories].sum(axis=1) > 1]
+# display(df_r_data.shape)
 
 # %%
-df_r_data = df_plot[
-    (df_plot[categories].sum(axis=1) > 1)
-    & ~(
-        (df_plot[lower_columns].sum(axis=1).isin((0, 3)))
-        & (df_plot[higher_columns].sum(axis=1).isin((0, 3)))
-    )
-]
+# df_r_data.shape
 
 # %%
-df_r_data.shape
+# gene_pairs_by_cats = from_indicators(categories, data=df_r_data)
 
 # %%
-gene_pairs_by_cats = from_indicators(categories, data=df_r_data)
+# fig = plt.figure(figsize=(15, 5))
 
-# %%
-fig = plt.figure(figsize=(17, 5))
+# g = plot(
+#     gene_pairs_by_cats,
+#     show_counts=True,
+#     sort_categories_by=None,
+#     element_size=None,
+#     fig=fig,
+# )
 
-plot(
-    gene_pairs_by_cats,
-    show_counts=True,
-    sort_categories_by=None,
-    # show_percentages=True,
-    # min_subset_size=2,
-    element_size=None,
-    fig=fig,
-)
+# g["totals"].set_visible(False)
 
 # %% [markdown]
-# ### Attemp with Casey's suggestions
+# ## Remove non-interesting subsets
+
+# %% [markdown]
+# I leave this part commented out just in case it is useful in the future.
+
+# %%
+# lower_columns = [x for x in categories if x.endswith("_lower")]
+# display(lower_columns)
+
+# higher_columns = [x for x in categories if x.endswith("_higher")]
+# display(higher_columns)
+
+# %%
+# df_r_data = df_plot[
+#     (df_plot[categories].sum(axis=1) > 1)
+#     & ~(
+#         (df_plot[lower_columns].sum(axis=1).isin((0, 3)))
+#         & (df_plot[higher_columns].sum(axis=1).isin((0, 3)))
+#     )
+# ]
+
+# %%
+# df_r_data.shape
+
+# %%
+# gene_pairs_by_cats = from_indicators(categories, data=df_r_data)
+
+# %%
+# fig = plt.figure(figsize=(17, 5))
+
+# g = plot(
+#     gene_pairs_by_cats,
+#     show_counts=True,
+#     sort_categories_by=None,
+#     element_size=None,
+#     fig=fig,
+# )
+
+# g["totals"].set_visible(False)
+
+# %% [markdown]
+# ## Sort by categories of subsets
 
 # %%
 df_r_data = df_plot
@@ -410,26 +422,38 @@ gene_pairs_by_cats = gene_pairs_by_cats.loc[
 ]
 
 # %%
-# assert gene_pairs_by_cats.shape[0] == df_r_data.shape[0]
-# assert np.array_equal(gene_pairs_by_cats.index.unique(), _tmp_index)
+fig = plt.figure(figsize=(14, 5))
 
-# %%
-fig = plt.figure(figsize=(18, 5))
-
-plot(
+# g = plot(
+g = MyUpSet(
     gene_pairs_by_cats,
     show_counts=True,
     sort_categories_by=None,
     sort_by=None,
-    # show_percentages=True,
+    show_percentages=True,
     # min_subset_size=2,
     element_size=None,
-    fig=fig,
+    # fig=fig,
+).plot(fig)
+
+g["totals"].remove()  # set_visible(False)
+
+# display(fig.get_size_inches())
+# fig.set_size_inches(12, 5)
+
+plt.savefig(
+    OUTPUT_FIGURE_DIR / "upsetplot.svg",
+    bbox_inches="tight",
+    facecolor="white",
 )
 
+# plt.margins(x=-0.4)
 
 # %% [markdown]
-# ## Look at specific cases
+# This plot has the sets that represent agreements on the left, and disagreements on the right. The plot shown here is not the final one for the manuscript.
+
+# %% [markdown]
+# # Look at specific gene pair cases
 
 # %%
 def plot_gene_pair(top_pairs_df, idx, bins="log"):
@@ -445,6 +469,7 @@ def plot_gene_pair(top_pairs_df, idx, bins="log"):
 
     _title = f"Clustermatch: {_clustermatch:.2f}\nPearson/Spearman: {_pearson:.2f}/{_spearman:.2f}"
 
+    displot DOES SUPPORT HUE!
     p = sns.jointplot(
         data=gene_expr_df.T,
         x=gene0,
@@ -466,7 +491,7 @@ def plot_gene_pair(top_pairs_df, idx, bins="log"):
 
 
 # %% [markdown] tags=[]
-# ### Clustermatch vs Spearman
+# ## Clustermatch vs Spearman
 
 # %%
 _tmp_df = df_r_data[
@@ -510,7 +535,7 @@ plot_gene_pair(_tmp_df, 2)
 plot_gene_pair(_tmp_df, 9)
 
 # %% [markdown] tags=[]
-# ### Clustermatch vs Pearson
+# ## Clustermatch vs Pearson
 
 # %%
 _tmp_df = df_r_data[
@@ -542,7 +567,7 @@ plot_gene_pair(_tmp_df, 1)
 plot_gene_pair(_tmp_df, 2)
 
 # %% [markdown] tags=[]
-# ### Clustermatch vs Spearman/Pearson
+# ## Clustermatch vs Spearman/Pearson
 
 # %%
 _tmp_df = df_r_data[
@@ -589,7 +614,7 @@ plot_gene_pair(_tmp_df, 6)
 plot_gene_pair(_tmp_df, 7)
 
 # %% [markdown] tags=[]
-# ### Clustermatch/Spearman vs Pearson
+# ## Clustermatch/Spearman vs Pearson
 
 # %%
 _tmp_df = df_r_data[
@@ -621,7 +646,7 @@ plot_gene_pair(_tmp_df, 1)
 plot_gene_pair(_tmp_df, 2)
 
 # %% [markdown] tags=[]
-# ### Pearson vs Spearman
+# ## Pearson vs Spearman
 
 # %%
 _tmp_df = df_r_data[
@@ -653,7 +678,7 @@ plot_gene_pair(_tmp_df, 1)
 plot_gene_pair(_tmp_df, 2)
 
 # %% [markdown] tags=[]
-# ### Spearman vs Pearson
+# ## Spearman vs Pearson
 
 # %%
 _tmp_df = df_r_data[
@@ -682,7 +707,7 @@ plot_gene_pair(_tmp_df, 0)
 plot_gene_pair(_tmp_df, 1)
 
 # %% [markdown] tags=[]
-# ### Pearson vs Spearman/Clustermatch
+# ## Pearson vs Spearman/Clustermatch
 
 # %%
 _tmp_df = df_r_data[
@@ -711,7 +736,7 @@ plot_gene_pair(_tmp_df, 0)
 plot_gene_pair(_tmp_df, 1)
 
 # %% [markdown] tags=[]
-# ### Pearson vs Clustermatch
+# ## Pearson vs Clustermatch
 
 # %%
 _tmp_df = df_r_data[

@@ -16,8 +16,10 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import seaborn as sns
 from seaborn.distributions import _freedman_diaconis_bins
+from upsetplot import UpSet
 
 from clustermatch.coef import cm
+from clustermatch.utils import human_format
 
 
 def plot_histogram(
@@ -204,3 +206,24 @@ def jointplot(data: pd.DataFrame, x: str, y: str, bins="log", output_dir: Path =
         )
 
     return grid
+
+
+class MyUpSet(UpSet):
+    """
+    This class tweaks the UpSet class (to create an UpSet plot) to show numbers
+    in a more short format. It assumes that both numbers and percentages are
+    shown, and only at the top (no left/right position of labels is supported).
+    """
+    def _label_sizes(self, ax, rects, where):
+        def make_args(val):
+            fmt_num = human_format(val)
+            fmt_perc = "%.1f%%" % (100 * val / self.total)
+            return f"{fmt_num}\n{fmt_perc}"
+
+        margin = 0.01 * abs(np.diff(ax.get_ylim()))
+        for rect in rects:
+            height = rect.get_height() + rect.get_y()
+            ax.text(rect.get_x() + rect.get_width() * .5,
+                    height + margin,
+                    make_args(height),
+                    ha='center', va='bottom')
