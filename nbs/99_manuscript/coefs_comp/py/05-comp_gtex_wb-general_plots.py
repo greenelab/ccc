@@ -18,6 +18,8 @@
 
 # %% [markdown] tags=[]
 # It generates different general plots to compare coefficient values from Pearson, Spearman and Clustermatch, such as their distribution.
+#
+# In `Settings` below, the data set and other options (such as tissue for GTEx) are specified.
 
 # %% [markdown] tags=[]
 # # Modules
@@ -49,7 +51,7 @@ assert (
 ), "Manuscript dir not set"
 
 # %% tags=[]
-OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp"
+OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / f"gtex_{GTEX_TISSUE}"
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
@@ -254,12 +256,12 @@ def jointplot(data, x, y, bins=None):
     
     # add text box for the statistics
     ax = grid.ax_joint
-    stats = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
+    corr_vals = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
     bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.15)
     ax.text(
         0.25,
         0.80,
-        stats,
+        corr_vals,
         fontsize=12,
         bbox=bbox,
         transform=ax.transAxes,
@@ -320,31 +322,5 @@ with sns.plotting_context("talk", font_scale=1.0):
         dpi=300,
         facecolor="white",
     )
-
-# %% [markdown]
-# ## Correlations between coefficient values
-
-# %%
-from scipy.spatial.distance import squareform
-
-# %%
-df.corr()
-
-# %%
-df.corr("spearman")
-
-# %%
-_tmp = squareform(cm(df.T))
-np.fill_diagonal(_tmp, 1.0)
-
-# %%
-pd.DataFrame(
-    data=_tmp,
-    index=df.columns.copy(),
-    columns=df.columns.copy(),
-)
-
-# %% [markdown]
-# If we correlate coefficients' values with each other (using the three coefficients, as shown above), Clustermatch and Spearman agree more between them.
 
 # %%
