@@ -214,6 +214,7 @@ class MyUpSet(UpSet):
     in a more short format. It assumes that both numbers and percentages are
     shown, and only at the top (no left/right position of labels is supported).
     """
+
     def _label_sizes(self, ax, rects, where):
         def make_args(val):
             fmt_num = human_format(val)
@@ -223,7 +224,10 @@ class MyUpSet(UpSet):
         margin = 0.01 * abs(np.diff(ax.get_ylim()))
         for rect in rects:
             height = rect.get_height() + rect.get_y()
-            ax.text(rect.get_x() + rect.get_width() * .5,
-                    height + margin,
-                    make_args(height),
-                    ha='center', va='bottom')
+            ax.text(
+                rect.get_x() + rect.get_width() * 0.5,
+                height + margin,
+                make_args(height),
+                ha="center",
+                va="bottom",
+            )
