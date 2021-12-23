@@ -22,6 +22,10 @@ else
   ROOT_DIR="${CM_ROOT_DIR}"
 fi
 
+if [ -z "${CM_N_JOBS}" ]; then
+  CM_N_JOBS=1
+fi
+
 echo "  Root dir: ${ROOT_DIR}"
 echo "  Manuscript dir: ${CM_MANUSCRIPT_DIR}"
 echo "  CPU cores: ${CM_N_JOBS}"
