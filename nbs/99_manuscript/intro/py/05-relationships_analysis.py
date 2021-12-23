@@ -143,10 +143,10 @@ datasets_df = datasets_df.append(
 )
 
 # %% [markdown] tags=[]
-# ## Two lines
+# ## Two-lines
 
 # %% tags=[]
-rel_name = "Two lines"
+rel_name = "Two-lines"
 
 # %% tags=[]
 np.random.seed(5)
@@ -180,7 +180,7 @@ datasets_df = datasets_df.append(
 # ## Random / independent
 
 # %% tags=[]
-rel_name = "Random/independent"
+rel_name = "Random / independent"
 
 # %% tags=[]
 np.random.seed(10)
@@ -256,7 +256,22 @@ def get_cm_line_points(x, y, max_parts, parts):
 
 # %% tags=[]
 with sns.plotting_context("paper", font_scale=1.8):
-    g = sns.FacetGrid(data=datasets_df, col="dataset", col_wrap=4, height=5)
+    g = sns.FacetGrid(
+        data=datasets_df,
+        col="dataset",
+        col_order=[
+            "Anscombe I",
+            "Anscombe II",
+            "Anscombe III",
+            "Anscombe IV",
+            "Random / independent",
+            "Non-coexistence",
+            "Quadratic",
+            "Two-lines",
+        ],
+        col_wrap=4,
+        height=5,
+    )
     g.map(sns.scatterplot, "x", "y", s=50, alpha=1)
     g.set_titles(row_template="{row_name}", col_template="{col_name}")
 
