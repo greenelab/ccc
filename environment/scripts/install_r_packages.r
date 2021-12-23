@@ -10,6 +10,9 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager", repos=default_repo)
 BiocManager::install(version = "3.13", update=FALSE, ask=FALSE)
 
+# styler
+BiocManager::install("styler", update=FALSE, ask=FALSE)
+
 # clusterProfiler
 BiocManager::install("clusterProfiler", update=FALSE, ask=FALSE)
 
@@ -19,7 +22,11 @@ BiocManager::install("org.Hs.eg.db", update=FALSE, ask=FALSE)
 # ReactomePA
 BiocManager::install("ReactomePA", update=FALSE, ask=FALSE)
 
-# library(devtools)
+# recount2
+BiocManager::install("recount", update=FALSE, ask=FALSE)
+BiocManager::install("biomaRt", update=FALSE, ask=FALSE)
+
+# require(devtools)
 
 # fgsea
 # install_github("ctlab/fgsea", ref="v1.17.0")
