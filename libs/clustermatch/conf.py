@@ -114,6 +114,18 @@ RECOUNT2["SIMILARITY_MATRICES_DIR"] = Path(
 ).resolve()
 
 
+#
+# recount2 (full dataset)
+#
+RECOUNT2FULL = {}
+
+# Input data
+RECOUNT2FULL["DATA_DIR"] = Path(DATA_DIR, "recount2full").resolve()
+
+# this stores the internal data files downloaded by the recount package
+RECOUNT2FULL["INTERNAL_DATA_DIR"] = Path(RECOUNT2FULL["DATA_DIR"], "data").resolve()
+
+
 if __name__ == "__main__":
     # if this script is run, then it exports the configuration as environment
     # variables (for bash/R, etc)
