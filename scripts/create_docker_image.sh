@@ -5,7 +5,7 @@ VERSION="dev"
 
 docker build -t miltondp/${PROJECT_NAME}:${VERSION} -t miltondp/${PROJECT_NAME}:latest .
 
-read -p "'docker push' new image? " -n 1 -r
+read -p "'docker push' new image? " -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   # push version label
