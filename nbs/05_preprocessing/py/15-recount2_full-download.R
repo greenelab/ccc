@@ -141,6 +141,6 @@ output_filepath <- file.path(recount2full.data.dir, "recount2_rpkm_raw")
 output_filepath
 
 # %%
-saveRDS(gene.df, file = paste0(output_filepath, ".rds"))
+saveRDS(rpkm.df, file = paste0(output_filepath, ".rds"))
 
 # %%
