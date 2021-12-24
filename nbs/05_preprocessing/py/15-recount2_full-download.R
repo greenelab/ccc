@@ -32,19 +32,19 @@ library(recount)
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 recount2full.data.dir <- Sys.getenv("CM_RECOUNT2FULL_DATA_DIR")
 
-# %%
+# %% tags=[]
 recount2full.data.dir
 
-# %%
+# %% tags=[]
 dir.create(recount2full.data.dir, recursive = TRUE, showWarnings = FALSE)
 
-# %%
+# %% tags=[]
 data.dir <- Sys.getenv("CM_RECOUNT2FULL_INTERNAL_DATA_DIR")
 
-# %%
+# %% tags=[]
 data.dir
 
 # %% tags=[]
@@ -53,7 +53,7 @@ dir.create(data.dir, recursive = TRUE, showWarnings = FALSE)
 # %% [markdown] tags=[]
 # # Functions
 
-# %%
+# %% tags=[]
 # Get RPKM value for each gene - adapted from recount package
 getRPKM <- function(rse, length_var = "bp_length", mapped_var = NULL) {
   # Computes the RPKM value for each gene in the sample.
@@ -71,7 +71,7 @@ getRPKM <- function(rse, length_var = "bp_length", mapped_var = NULL) {
   if (!is.null(mapped_var)) {
     mapped <- colData(rse)[, mapped_var]
   } else {
-       mapped <- colSums(assays(rse)$counts)
+    mapped <- colSums(assays(rse)$counts)
   }
   bg <- matrix(mapped, ncol = ncol(rse), nrow = nrow(rse), byrow = TRUE)
   if (!is.null(length_var)) {
@@ -87,17 +87,17 @@ getRPKM <- function(rse, length_var = "bp_length", mapped_var = NULL) {
 # %% [markdown] tags=[]
 # # Download
 
-# %%
+# %% tags=[]
 # Get all samples from recount database
 metasample.sra <- all_metadata(subset = "sra", verbose = TRUE)
 metasample.sra <- as.data.frame(metasample.sra)
 
-# %%
+# %% tags=[]
 # Remove samples without description
 metadata.nonempty <- metasample.sra[!is.na(metasample.sra$characteristics), ]
 included.sample.list <- unique(metadata.nonempty$project)
 
-# %%
+# %% tags=[]
 # Download all recount2 samples in included.sample.list
 lapply(
   included.sample.list,
@@ -112,7 +112,7 @@ lapply(
 # %% [markdown] tags=[]
 # # Normalize with RPKM
 
-# %%
+# %% tags=[]
 # get RPKM for each experiment and add to list
 rpkm.list <- list()
 for (experiment in included.sample.list) {
@@ -122,7 +122,7 @@ for (experiment in included.sample.list) {
   rpkm.list[[experiment]] <- rpkm
 }
 
-# %%
+# %% tags=[]
 # combine experiments -- this is the most memory efficient way to go about this
 # that I've found -- will need to drop extraneous gene id columns
 rpkm.df <- do.call(base::cbind, c(rpkm.list, by = "id"))
@@ -134,13 +134,13 @@ rpkm.df <- rpkm.df %>% dplyr::select(-by)
 # %% [markdown] tags=[]
 # # Save
 
-# %%
+# %% tags=[]
 output_filepath <- file.path(recount2full.data.dir, "recount2_rpkm_raw")
 
-# %%
+# %% tags=[]
 output_filepath
 
-# %%
+# %% tags=[]
 saveRDS(rpkm.df, file = paste0(output_filepath, ".rds"))
 
-# %%
+# %% tags=[]
