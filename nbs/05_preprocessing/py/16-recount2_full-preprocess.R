@@ -33,19 +33,19 @@ library(reticulate)
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 recount2full.data.dir <- Sys.getenv("CM_RECOUNT2FULL_DATA_DIR")
 
-# %%
+# %% tags=[]
 recount2full.data.dir
 
-# %%
+# %% tags=[]
 dir.create(recount2full.data.dir, recursive = TRUE, showWarnings = FALSE)
 
-# %%
+# %% tags=[]
 data.dir <- Sys.getenv("CM_RECOUNT2FULL_INTERNAL_DATA_DIR")
 
-# %%
+# %% tags=[]
 data.dir
 
 # %% tags=[]
@@ -54,32 +54,32 @@ dir.create(data.dir, recursive = TRUE, showWarnings = FALSE)
 # %% [markdown] tags=[]
 # # Load raw data
 
-# %%
+# %% tags=[]
 input.file <- file.path(recount2full.data.dir, "recount2_rpkm_raw.rds")
 
-# %%
+# %% tags=[]
 input.file
 
-# %%
+# %% tags=[]
 rpkm.df <- readRDS(input.file)
 
-# %%
+# %% tags=[]
 dim(rpkm.df)
 
-# %%
+# %% tags=[]
 head(rpkm.df[, 1:10])
 
 # %% [markdown] tags=[]
 # # Preprocess data
 
-# %%
+# %% tags=[]
 # Transform ensembl id to genesymbol
 mart <- biomaRt::useDataset(
   "hsapiens_gene_ensembl",
   biomaRt::useMart("ensembl")
 )
 
-# %%
+# %% tags=[]
 genes <- unlist(lapply(strsplit(rpkm.df$ENSG, "[.]"), `[[`, 1))
 
 rpkm.df$ensembl_gene_id <- unlist(lapply(
@@ -94,38 +94,38 @@ gene.df <- biomaRt::getBM(
   mart = mart
 )
 
-# %%
+# %% tags=[]
 # filter to remove genes without a gene symbol
 gene.df <- gene.df %>% dplyr::filter(complete.cases(.))
 
-# %%
+# %% tags=[]
 # add gene symbols to expression df
 rpkm.df <- dplyr::inner_join(gene.df, rpkm.df,
   by = "ensembl_gene_id"
 )
 
-# %%
+# %% tags=[]
 # keep gene mappings
 gene.df <- rpkm.df %>% dplyr::select(ensembl_gene_id, hgnc_symbol)
 
-# %%
+# %% tags=[]
 dim(gene.df)
 
-# %%
+# %% tags=[]
 head(gene.df)
 
-# %%
+# %% tags=[]
 # set Ensemble IDs as rownames
 rownames(rpkm.df) <- make.names(rpkm.df$ensembl_gene_id, unique = TRUE)
 
-# %%
+# %% tags=[]
 # remove gene identifier columns
 rpkm.df <- rpkm.df %>% dplyr::select(-c(ensembl_gene_id:ENSG))
 
-# %%
+# %% tags=[]
 dim(rpkm.df)
 
-# %%
+# %% tags=[]
 head(rpkm.df[, 1:10])
 
 # %% [markdown] tags=[]
@@ -134,37 +134,37 @@ head(rpkm.df[, 1:10])
 # %% [markdown] tags=[]
 # ## Gene ID mappings
 
-# %%
+# %% tags=[]
 output_filepath <- file.path(recount2full.data.dir, "recount2_gene_ids_mappings")
 
-# %%
+# %% tags=[]
 output_filepath
 
-# %%
+# %% tags=[]
 saveRDS(gene.df, file = paste0(output_filepath, ".rds"))
 
-# %%
+# %% tags=[]
 py_save_object(gene.df, paste0(output_filepath, ".pkl"))
 
 # %% [markdown] tags=[]
 # ## Gene expression data
 
-# %%
+# %% tags=[]
 output_filepath <- file.path(recount2full.data.dir, "recount2_rpkm")
 
-# %%
+# %% tags=[]
 output_filepath
 
-# %%
+# %% tags=[]
 saveRDS(rpkm.df, file = paste0(output_filepath, ".rds"))
 
-# %%
+# %% tags=[]
 py_save_object(rpkm.df, paste0(output_filepath, ".pkl"))
 
 # %% [markdown] tags=[]
 # # Cleanup
 
-# %%
+# %% tags=[]
 # the raw file is not longer necessary
 if (file.exists(input.file)) {
   # Delete file if it exists
