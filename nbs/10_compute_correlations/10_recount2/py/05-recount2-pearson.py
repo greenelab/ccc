@@ -35,8 +35,7 @@ from clustermatch.corr import pearson
 # # Settings
 
 # %% tags=[]
-# we don't have gene subsets for recount2
-# GENE_SELECTION_STRATEGY = "var_raw"
+GENE_SELECTION_STRATEGY = "var_pc_log2"
 
 # %% tags=[]
 CORRELATION_METHOD = pearson
@@ -45,19 +44,22 @@ method_name = CORRELATION_METHOD.__name__
 display(method_name)
 
 # %% tags=[]
-PERFORMANCE_TEST_N_TOP_GENES = 500
+PERFORMANCE_TEST_N_TOP_GENES = 50
 
 # %% [markdown] tags=[]
 # # Paths
 
 # %% tags=[]
-INPUT_FILE = conf.RECOUNT2["DATA_FILE"]
+INPUT_FILE = (
+    conf.RECOUNT2FULL["GENE_SELECTION_DIR"]
+    / f"recount2_rpkm-{GENE_SELECTION_STRATEGY}.pkl"
+)
 display(INPUT_FILE)
 
 assert INPUT_FILE.exists()
 
 # %% tags=[]
-OUTPUT_DIR = conf.RECOUNT2["SIMILARITY_MATRICES_DIR"]
+OUTPUT_DIR = conf.RECOUNT2FULL["SIMILARITY_MATRICES_DIR"]
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_DIR)
 
@@ -115,6 +117,9 @@ assert data.shape[0] == data_corrs.shape[0]
 
 # %% tags=[]
 data_corrs.head()
+
+# %% [markdown] tags=[]
+# ## Save
 
 # %% tags=[]
 output_filename = OUTPUT_DIR / f"{INPUT_FILE.stem}-{method_name}.pkl"
