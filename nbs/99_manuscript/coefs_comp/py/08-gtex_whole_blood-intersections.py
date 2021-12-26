@@ -489,7 +489,7 @@ def plot_gene_pair(top_pairs_df, idx, bins="log"):
     p.ax_joint.set_ylabel(f"{gene_y_id}\n{gene_y_symbol}")
 
     p.fig.suptitle(_title)
-    
+
     return p
 
 
@@ -532,28 +532,28 @@ _tmp_df = df_r_data[
 ]
 
 if len(second_coefs) > 1:
-    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(_tmp_df[f"{second_coefs[1]}_rank"])
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(
+        _tmp_df[f"{second_coefs[1]}_rank"]
+    )
 else:
     _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"]
 
-_tmp_df = _tmp_df.assign(
-    rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum)
-)
+_tmp_df = _tmp_df.assign(rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum))
 
 # show this just to make sure of the groups
 # display(_tmp_df.head())
 
 # sort by rank_diff
-_tmp_df = _tmp_df.sort_values(
-    "rank_diff", ascending=False
-)
+_tmp_df = _tmp_df.sort_values("rank_diff", ascending=False)
 
 # # sort by firt_coef value
 # _tmp_df = _tmp_df.sort_values(
 #     first_coef, ascending=False
 # )
 
-_tmp_df = _tmp_df[[x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]]
+_tmp_df = _tmp_df[
+    [x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]
+]
 
 display(_tmp_df.shape)
 display(_tmp_df)
@@ -583,28 +583,28 @@ _tmp_df = df_r_data[
 ]
 
 if len(second_coefs) > 1:
-    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(_tmp_df[f"{second_coefs[1]}_rank"])
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(
+        _tmp_df[f"{second_coefs[1]}_rank"]
+    )
 else:
     _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"]
 
-_tmp_df = _tmp_df.assign(
-    rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum)
-)
+_tmp_df = _tmp_df.assign(rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum))
 
 # show this just to make sure of the groups
 # display(_tmp_df.head())
 
 # sort by rank_diff
-_tmp_df = _tmp_df.sort_values(
-    "rank_diff", ascending=False
-)
+_tmp_df = _tmp_df.sort_values("rank_diff", ascending=False)
 
 # # sort by firt_coef value
 # _tmp_df = _tmp_df.sort_values(
 #     first_coef, ascending=False
 # )
 
-_tmp_df = _tmp_df[[x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]]
+_tmp_df = _tmp_df[
+    [x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]
+]
 
 display(_tmp_df.shape)
 display(_tmp_df)
@@ -634,28 +634,28 @@ _tmp_df = df_r_data[
 ]
 
 if len(second_coefs) > 1:
-    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(_tmp_df[f"{second_coefs[1]}_rank"])
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(
+        _tmp_df[f"{second_coefs[1]}_rank"]
+    )
 else:
     _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"]
 
-_tmp_df = _tmp_df.assign(
-    rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum)
-)
+_tmp_df = _tmp_df.assign(rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum))
 
 # show this just to make sure of the groups
 # display(_tmp_df.head())
 
 # sort by rank_diff
-_tmp_df = _tmp_df.sort_values(
-    "rank_diff", ascending=False
-)
+_tmp_df = _tmp_df.sort_values("rank_diff", ascending=False)
 
 # # sort by firt_coef value
 # _tmp_df = _tmp_df.sort_values(
 #     first_coef, ascending=False
 # )
 
-_tmp_df = _tmp_df[[x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]]
+_tmp_df = _tmp_df[
+    [x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]
+]
 
 display(_tmp_df.shape)
 display(_tmp_df)
