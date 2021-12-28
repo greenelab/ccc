@@ -134,6 +134,13 @@ df.shape
 df.head()
 
 # %%
+# FIXME: this will not be necessary in new runs of clustermatch on GTEx
+df.loc[df["clustermatch"] < 0, "clustermatch"] = 0.0
+
+# %%
+df.describe()
+
+# %%
 # show quantiles
 df.apply(lambda x: x.quantile(np.linspace(0.20, 1.0, 20)))
 
@@ -468,7 +475,7 @@ def plot_gene_pair(top_pairs_df, idx, bins="log"):
         (gene0, gene1), ["pearson", "spearman", "clustermatch"]
     ].tolist()
 
-    _title = f"Clustermatch: {_clustermatch:.2f}\nPearson/Spearman: {_pearson:.2f}/{_spearman:.2f}"
+    _title = f"$c={_clustermatch:.2f}$  $r={_pearson:.2f}$  $r_s={_spearman:.2f}$"
 
     # displot DOES SUPPORT HUE!
     p = sns.jointplot(
@@ -497,8 +504,8 @@ def plot_gene_pair(top_pairs_df, idx, bins="log"):
 # add columns with ranks
 df_r_data = pd.concat(
     [
-        df_r_data,
-        df_r_data[["clustermatch", "pearson", "spearman"]]
+        df_plot,
+        df_plot[["clustermatch", "pearson", "spearman"]]
         .rank()
         .rename(
             columns={
@@ -515,19 +522,19 @@ df_r_data = pd.concat(
 df_r_data.head()
 
 # %% [markdown] tags=[]
-# ## Clustermatch vs Spearman/Pearson
+# ## Clustermatch/Spearman vs Pearson
 
 # %%
 first_coef = "clustermatch"
-second_coefs = ("spearman", "pearson")
+second_coefs = ("pearson",)
 
 # %%
 _tmp_df = df_r_data[
     (df_r_data["Clustermatch (high)"])
-    & ~(df_r_data["Spearman (high)"])
+    & (df_r_data["Spearman (high)"])
     & ~(df_r_data["Pearson (high)"])
     & ~(df_r_data["Clustermatch (low)"])
-    & (df_r_data["Spearman (low)"])
+    & ~(df_r_data["Spearman (low)"])
     & (df_r_data["Pearson (low)"])
 ]
 
@@ -559,7 +566,58 @@ display(_tmp_df.shape)
 display(_tmp_df)
 
 # %%
-for i in range(_tmp_df.shape[0]):
+for i in range(min(_tmp_df.shape[0], 5)):
+    display(f"Index: {i}")
+    p = plot_gene_pair(_tmp_df, i)
+    display(p.fig)
+    plt.close(p.fig)
+
+# %% [markdown] tags=[]
+# ## Clustermatch vs Pearson
+
+# %%
+first_coef = "clustermatch"
+second_coefs = ("pearson",)
+
+# %%
+_tmp_df = df_r_data[
+    (df_r_data["Clustermatch (high)"])
+    & ~(df_r_data["Spearman (high)"])
+    & ~(df_r_data["Pearson (high)"])
+    & ~(df_r_data["Clustermatch (low)"])
+    & ~(df_r_data["Spearman (low)"])
+    & (df_r_data["Pearson (low)"])
+]
+
+if len(second_coefs) > 1:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(
+        _tmp_df[f"{second_coefs[1]}_rank"]
+    )
+else:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"]
+
+_tmp_df = _tmp_df.assign(rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum))
+
+# show this just to make sure of the groups
+# display(_tmp_df.head())
+
+# sort by rank_diff
+_tmp_df = _tmp_df.sort_values("rank_diff", ascending=False)
+
+# # sort by firt_coef value
+# _tmp_df = _tmp_df.sort_values(
+#     first_coef, ascending=False
+# )
+
+_tmp_df = _tmp_df[
+    [x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]
+]
+
+display(_tmp_df.shape)
+display(_tmp_df)
+
+# %%
+for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
@@ -617,16 +675,220 @@ for i in range(_tmp_df.shape[0]):
     plt.close(p.fig)
 
 # %% [markdown] tags=[]
-# ## Clustermatch vs Pearson
+# ## Clustermatch vs Spearman/Pearson
 
 # %%
 first_coef = "clustermatch"
-second_coefs = ("pearson",)
+second_coefs = ("spearman", "pearson")
 
 # %%
 _tmp_df = df_r_data[
     (df_r_data["Clustermatch (high)"])
     & ~(df_r_data["Spearman (high)"])
+    & ~(df_r_data["Pearson (high)"])
+    & ~(df_r_data["Clustermatch (low)"])
+    & (df_r_data["Spearman (low)"])
+    & (df_r_data["Pearson (low)"])
+]
+
+if len(second_coefs) > 1:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(
+        _tmp_df[f"{second_coefs[1]}_rank"]
+    )
+else:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"]
+
+_tmp_df = _tmp_df.assign(rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum))
+
+# show this just to make sure of the groups
+# display(_tmp_df.head())
+
+# sort by rank_diff
+_tmp_df = _tmp_df.sort_values("rank_diff", ascending=False)
+
+# # sort by firt_coef value
+# _tmp_df = _tmp_df.sort_values(
+#     first_coef, ascending=False
+# )
+
+_tmp_df = _tmp_df[
+    [x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]
+]
+
+display(_tmp_df.shape)
+display(_tmp_df)
+
+# %%
+for i in range(_tmp_df.shape[0]):
+    display(f"Index: {i}")
+    p = plot_gene_pair(_tmp_df, i)
+    display(p.fig)
+    plt.close(p.fig)
+
+# %% [markdown] tags=[]
+# ## Pearson vs Clustermatch
+
+# %%
+first_coef = "pearson"
+second_coefs = ("clustermatch",)
+
+# %%
+_tmp_df = df_r_data[
+    ~(df_r_data["Clustermatch (high)"])
+    & ~(df_r_data["Spearman (high)"])
+    & (df_r_data["Pearson (high)"])
+    & (df_r_data["Clustermatch (low)"])
+    & ~(df_r_data["Spearman (low)"])
+    & ~(df_r_data["Pearson (low)"])
+]
+
+if len(second_coefs) > 1:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(
+        _tmp_df[f"{second_coefs[1]}_rank"]
+    )
+else:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"]
+
+_tmp_df = _tmp_df.assign(rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum))
+
+# show this just to make sure of the groups
+# display(_tmp_df.head())
+
+# sort by rank_diff
+_tmp_df = _tmp_df.sort_values("rank_diff", ascending=False)
+
+# # sort by firt_coef value
+# _tmp_df = _tmp_df.sort_values(
+#     first_coef, ascending=False
+# )
+
+_tmp_df = _tmp_df[
+    [x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]
+]
+
+display(_tmp_df.shape)
+display(_tmp_df)
+
+# %%
+for i in range(min(_tmp_df.shape[0], 5)):
+    display(f"Index: {i}")
+    p = plot_gene_pair(_tmp_df, i)
+    display(p.fig)
+    plt.close(p.fig)
+
+# %% [markdown] tags=[]
+# ## Pearson vs Spearman
+
+# %%
+first_coef = "pearson"
+second_coefs = ("spearman",)
+
+# %%
+_tmp_df = df_r_data[
+    ~(df_r_data["Clustermatch (high)"])
+    & ~(df_r_data["Spearman (high)"])
+    & (df_r_data["Pearson (high)"])
+    & ~(df_r_data["Clustermatch (low)"])
+    & (df_r_data["Spearman (low)"])
+    & ~(df_r_data["Pearson (low)"])
+]
+
+if len(second_coefs) > 1:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(
+        _tmp_df[f"{second_coefs[1]}_rank"]
+    )
+else:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"]
+
+_tmp_df = _tmp_df.assign(rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum))
+
+# show this just to make sure of the groups
+# display(_tmp_df.head())
+
+# sort by rank_diff
+_tmp_df = _tmp_df.sort_values("rank_diff", ascending=False)
+
+# # sort by firt_coef value
+# _tmp_df = _tmp_df.sort_values(
+#     first_coef, ascending=False
+# )
+
+_tmp_df = _tmp_df[
+    [x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]
+]
+
+display(_tmp_df.shape)
+display(_tmp_df)
+
+# %%
+for i in range(min(_tmp_df.shape[0], 5)):
+    display(f"Index: {i}")
+    p = plot_gene_pair(_tmp_df, i)
+    display(p.fig)
+    plt.close(p.fig)
+
+# %% [markdown] tags=[]
+# ## Pearson vs Spearman/Clustermatch
+
+# %%
+first_coef = "pearson"
+second_coefs = ("spearman", "clustermatch")
+
+# %%
+_tmp_df = df_r_data[
+    ~(df_r_data["Clustermatch (high)"])
+    & ~(df_r_data["Spearman (high)"])
+    & (df_r_data["Pearson (high)"])
+    & (df_r_data["Clustermatch (low)"])
+    & (df_r_data["Spearman (low)"])
+    & ~(df_r_data["Pearson (low)"])
+]
+
+if len(second_coefs) > 1:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"].add(
+        _tmp_df[f"{second_coefs[1]}_rank"]
+    )
+else:
+    _second_coefs_sum = _tmp_df[f"{second_coefs[0]}_rank"]
+
+_tmp_df = _tmp_df.assign(rank_diff=_tmp_df[f"{first_coef}_rank"].sub(_second_coefs_sum))
+
+# show this just to make sure of the groups
+# display(_tmp_df.head())
+
+# sort by rank_diff
+_tmp_df = _tmp_df.sort_values("rank_diff", ascending=False)
+
+# # sort by firt_coef value
+# _tmp_df = _tmp_df.sort_values(
+#     first_coef, ascending=False
+# )
+
+_tmp_df = _tmp_df[
+    [x for x in _tmp_df.columns if "(high)" not in x and "(low)" not in x]
+]
+
+display(_tmp_df.shape)
+display(_tmp_df)
+
+# %%
+for i in range(min(_tmp_df.shape[0], 5)):
+    display(f"Index: {i}")
+    p = plot_gene_pair(_tmp_df, i)
+    display(p.fig)
+    plt.close(p.fig)
+
+# %% [markdown] tags=[]
+# ## Spearman vs Pearson
+
+# %%
+first_coef = "spearman"
+second_coefs = ("pearson",)
+
+# %%
+_tmp_df = df_r_data[
+    ~(df_r_data["Clustermatch (high)"])
+    & (df_r_data["Spearman (high)"])
     & ~(df_r_data["Pearson (high)"])
     & ~(df_r_data["Clustermatch (low)"])
     & ~(df_r_data["Spearman (low)"])
@@ -666,200 +928,5 @@ for i in range(min(_tmp_df.shape[0], 5)):
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
-
-# %%
-
-# %%
-
-# %%
-
-# %% [markdown] tags=[]
-# ## Clustermatch/Spearman vs Pearson
-
-# %%
-_tmp_df = df_r_data[
-    (df_r_data["clustermatch_higher"])
-    & (df_r_data["spearman_higher"])
-    & ~(df_r_data["pearson_higher"])
-    & ~(df_r_data["clustermatch_lower"])
-    & ~(df_r_data["spearman_lower"])
-    & (df_r_data["pearson_lower"])
-]
-
-# show this just to make sure of the groups
-# display(_tmp_df.head())
-
-_tmp_df = _tmp_df[[x for x in df_r_data.columns if "_" not in x]].sort_values(
-    "clustermatch", ascending=False
-)
-
-display(_tmp_df.shape)
-display(_tmp_df)
-
-# %%
-plot_gene_pair(_tmp_df, 0)
-
-# %%
-plot_gene_pair(_tmp_df, 1)
-
-# %%
-plot_gene_pair(_tmp_df, 2)
-
-# %% [markdown] tags=[]
-# ## Pearson vs Spearman
-
-# %%
-_tmp_df = df_r_data[
-    ~(df_r_data["clustermatch_higher"])
-    & ~(df_r_data["spearman_higher"])
-    & (df_r_data["pearson_higher"])
-    & ~(df_r_data["clustermatch_lower"])
-    & (df_r_data["spearman_lower"])
-    & ~(df_r_data["pearson_lower"])
-]
-
-# show this just to make sure of the groups
-# display(_tmp_df.head())
-
-_tmp_df = _tmp_df[[x for x in df_r_data.columns if "_" not in x]].sort_values(
-    "pearson", ascending=False
-)
-
-display(_tmp_df.shape)
-display(_tmp_df)
-
-# %%
-plot_gene_pair(_tmp_df, 0)
-
-# %%
-plot_gene_pair(_tmp_df, 1)
-
-# %%
-plot_gene_pair(_tmp_df, 2)
-
-# %% [markdown] tags=[]
-# ## Spearman vs Pearson
-
-# %%
-_tmp_df = df_r_data[
-    ~(df_r_data["clustermatch_higher"])
-    & (df_r_data["spearman_higher"])
-    & ~(df_r_data["pearson_higher"])
-    & ~(df_r_data["clustermatch_lower"])
-    & ~(df_r_data["spearman_lower"])
-    & (df_r_data["pearson_lower"])
-]
-
-# show this just to make sure of the groups
-# display(_tmp_df.head())
-
-_tmp_df = _tmp_df[[x for x in df_r_data.columns if "_" not in x]].sort_values(
-    "pearson", ascending=False
-)
-
-display(_tmp_df.shape)
-display(_tmp_df)
-
-# %%
-plot_gene_pair(_tmp_df, 0)
-
-# %%
-plot_gene_pair(_tmp_df, 1)
-
-# %% [markdown] tags=[]
-# ## Pearson vs Spearman/Clustermatch
-
-# %%
-_tmp_df = df_r_data[
-    ~(df_r_data["clustermatch_higher"])
-    & ~(df_r_data["spearman_higher"])
-    & (df_r_data["pearson_higher"])
-    & (df_r_data["clustermatch_lower"])
-    & (df_r_data["spearman_lower"])
-    & ~(df_r_data["pearson_lower"])
-]
-
-# show this just to make sure of the groups
-# display(_tmp_df.head())
-
-_tmp_df = _tmp_df[[x for x in df_r_data.columns if "_" not in x]].sort_values(
-    "pearson", ascending=False
-)
-
-display(_tmp_df.shape)
-display(_tmp_df)
-
-# %%
-plot_gene_pair(_tmp_df, 0)
-
-# %%
-plot_gene_pair(_tmp_df, 1)
-
-# %% [markdown] tags=[]
-# ## Pearson vs Clustermatch
-
-# %%
-_tmp_df = df_r_data[
-    ~(df_r_data["clustermatch_higher"])
-    & ~(df_r_data["spearman_higher"])
-    & (df_r_data["pearson_higher"])
-    & (df_r_data["clustermatch_lower"])
-    & ~(df_r_data["spearman_lower"])
-    & ~(df_r_data["pearson_lower"])
-]
-
-# show this just to make sure of the groups
-# display(_tmp_df.head())
-
-_tmp_df = _tmp_df[[x for x in df_r_data.columns if "_" not in x]].sort_values(
-    "pearson", ascending=False
-)
-
-display(_tmp_df.shape)
-display(_tmp_df)
-
-# %%
-plot_gene_pair(_tmp_df, 0)
-
-# %%
-gene0, gene1 = (
-    gene_expr_df.loc["ENSG00000130598.15"].copy(),
-    gene_expr_df.loc["ENSG00000177791.11"].copy(),
-)
-
-# %%
-cm(gene0, gene1)
-
-# %%
-q = 0.75
-gene0[gene0 <= gene0.quantile(q)] = 0
-gene0[gene0 > gene0.quantile(q)] = 1
-
-gene1[gene1 <= gene1.quantile(q)] = 0
-gene1[gene1 > gene1.quantile(q)] = 1
-
-cm(gene0, gene1)
-
-# %%
-plot_gene_pair(_tmp_df, 500)
-
-# %%
-gene0, gene1 = (
-    gene_expr_df.loc["ENSG00000177409.11"].copy(),
-    gene_expr_df.loc["ENSG00000149131.15"].copy(),
-)
-
-# %%
-cm(gene0, gene1)
-
-# %%
-q = 0.75
-gene0[gene0 <= gene0.quantile(q)] = 0
-gene0[gene0 > gene0.quantile(q)] = 1
-
-gene1[gene1 <= gene1.quantile(q)] = 0
-gene1[gene1 > gene1.quantile(q)] = 1
-
-cm(gene0, gene1)
 
 # %%
