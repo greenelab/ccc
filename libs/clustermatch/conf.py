@@ -105,6 +105,10 @@ GTEX[
     "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
 ] = "gtex_v8_data_{tissue}-{gene_sel_strategy}-{corr_method}.pkl"
 
+## Gene pairs intersections
+GTEX["GENE_PAIR_INTERSECTIONS"] = Path(
+    GTEX["RESULTS_DIR"], "gene_pair_intersections"
+).resolve()
 
 #
 # recount2 (from MultiPLIER)
