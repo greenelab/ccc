@@ -31,6 +31,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from clustermatch.plots import jointplot
 from clustermatch import conf
 
 # %% [markdown] tags=[]
@@ -149,7 +150,7 @@ df_r_data_boolean_cols
 
 
 # %%
-def plot_gene_pair(top_pairs_df, idx, bins="log"):
+def plot_gene_pair(top_pairs_df, idx, bins="log", plot_gene_ids=True):
     gene0, gene1 = top_pairs_df.iloc[idx].name
     display((gene0, gene1))
 
@@ -159,8 +160,6 @@ def plot_gene_pair(top_pairs_df, idx, bins="log"):
     _pearson, _spearman, _clustermatch = top_pairs_df.loc[
         (gene0, gene1), ["pearson", "spearman", "clustermatch"]
     ].tolist()
-
-    _title = f"$c={_clustermatch:.2f}$  $r={_pearson:.2f}$  $r_s={_spearman:.2f}$"
 
     # displot DOES SUPPORT HUE!
     p = sns.jointplot(
@@ -174,12 +173,18 @@ def plot_gene_pair(top_pairs_df, idx, bins="log"):
 
     gene_x_id = p.ax_joint.get_xlabel()
     gene_x_symbol = gene_map[gene_x_id]
-    p.ax_joint.set_xlabel(f"{gene_x_id}\n{gene_x_symbol}")
 
     gene_y_id = p.ax_joint.get_ylabel()
     gene_y_symbol = gene_map[gene_y_id]
-    p.ax_joint.set_ylabel(f"{gene_y_id}\n{gene_y_symbol}")
+    
+    if plot_gene_ids:
+        p.ax_joint.set_xlabel(f"{gene_x_id}\n{gene_x_symbol}")
+        p.ax_joint.set_ylabel(f"{gene_y_id}\n{gene_y_symbol}")
+    else:
+        p.ax_joint.set_xlabel(f"{gene_x_symbol}", fontstyle="italic")
+        p.ax_joint.set_ylabel(f"{gene_y_symbol}", fontstyle="italic")
 
+    _title = f"$c={_clustermatch:.2f}$  $r={_pearson:.2f}$    $r_s={_spearman:.2f}$"
     p.fig.suptitle(_title)
 
     return p
@@ -239,6 +244,33 @@ def get_gene_pairs(first_coef, query_set):
     return _tmp_df
 
 
+# %%
+def plot_and_save_gene_pair(data, gene0_id, gene1_id, output_file_subset):
+    gene0_symbol = gene_map[gene0_id]
+    gene1_symbol = gene_map[gene1_id]
+
+    with sns.plotting_context("paper", font_scale=2.0):
+        p = jointplot(
+            data,
+            x=gene0_id,
+            y=gene1_id,
+            add_corr_coefs=False,
+        )
+
+        p.ax_joint.set_xlabel(f"{gene0_symbol}", fontstyle="italic")
+        p.ax_joint.set_ylabel(f"{gene1_symbol}", fontstyle="italic")
+
+        output_file = OUTPUT_FIGURE_DIR / f"genes-{output_file_subset}-{gene0_symbol}_vs_{gene1_symbol}.svg"
+        display(output_file)
+        
+        plt.savefig(
+            output_file,
+            bbox_inches="tight",
+            dpi=300,
+            facecolor="white",
+        )
+
+
 # %% [markdown] tags=[]
 # ## Clustermatch/Spearman vs Pearson
 
@@ -255,12 +287,44 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
+# %% [markdown]
+# ### Preview
+
 # %%
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Selection
+
+# %%
+gene_pair_subset = "c_rs_vs_r"
+
+gene0_id = "ENSG00000135094.10"
+gene1_id = "ENSG00000111537.4"
+
+plot_and_save_gene_pair(
+    gene_expr_df.T,
+    gene0_id,
+    gene1_id,
+    output_file_subset=gene_pair_subset,
+)
+
+# %%
+gene_pair_subset = "c_rs_vs_r"
+
+gene0_id = "ENSG00000130208.9"
+gene1_id = "ENSG00000177606.6"
+
+plot_and_save_gene_pair(
+    gene_expr_df.T,
+    gene0_id,
+    gene1_id,
+    output_file_subset=gene_pair_subset,
+)
 
 # %% [markdown] tags=[]
 # ## Clustermatch vs Pearson
@@ -277,12 +341,31 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
+# %% [markdown]
+# ### Preview
+
 # %%
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Selection
+
+# %%
+gene_pair_subset = "c_vs_r"
+
+gene0_id = "ENSG00000236409.1"
+gene1_id = "ENSG00000151929.9"
+
+plot_and_save_gene_pair(
+    gene_expr_df.T,
+    gene0_id,
+    gene1_id,
+    output_file_subset=gene_pair_subset,
+)
 
 # %% [markdown] tags=[]
 # ## Clustermatch vs Spearman
@@ -299,12 +382,44 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
+# %% [markdown]
+# ### Preview
+
 # %%
 for i in range(min(_tmp_df.shape[0], 30)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Selection
+
+# %%
+gene_pair_subset = "c_vs_rs"
+
+gene0_id = "ENSG00000147050.14"
+gene1_id = "ENSG00000183878.15"
+
+plot_and_save_gene_pair(
+    gene_expr_df.T,
+    gene0_id,
+    gene1_id,
+    output_file_subset=gene_pair_subset,
+)
+
+# %%
+gene_pair_subset = "c_vs_rs"
+
+gene0_id = "ENSG00000115165.9"
+gene1_id = "ENSG00000101265.15"
+
+plot_and_save_gene_pair(
+    gene_expr_df.T,
+    gene0_id,
+    gene1_id,
+    output_file_subset=gene_pair_subset,
+)
 
 # %% [markdown] tags=[]
 # ## Clustermatch vs Spearman/Pearson
@@ -322,12 +437,31 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
+# %% [markdown]
+# ### Preview
+
 # %%
 for i in range(min(_tmp_df.shape[0], 10)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Selection
+
+# %%
+gene_pair_subset = "c_vs_r_rs"
+
+gene0_id = "ENSG00000162413.16"
+gene1_id = "ENSG00000235027.1"
+
+plot_and_save_gene_pair(
+    gene_expr_df.T,
+    gene0_id,
+    gene1_id,
+    output_file_subset=gene_pair_subset,
+)
 
 # %% [markdown] tags=[]
 # ## Pearson vs Clustermatch
@@ -344,12 +478,31 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
+# %% [markdown]
+# ### Preview
+
 # %%
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Selection
+
+# %%
+gene_pair_subset = "r_vs_c"
+
+gene0_id = "ENSG00000130598.15"
+gene1_id = "ENSG00000177791.11"
+
+plot_and_save_gene_pair(
+    gene_expr_df.T,
+    gene0_id,
+    gene1_id,
+    output_file_subset=gene_pair_subset,
+)
 
 # %% [markdown] tags=[]
 # ## Pearson vs Spearman
@@ -366,12 +519,18 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
+# %% [markdown]
+# ### Preview
+
 # %%
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Selection
 
 # %% [markdown] tags=[]
 # ## Pearson vs Spearman/Clustermatch
@@ -389,12 +548,31 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
+# %% [markdown]
+# ### Preview
+
 # %%
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Selection
+
+# %%
+gene_pair_subset = "r_vs_c_rs"
+
+gene0_id = "ENSG00000198467.13"
+gene1_id = "ENSG00000068976.13"
+
+plot_and_save_gene_pair(
+    gene_expr_df.T,
+    gene0_id,
+    gene1_id,
+    output_file_subset=gene_pair_subset,
+)
 
 # %% [markdown] tags=[]
 # ## Spearman vs Pearson
@@ -411,11 +589,17 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
+# %% [markdown]
+# ### Preview
+
 # %%
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Selection
 
 # %%
