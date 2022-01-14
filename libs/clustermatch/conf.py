@@ -164,6 +164,11 @@ RECOUNT2FULL[
     "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
 ] = "recount2_rpkm-{gene_sel_strategy}-{corr_method}.pkl"
 
+## Gene pairs intersections
+RECOUNT2FULL["GENE_PAIR_INTERSECTIONS"] = Path(
+    RECOUNT2FULL["RESULTS_DIR"], "gene_pair_intersections"
+).resolve()
+
 
 if __name__ == "__main__":
     # if this script is run, then it exports the configuration as environment
