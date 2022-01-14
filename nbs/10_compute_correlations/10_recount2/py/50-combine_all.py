@@ -32,7 +32,7 @@ from clustermatch import conf
 # # Settings
 
 # %% tags=["parameters"]
-DATASET_CONFIG = conf.RECOUNT2
+DATASET_CONFIG = conf.RECOUNT2FULL
 # GTEX_TISSUE = None
 GENE_SEL_STRATEGY = "var_pc_log2"
 
@@ -40,7 +40,7 @@ GENE_SEL_STRATEGY = "var_pc_log2"
 # # Paths
 
 # %% tags=[]
-INPUT_GENE_EXPR_DATA_FILE = conf.RECOUNT2["DATA_FILE"]
+INPUT_GENE_EXPR_DATA_FILE = DATASET_CONFIG["DATA_DIR"] / "recount2_rpkm.pkl"
 display(INPUT_GENE_EXPR_DATA_FILE)
 
 assert INPUT_GENE_EXPR_DATA_FILE.exists()
@@ -56,6 +56,7 @@ display(INPUT_CORR_FILE_TEMPLATE)
 OUTPUT_FILE = DATASET_CONFIG["SIMILARITY_MATRICES_DIR"] / str(
     INPUT_CORR_FILE_TEMPLATE
 ).format(
+    gene_sel_strategy=GENE_SEL_STRATEGY,
     corr_method="all",
 )
 display(OUTPUT_FILE)
@@ -67,27 +68,27 @@ display(OUTPUT_FILE)
 # ## Gene Ensembl ID -> Symbol mapping
 
 # %% tags=[]
-gene_map = pd.read_pickle(
-    DATASET_CONFIG["DATA_DIR"] / "gtex_gene_id_symbol_mappings.pkl"
-)
+# gene_map = pd.read_pickle(
+#     DATASET_CONFIG["DATA_DIR"] / "gtex_gene_id_symbol_mappings.pkl"
+# )
 
 # %% tags=[]
-gene_map = gene_map.set_index("gene_ens_id")["gene_symbol"].to_dict()
+# gene_map = gene_map.set_index("gene_ens_id")["gene_symbol"].to_dict()
 
 # %% tags=[]
-assert gene_map["ENSG00000145309.5"] == "CABS1"
+# assert gene_map["ENSG00000145309.5"] == "CABS1"
 
 # %% [markdown] tags=[]
 # ## Gene expression
 
 # %% tags=[]
-data = pd.read_pickle(INPUT_GENE_EXPR_DATA_FILE)
+# data = pd.read_pickle(INPUT_GENE_EXPR_DATA_FILE)
 
 # %% tags=[]
-data.shape
+# data.shape
 
 # %% tags=[]
-data.head()
+# data.head()
 
 # %% [markdown] tags=[]
 # ## Clustermatch
@@ -95,7 +96,8 @@ data.head()
 # %% tags=[]
 clustermatch_df = pd.read_pickle(
     str(INPUT_CORR_FILE_TEMPLATE).format(
-        corr_method="clustermatch_k2to5",
+        gene_sel_strategy=GENE_SEL_STRATEGY,
+        corr_method="clustermatch",
     )
 )
 
@@ -105,15 +107,13 @@ clustermatch_df.shape
 # %% tags=[]
 clustermatch_df.head()
 
-# %% tags=[]
-assert data.index.equals(clustermatch_df.index)
-
 # %% [markdown] tags=[]
 # ## Pearson
 
 # %% tags=[]
 pearson_df = pd.read_pickle(
     str(INPUT_CORR_FILE_TEMPLATE).format(
+        gene_sel_strategy=GENE_SEL_STRATEGY,
         corr_method="pearson",
     )
 )
@@ -125,7 +125,7 @@ pearson_df.shape
 pearson_df.head()
 
 # %% tags=[]
-assert data.index.equals(pearson_df.index)
+assert clustermatch_df.index.equals(pearson_df.index)
 
 # %% [markdown] tags=[]
 # ## Spearman
@@ -133,6 +133,7 @@ assert data.index.equals(pearson_df.index)
 # %% tags=[]
 spearman_df = pd.read_pickle(
     str(INPUT_CORR_FILE_TEMPLATE).format(
+        gene_sel_strategy=GENE_SEL_STRATEGY,
         corr_method="spearman",
     )
 )
@@ -144,7 +145,7 @@ spearman_df.shape
 spearman_df.head()
 
 # %% tags=[]
-assert data.index.equals(spearman_df.index)
+assert clustermatch_df.index.equals(spearman_df.index)
 
 
 # %% [markdown] tags=[]
