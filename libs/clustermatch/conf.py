@@ -137,6 +137,34 @@ RECOUNT2[
 ] = "recount_data_prep_PLIER-{corr_method}.pkl"
 
 
+#
+# recount2 (full dataset)
+#
+RECOUNT2FULL = {}
+
+# Input data
+RECOUNT2FULL["DATA_DIR"] = Path(DATA_DIR, "recount2full").resolve()
+
+# this stores the internal data files downloaded by the recount package
+RECOUNT2FULL["INTERNAL_DATA_DIR"] = Path(RECOUNT2FULL["DATA_DIR"], "data").resolve()
+
+# Results
+RECOUNT2FULL["RESULTS_DIR"] = Path(RESULTS_DIR, "recount2full").resolve()
+
+## Gene selection
+RECOUNT2FULL["GENE_SELECTION_DIR"] = Path(
+    RECOUNT2FULL["RESULTS_DIR"], "gene_selection"
+).resolve()
+
+## Similarity matrices
+RECOUNT2FULL["SIMILARITY_MATRICES_DIR"] = Path(
+    RECOUNT2FULL["RESULTS_DIR"], "similarity_matrices"
+).resolve()
+RECOUNT2FULL[
+    "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
+] = "recount2_rpkm-{gene_sel_strategy}-{corr_method}.pkl"
+
+
 if __name__ == "__main__":
     # if this script is run, then it exports the configuration as environment
     # variables (for bash/R, etc)
