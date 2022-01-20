@@ -28,10 +28,12 @@
 import pandas as pd
 import numpy as np
 
+from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from clustermatch.plots import jointplot
+from clustermatch.coef import cm
 from clustermatch import conf
 
 # %% [markdown] tags=[]
@@ -144,6 +146,9 @@ gene_expr_df.head()
 # %% [markdown]
 # # Look at specific gene pair cases
 
+# %% [markdown]
+# ## Prepare data
+
 # %%
 # add columns with ranks
 df_r_data = pd.concat(
@@ -173,6 +178,9 @@ df_r_data_boolean_cols = set(
 # %%
 df_r_data_boolean_cols
 
+
+# %% [markdown]
+# ## Functions
 
 # %%
 def get_gene_symbol(gene_ensemble_id):
@@ -429,6 +437,161 @@ for i in range(min(_tmp_df.shape[0], 5)):
     plt.close(p.fig)
 
 # %% [markdown]
+# ### Explore
+
+# %%
+from scipy.stats.contingency import expected_freq
+
+# %%
+from clustermatch.sklearn.metrics import get_contingency_matrix
+
+
+# %% tags=[]
+def get_cm_contingency_table(max_parts, parts):
+    """
+    TODO
+    """
+    # get the clustermatch partitions that maximize the coefficient
+    x_max_part = parts[0][max_parts[0]]
+    
+    y_max_part = parts[1][max_parts[1]]
+    new_y_max_part = np.full(y_max_part.shape, np.nan)
+    for new_k, k in enumerate(np.flip(np.unique(y_max_part))):
+        new_y_max_part[y_max_part == k] = new_k
+    
+    return get_contingency_matrix(new_y_max_part, x_max_part)
+
+
+# %%
+def get_adjusted_contingency_matrix(cont_mat):
+    n = int(cont_mat.sum())
+    nis = np.sum(cont_mat, axis=1)
+    njs = np.sum(cont_mat, axis=0)
+
+    adj_cont_mat = np.full(cont_mat.shape, np.nan)
+    for i in range(cont_mat.shape[0]):
+        ni = int(nis[i])
+
+        for j in range(cont_mat.shape[1]):
+            nj = int(njs[j])
+
+            nij = int(cont_mat[i, j])
+
+            adj_cont_mat[i, j] = (nij * (nij - 1)) / ((ni * (ni - 1) * nj * (nj - 1)) / (n * (n - 1)))
+    
+    return adj_cont_mat
+
+
+# %%
+gene0, gene1 = ('ENSG00000202293', 'ENSG00000199077')
+
+gene0_data = gene_expr_df.loc[gene0]
+gene1_data = gene_expr_df.loc[gene1]
+
+# gene0_data = gene0_data[gene0_data < 37]
+# gene1_data = gene1_data[gene1_data < 41]
+
+_gene_expr_df_sample = pd.concat([gene0_data, gene1_data], axis=1)
+_gene_expr_df_sample = _gene_expr_df_sample.dropna()
+display(_gene_expr_df_sample.shape)
+
+p = jointplot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    bins=None,
+    add_corr_coefs=False,
+)
+
+# %%
+sns.displot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    kind="hist",
+    bins=10,
+)
+
+# %%
+sns.displot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    kind="kde",
+    # thresh=0.75,
+)
+
+# %%
+_gene_expr_df_sample.describe()
+
+# %%
+_gene_expr_df_sample.quantile(0.95)
+
+# %%
+x = _gene_expr_df_sample.iloc[:, 0]
+y = _gene_expr_df_sample.iloc[:, 1]
+c, max_parts, parts = cm(x, y, return_parts=True, internal_n_clusters=[10])
+display(c)
+
+# %%
+cont_mat = get_cm_contingency_table(max_parts, parts)
+
+# %%
+cont_mat
+
+# %%
+_cont_mat_expected = expected_freq(cont_mat)
+sns.heatmap(cont_mat / _cont_mat_expected, annot=True, fmt='.2f', cmap="Blues")
+
+# %%
+adj_cont_mat = get_adjusted_contingency_matrix(cont_mat)
+
+# %%
+sns.heatmap(adj_cont_mat, annot=True, fmt='.1f', cmap="Blues")
+
+# %%
+
+# %%
+import statsmodels.formula.api as smf
+from sklearn.preprocessing import scale
+
+# %%
+x = _gene_expr_df_sample.iloc[:, 0]
+y = _gene_expr_df_sample.iloc[:, 1]
+
+# %%
+x_s = scale(x)
+
+# %%
+z = np.polyfit(x_s, y, 4)
+
+# %%
+m = np.poly1d(z)
+
+# %%
+m
+
+# %%
+df = _gene_expr_df_sample.rename(columns={gene0: "x", gene1: "y"})
+df["x"] = scale(df["x"])
+results = smf.ols(formula='y ~ m(x)', data=df).fit()
+
+# %%
+results.summary()
+
+# %%
+df = df.sort_values("x")
+x = df["x"]
+y = df["y"]
+
+fig, ax = plt.subplots()
+ax.plot(x, y, "o", label='data')
+# ax.plot(x, m(scale(x)), "--", label='fit')
+ax.legend()
+ax.set_xlim(0, 50)
+ax.set_ylim(-10, 200)
+
+# %% [markdown]
 # ### Selection
 
 # %%
@@ -463,11 +626,81 @@ display(_tmp_df)
 # ### Preview
 
 # %%
-for i in range(min(_tmp_df.shape[0], 10)):
+for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Explore
+
+# %%
+gene0, gene1 = ('ENSG00000221533', 'ENSG00000206630')
+
+gene0_data = gene_expr_df.loc[gene0]
+gene1_data = gene_expr_df.loc[gene1]
+
+# gene0_data = gene0_data[gene0_data < 37]
+# gene1_data = gene1_data[gene1_data < 41]
+
+_gene_expr_df_sample = pd.concat([gene0_data, gene1_data], axis=1)
+_gene_expr_df_sample = _gene_expr_df_sample.dropna()
+display(_gene_expr_df_sample.shape)
+
+p = jointplot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    bins=None,
+    add_corr_coefs=False,
+)
+
+# %%
+sns.displot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    kind="hist",
+    bins=10,
+)
+
+# %%
+sns.displot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    kind="kde",
+    # thresh=0.01,
+)
+
+# %%
+_gene_expr_df_sample.describe()
+
+# %%
+_gene_expr_df_sample.quantile(0.90)
+
+# %%
+x = _gene_expr_df_sample.iloc[:, 0]
+y = _gene_expr_df_sample.iloc[:, 1]
+c, max_parts, parts = cm(x, y, return_parts=True)
+display(c)
+
+# %%
+cont_mat = get_cm_contingency_table(max_parts, parts)
+
+# %%
+cont_mat
+
+# %%
+_cont_mat_expected = expected_freq(cont_mat)
+sns.heatmap(cont_mat / _cont_mat_expected, annot=True, fmt='.2f', cmap="Blues")
+
+# %%
+adj_cont_mat = get_adjusted_contingency_matrix(cont_mat)
+
+# %%
+sns.heatmap(adj_cont_mat, annot=True, fmt='.1f', cmap="Blues")
 
 # %% [markdown]
 # ### Selection
@@ -510,6 +743,79 @@ for i in range(min(_tmp_df.shape[0], 10)):
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Explore
+
+# %%
+gene0, gene1 = ('ENSG00000260894', 'ENSG00000277370')
+
+gene0_data = gene_expr_df.loc[gene0]
+gene1_data = gene_expr_df.loc[gene1]
+
+# gene0_data = gene0_data[gene0_data < 37]
+# gene1_data = gene1_data[gene1_data < 41]
+
+_gene_expr_df_sample = pd.concat([gene0_data, gene1_data], axis=1)
+_gene_expr_df_sample = _gene_expr_df_sample.dropna()
+display(_gene_expr_df_sample.shape)
+
+p = jointplot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    bins=None,
+    add_corr_coefs=False,
+)
+
+# %%
+sns.displot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    kind="hist",
+    bins=10,
+)
+
+# %%
+sns.displot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    kind="kde",
+    thresh=0.75,
+    # levels=10,
+    # kind="hist",
+    # bins=10,
+)
+
+# %%
+_gene_expr_df_sample.describe()
+
+# %%
+_gene_expr_df_sample.quantile(0.90)
+
+# %%
+x = _gene_expr_df_sample.iloc[:, 0]
+y = _gene_expr_df_sample.iloc[:, 1]
+c, max_parts, parts = cm(x, y, return_parts=True)
+display(c)
+
+# %%
+cont_mat = get_cm_contingency_table(max_parts, parts)
+
+# %%
+cont_mat
+
+# %%
+_cont_mat_expected = expected_freq(cont_mat)
+sns.heatmap(cont_mat / _cont_mat_expected, annot=True, fmt='.2f', cmap="Blues")
+
+# %%
+adj_cont_mat = get_adjusted_contingency_matrix(cont_mat)
+
+# %%
+sns.heatmap(adj_cont_mat, annot=True, fmt='.1f', cmap="Blues")
 
 # %% [markdown]
 # ### Selection
@@ -662,6 +968,68 @@ for i in range(min(_tmp_df.shape[0], 5)):
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
+
+# %% [markdown]
+# ### Explore
+
+# %%
+gene0, gene1 = ('ENSG00000213442', 'ENSG00000199153')
+
+gene0_data = gene_expr_df.loc[gene0]
+gene1_data = gene_expr_df.loc[gene1]
+
+# gene0_data = gene0_data[gene0_data < 500]
+# gene1_data = gene1_data[gene1_data < 100]
+
+_gene_expr_df_sample = pd.concat([gene0_data, gene1_data], axis=1)
+_gene_expr_df_sample = _gene_expr_df_sample.dropna()
+display(_gene_expr_df_sample.shape)
+
+p = jointplot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    bins=None,
+    add_corr_coefs=False,
+)
+
+# %%
+sns.displot(
+    data=_gene_expr_df_sample,
+    x=gene0,
+    y=gene1,
+    # kind="kde",
+    # thresh=0.50,
+    kind="hist",
+    bins=10,
+)
+
+# %%
+_gene_expr_df_sample.describe().applymap(str)
+
+# %%
+x = _gene_expr_df_sample.iloc[:, 0]
+y = _gene_expr_df_sample.iloc[:, 1]
+c, max_parts, parts = cm(x, y, return_parts=True)
+display(c)
+
+# %%
+pd.Series(parts[1][0]).value_counts()
+
+# %%
+cont_mat = get_cm_contingency_table(max_parts, parts)
+
+# %%
+cont_mat
+
+# %%
+sns.heatmap(cont_mat / cont_mat.sum(), annot=True, fmt='.2f', cmap="Blues")
+
+# %%
+adj_cont_mat = get_adjusted_contingency_matrix(cont_mat)
+
+# %%
+sns.heatmap(adj_cont_mat, annot=True, fmt='.1f', cmap="Blues")
 
 # %% [markdown] tags=[]
 # ## Spearman vs Pearson
