@@ -2,25 +2,26 @@
 # currently installed (options update=TRUE, ask=FALSE in BiocManager::install).
 
 
-default_repo <- 'http://cran.us.r-project.org'
+default_repo <- "http://cran.us.r-project.org"
 
 # install BiocManager but do not update R packages so we keep those installed
 # with conda
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager", repos=default_repo)
-BiocManager::install(version = "3.13", update=FALSE, ask=FALSE)
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager", repos = default_repo)
+}
+BiocManager::install(version = "3.13", update = FALSE, ask = FALSE)
 
 # styler
-BiocManager::install("styler", update=FALSE, ask=FALSE)
+BiocManager::install("styler", update = FALSE, ask = FALSE)
 
 # clusterProfiler
-BiocManager::install("clusterProfiler", update=FALSE, ask=FALSE)
+BiocManager::install("clusterProfiler", update = FALSE, ask = FALSE)
 
 # org.Hs.eg.db
-BiocManager::install("org.Hs.eg.db", update=FALSE, ask=FALSE)
+BiocManager::install("org.Hs.eg.db", update = FALSE, ask = FALSE)
 
 # ReactomePA
-BiocManager::install("ReactomePA", update=FALSE, ask=FALSE)
+BiocManager::install("ReactomePA", update = FALSE, ask = FALSE)
 
 # library(devtools)
 
