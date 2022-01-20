@@ -310,4 +310,152 @@ with sns.plotting_context("paper", font_scale=1.8):
 # 1. When the number of internal clusters (separated by red lines) is higher, Clustermatch is able to capture more complex relationships.
 # 1. With two internal clusters (Anscombe I, II and III) for each variable pair, Clustermatch seems to capture linear relationships. However, two clusters also capture noncoexistence relationships.
 
+# %% [markdown]
+# # Experiment with contingency tables
+
+# %% [markdown]
+# ## Select dataset
+
+# %%
+# df = datasets["Random/independent"].copy().to_numpy()
+# x, y = df[:, 0], df[:, 1]
+
+# %%
+# df = datasets["Two lines"].copy().to_numpy()
+# x, y = df[:, 0], df[:, 1]
+
+# %%
+# df = datasets["Noncoexistence"].copy().to_numpy()
+# x, y = df[:, 0], df[:, 1]
+
+# %%
+df = datasets["Quadratic"].copy().to_numpy()
+x, y = df[:, 0], df[:, 1]
+
+# %% [markdown]
+# ## (optional) Add outliers
+
+# %%
+# add outliers
+n = 10
+x[np.random.randint(0, 100, size=n)] = np.random.rand(n) * 1000
+
+# %%
+# add outliers
+y[np.random.randint(0, 100, size=n)] = np.random.rand(n) * 1000
+
+# %%
+sns.scatterplot(x=x, y=y)
+
+# %% [markdown]
+# ## Get clustermatch contingency table
+
+# %%
+from clustermatch.sklearn.metrics import get_contingency_matrix
+from scipy.stats.contingency import expected_freq
+
+
 # %% tags=[]
+def get_cm_contingency_table(max_parts, parts):
+    """
+    TODO
+    """
+    # get the clustermatch partitions that maximize the coefficient
+    x_max_part = parts[0][max_parts[0]]
+
+    y_max_part = parts[1][max_parts[1]]
+    new_y_max_part = np.full(y_max_part.shape, np.nan)
+    for new_k, k in enumerate(np.flip(np.unique(y_max_part))):
+        new_y_max_part[y_max_part == k] = new_k
+
+    return get_contingency_matrix(new_y_max_part, x_max_part)
+
+
+# %%
+# x = _gene_expr_df_sample.iloc[:, 0]
+# y = _gene_expr_df_sample.iloc[:, 1]
+c, max_parts, parts = cm(x, y, return_parts=True)
+display(c)
+
+# %%
+cont_mat = get_cm_contingency_table(max_parts, parts)
+
+# %%
+cont_mat
+
+# %% [markdown]
+# ## Plot contingency table
+
+# %% [markdown]
+# ### Option 1: divide counts by expected cell value
+
+# %%
+_cont_mat_expected = expected_freq(cont_mat)
+sns.heatmap(
+    cont_mat / _cont_mat_expected,
+    annot=True,
+    fmt=".2f",
+    cmap="Blues",
+    cbar=False,
+    vmin=0.0,
+)
+
+# %% [markdown]
+# ### Option 2: use formula from ARI paper
+
+# %%
+n = int(cont_mat.sum())
+nis = np.sum(cont_mat, axis=1)
+njs = np.sum(cont_mat, axis=0)
+
+adj_cont_mat = np.full(cont_mat.shape, np.nan)
+for i in range(cont_mat.shape[0]):
+    ni = int(nis[i])
+
+    for j in range(cont_mat.shape[1]):
+        nj = int(njs[j])
+
+        nij = int(cont_mat[i, j])
+
+        adj_cont_mat[i, j] = (nij * (nij - 1)) / (
+            (ni * (ni - 1) * nj * (nj - 1)) / (n * (n - 1))
+        )
+
+# %%
+sns.heatmap(adj_cont_mat / adj_cont_mat.sum(), annot=True, fmt=".2f", cmap="Blues")
+
+# %% [markdown]
+# ## Fit polynomial
+
+# %%
+import statsmodels.formula.api as smf
+
+# %%
+z = np.polyfit(x, y, 1)
+
+# %%
+m = np.poly1d(z)
+
+# %%
+m
+
+# %%
+df = pd.DataFrame({"x": x, "y": y})
+results = smf.ols(formula="y ~ m(x)", data=df).fit()
+
+# %%
+results.summary()
+
+# %%
+df = df.sort_values("x")
+x = df["x"]
+y = df["y"]
+
+fig, ax = plt.subplots()
+ax.plot(x, y, "o", label="data")
+ax.plot(x, m(x), "--", label="fit")
+ax.legend()
+# ax.set_xlim(0, 1000)
+# ax.set_ylim(0, 100)
+
+# %%
