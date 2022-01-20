@@ -431,4 +431,84 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
+# %% [markdown]
+# # recount2
+
+# %%
+# FIXME hard coded
+gene0_id, gene1_id = 'ENSG00000147050', 'ENSG00000183878'
+
+# %%
+INPUT_FILE = (
+    conf.RECOUNT2FULL["DATA_DIR"]
+    / f"data_tmp.pkl"
+)
+display(INPUT_FILE)
+
+# %%
+data = pd.read_pickle(INPUT_FILE)
+
+# %%
+data.shape
+
+# %%
+data.head()
+
+# %%
+data.loc["ENSG00000183878"]
+
+# %%
+data.loc["ENSG00000147050"]
+
+# %%
+sns.scatterplot(data=data.T, x="ENSG00000183878", y="ENSG00000147050")
+
+# %%
+sns.jointplot(data=data.T, x="ENSG00000183878", y="ENSG00000147050")
+
+# %%
+from clustermatch.plots import jointplot
+
+# %%
+jointplot(data=data.T, x="ENSG00000183878", y="ENSG00000147050")
+
+# %%
+from clustermatch.sklearn.metrics import get_contingency_matrix
+from scipy.stats.contingency import expected_freq
+
+
+# %% tags=[]
+def get_cm_contingency_table(max_parts, parts):
+    """
+    TODO
+    """
+    # get the clustermatch partitions that maximize the coefficient
+    x_max_part = parts[0][max_parts[0]]
+    
+    y_max_part = parts[1][max_parts[1]]
+    new_y_max_part = np.full(y_max_part.shape, np.nan)
+    for new_k, k in enumerate(np.flip(np.unique(y_max_part))):
+        new_y_max_part[y_max_part == k] = new_k
+    
+    return get_contingency_matrix(new_y_max_part, x_max_part)
+
+
+# %%
+c, max_parts, parts = cm(data.iloc[0], data.iloc[1], return_parts=True)
+display(c)
+
+# %%
+
+# %%
+cont_mat = get_cm_contingency_table(max_parts, parts)
+
+# %%
+cont_mat
+
+# %%
+
+# %%
+_cont_mat_expected = expected_freq(cont_mat)
+sns.heatmap(cont_mat / _cont_mat_expected, annot=True, fmt='.2f', cmap="Blues", cbar=False, vmin=0.0)
+
 # %%
