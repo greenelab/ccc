@@ -51,8 +51,11 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 # ## GTEx samples info
 
 # %%
+assert conf.GTEX["SAMPLE_ATTRS_FILE"].exists(), "Sample files does not exist"
+
+# %%
 gtex_samples = pd.read_csv(
-    conf.GTEX["DATA_DIR"] / "GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt",
+    conf.GTEX["SAMPLE_ATTRS_FILE"],
     sep="\t",
     index_col="SAMPID",
 )
@@ -68,8 +71,11 @@ gtex_samples.head()
 # ## GTEx subject phenotypes
 
 # %%
+assert conf.GTEX["SUBJECTS_ATTRS_FILE"].exists(), "Subject files does not exist"
+
+# %%
 gtex_phenotypes = pd.read_csv(
-    conf.GTEX["DATA_DIR"] / "GTEx_Analysis_v8_Annotations_SubjectPhenotypesDS.txt",
+    conf.GTEX["SUBJECTS_ATTRS_FILE"],
     sep="\t",
 )
 
