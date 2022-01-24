@@ -89,6 +89,9 @@ GTEX["GENE_SELECTION_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_selection").resolve
 GTEX["SIMILARITY_MATRICES_DIR"] = Path(
     GTEX["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
+GTEX[
+    "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
+] = "gtex_v8_data_{tissue}-{gene_sel_strategy}-{corr_method}.pkl"
 
 
 #
