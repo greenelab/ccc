@@ -77,6 +77,9 @@ GTEX["DATA_DIR"] = Path(DATA_DIR, "gtex_v8").resolve()
 GTEX["SAMPLE_ATTRS_FILE"] = Path(
     GTEX["DATA_DIR"], "GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt"
 ).resolve()
+GTEX["SUBJECTS_ATTRS_FILE"] = Path(
+    GTEX["DATA_DIR"], "GTEx_Analysis_v8_Annotations_SubjectPhenotypesDS.txt"
+).resolve()
 GTEX["DATA_TPM_GCT_FILE"] = Path(
     GTEX["DATA_DIR"], "GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz"
 ).resolve()
