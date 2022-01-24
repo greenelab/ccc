@@ -105,7 +105,7 @@ df.apply(lambda x: stats.skew(x))
 
 # %% tags=[]
 with sns.plotting_context("talk", font_scale=1.0):
-    plot_histogram(df, output_dir=OUTPUT_FIGURE_DIR)
+    plot_histogram(df, output_dir=OUTPUT_FIGURE_DIR, fill=False)
 
 # %% [markdown] tags=[]
 # Coefficients' values distribute very differently. Clustermatch is skewed to the left, whereas Pearson and specially Spearman seem more uniform.
@@ -129,6 +129,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         data=df,
         x="pearson",
         y="clustermatch",
+        add_corr_coefs=False,
         output_dir=OUTPUT_FIGURE_DIR,
     )
 
@@ -140,6 +141,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         data=df,
         x=x,
         y=y,
+        add_corr_coefs=False,
     )
 
     sns.despine(ax=g.ax_joint, left=True)
@@ -159,6 +161,7 @@ with sns.plotting_context("talk", font_scale=1.0):
         data=df,
         x="spearman",
         y="pearson",
+        add_corr_coefs=False,
         output_dir=OUTPUT_FIGURE_DIR,
     )
 
