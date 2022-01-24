@@ -106,10 +106,10 @@ datasets_df = datasets_df.append(
 )
 
 # %% [markdown] tags=[]
-# ## Noncoexistence
+# ## Non-coexistence
 
 # %% tags=[]
-rel_name = "Noncoexistence"
+rel_name = "Non-coexistence"
 
 # %% tags=[]
 np.random.seed(5)
@@ -280,7 +280,7 @@ with sns.plotting_context("paper", font_scale=1.8):
             ax.vlines(x=xp, ymin=1.5, ymax=14, color="r", alpha=0.5)
 
         # add text box for the statistics
-        stats = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
+        stats = f"$p$ = {r:.2f}\n" f"$s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
         bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.75)
         ax.text(
             0.95,
@@ -308,6 +308,6 @@ with sns.plotting_context("paper", font_scale=1.8):
 # Some points:
 #
 # 1. When the number of internal clusters (separated by red lines) is higher, Clustermatch is able to capture more complex relationships.
-# 1. With two internal clusters (Anscombe I, II and III) for each variable pair, Clustermatch seems to capture linear relationships. However, two clusters also capture noncoexistence relationships.
+# 1. With two internal clusters (Anscombe I, II and III) for each variable pair, Clustermatch seems to capture linear relationships. However, two clusters also capture non-coexistence relationships.
 
 # %% tags=[]
