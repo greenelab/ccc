@@ -21,7 +21,7 @@ from clustermatch.coef import cm
 
 
 def plot_histogram(
-    data: pd.DataFrame, figsize: tuple = (10, 7), output_dir: Path = None
+    data: pd.DataFrame, figsize: tuple = (10, 7), output_dir: Path = None, **kwargs,
 ):
     """
     TODO
@@ -39,6 +39,7 @@ def plot_histogram(
         common_norm=False,
         kde=True,
         ax=ax,
+        **kwargs,
     )
     sns.despine(ax=ax)
 
@@ -132,7 +133,14 @@ def plot_cumulative_histogram(
     return fig, ax
 
 
-def jointplot(data: pd.DataFrame, x: str, y: str, bins="log", output_dir: Path = None):
+def jointplot(
+    data: pd.DataFrame,
+    x: str,
+    y: str,
+    bins="log",
+    add_corr_coefs=True,
+    output_dir: Path = None,
+):
     """
     TODO
     Function based on Seaborn's jointplot, but without marginal plots.
@@ -140,6 +148,9 @@ def jointplot(data: pd.DataFrame, x: str, y: str, bins="log", output_dir: Path =
     Args:
         data: same as in plot_histogram
         x, y: name of column in data (it is the name of a correlation coefficient)
+
+    Returns:
+        JointGrid instance.
     """
 
     # compute correlations
@@ -182,18 +193,19 @@ def jointplot(data: pd.DataFrame, x: str, y: str, bins="log", output_dir: Path =
     grid.ax_marg_y.set_visible(False)
 
     # add text box for the statistics
-    ax = grid.ax_joint
-    corr_vals = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
-    bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.15)
-    ax.text(
-        0.25,
-        0.80,
-        corr_vals,
-        fontsize=12,
-        bbox=bbox,
-        transform=ax.transAxes,
-        horizontalalignment="right",
-    )
+    if add_corr_coefs:
+        ax = grid.ax_joint
+        corr_vals = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
+        bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.15)
+        ax.text(
+            0.25,
+            0.80,
+            corr_vals,
+            fontsize=12,
+            bbox=bbox,
+            transform=ax.transAxes,
+            horizontalalignment="right",
+        )
 
     if output_dir is not None:
         plt.savefig(
