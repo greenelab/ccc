@@ -8,6 +8,7 @@ dependencies:
   - jupyterlab=3.1.*
   - jupytext=1.11.*
   - matplotlib=3.4.*
+  - minepy=1.2.*
   - numba=0.53.*
   - numpy=1.21.*
   - openpyxl=3.0.*
