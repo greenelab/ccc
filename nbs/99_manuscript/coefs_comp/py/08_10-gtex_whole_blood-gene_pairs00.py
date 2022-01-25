@@ -24,10 +24,7 @@
 # # Modules
 
 # %% tags=[]
-import re
-
 import pandas as pd
-import numpy as np
 
 from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
@@ -53,7 +50,12 @@ TISSUE_DIR = conf.GTEX["DATA_DIR"] / "data_by_tissue"
 assert TISSUE_DIR.exists()
 
 # %% tags=[]
-OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / f"{gene0_symbol.lower()}_vs_{gene1_symbol.lower()}" / "tissues"
+OUTPUT_FIGURE_DIR = (
+    conf.MANUSCRIPT["FIGURES_DIR"]
+    / "coefs_comp"
+    / f"{gene0_symbol.lower()}_vs_{gene1_symbol.lower()}"
+    / "tissues"
+)
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
@@ -164,7 +166,6 @@ def plot_gene_pair(
     # merge gene expression with metadata
     tissue_file = get_tissue_file(tissue_name)
     tissue_data = pd.read_pickle(tissue_file).T[[gene0, gene1]]
-    n_samples = tissue_data.shape[0]
     tissue_data = pd.merge(
         tissue_data,
         gtex_metadata,
@@ -218,7 +219,10 @@ def plot_gene_pair(
         p.fig.suptitle(_title)
 
         # save
-        output_file = OUTPUT_FIGURE_DIR / f"gtex_{tissue_name}-{gene_x_symbol}_vs_{gene_y_symbol}.pdf"
+        output_file = (
+            OUTPUT_FIGURE_DIR
+            / f"gtex_{tissue_name}-{gene_x_symbol}_vs_{gene_y_symbol}.pdf"
+        )
         display(output_file)
 
         plt.savefig(

@@ -29,7 +29,6 @@ import pandas as pd
 import numpy as np
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 from upsetplot import plot, from_indicators
 
 from clustermatch.plots import MyUpSet
@@ -309,16 +308,16 @@ gene_pairs_by_cats = gene_pairs_by_cats.loc[
         # full agreements on low:
         (True, True, True, False, False, False),
         # diagreements
-        ## clustermatch
+        #   clustermatch
         (False, True, False, True, False, True),
         (False, True, False, False, False, True),
         (True, False, False, False, False, True),
         (True, True, False, False, False, True),
-        ## pearson
+        #   pearson
         (False, False, True, False, True, False),
         (True, False, False, False, True, False),
         (True, False, True, False, True, False),
-        ## spearman
+        #   spearman
         (False, True, False, True, False, False),
     ]
 ]

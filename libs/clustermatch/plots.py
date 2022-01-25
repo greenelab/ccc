@@ -13,7 +13,6 @@ import pandas as pd
 from IPython.display import display
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import seaborn as sns
 from seaborn.distributions import _freedman_diaconis_bins
 from upsetplot import UpSet
@@ -173,7 +172,7 @@ def jointplot(
 
     color = "C0"
     color_rgb = mpl.colors.colorConverter.to_rgb(color)
-    colors = [sns.utils.set_hls_values(color_rgb, l=l) for l in np.linspace(1, 0, 12)]
+    colors = [sns.utils.set_hls_values(color_rgb, l=i) for i in np.linspace(1, 0, 12)]
     cmap = sns.palettes.blend_palette(colors, as_cmap=True)
 
     x_bins = min(_freedman_diaconis_bins(grid.x), 50)
