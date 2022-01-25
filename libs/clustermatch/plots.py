@@ -134,7 +134,14 @@ def plot_cumulative_histogram(
     return fig, ax
 
 
-def jointplot(data: pd.DataFrame, x: str, y: str, bins="log", add_corr_coefs=True, output_dir: Path = None):
+def jointplot(
+    data: pd.DataFrame,
+    x: str,
+    y: str,
+    bins="log",
+    add_corr_coefs=True,
+    output_dir: Path = None,
+):
     """
     TODO
     Function based on Seaborn's jointplot, but without marginal plots.

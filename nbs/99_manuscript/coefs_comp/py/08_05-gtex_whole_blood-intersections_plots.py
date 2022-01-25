@@ -176,7 +176,7 @@ def plot_gene_pair(top_pairs_df, idx, bins="log", plot_gene_ids=True):
 
     gene_y_id = p.ax_joint.get_ylabel()
     gene_y_symbol = gene_map[gene_y_id]
-    
+
     if plot_gene_ids:
         p.ax_joint.set_xlabel(f"{gene_x_id}\n{gene_x_symbol}")
         p.ax_joint.set_ylabel(f"{gene_y_id}\n{gene_y_symbol}")
@@ -260,9 +260,12 @@ def plot_and_save_gene_pair(data, gene0_id, gene1_id, output_file_subset):
         p.ax_joint.set_xlabel(f"{gene0_symbol}", fontstyle="italic")
         p.ax_joint.set_ylabel(f"{gene1_symbol}", fontstyle="italic")
 
-        output_file = OUTPUT_FIGURE_DIR / f"genes-{output_file_subset}-{gene0_symbol}_vs_{gene1_symbol}.svg"
+        output_file = (
+            OUTPUT_FIGURE_DIR
+            / f"genes-{output_file_subset}-{gene0_symbol}_vs_{gene1_symbol}.svg"
+        )
         display(output_file)
-        
+
         plt.savefig(
             output_file,
             bbox_inches="tight",

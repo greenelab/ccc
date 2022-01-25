@@ -42,7 +42,7 @@ from clustermatch.coef import cm
 # %%
 # this gene pair was originally found with clustermatch on whole blood
 # interesting: https://clincancerres.aacrjournals.org/content/26/21/5567.figures-only
-gene0_id, gene1_id = 'ENSG00000147050.14', 'ENSG00000183878.15'
+gene0_id, gene1_id = "ENSG00000147050.14", "ENSG00000183878.15"
 
 # %% [markdown] tags=[]
 # # Paths
@@ -52,9 +52,7 @@ TISSUE_DIR = conf.GTEX["DATA_DIR"] / "data_by_tissue"
 assert TISSUE_DIR.exists()
 
 # %% tags=[]
-OUTPUT_FIGURE_DIR = (
-    conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp"
-)
+OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp"
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
@@ -127,7 +125,7 @@ def get_tissue_file(name):
     for f in TISSUE_DIR.glob("*.pkl"):
         if name in f.name:
             tissue_files.append(f)
-    
+
     assert len(tissue_files) == 1
     return tissue_files[0]
 
@@ -211,7 +209,7 @@ def plot_gene_pair(
             dpi=300,
             facecolor="white",
         )
-    
+
     return tissue_data
 
 
@@ -436,13 +434,10 @@ _tissue_data = plot_gene_pair(
 
 # %%
 # FIXME hard coded
-gene0_id, gene1_id = 'ENSG00000147050', 'ENSG00000183878'
+gene0_id, gene1_id = "ENSG00000147050", "ENSG00000183878"
 
 # %%
-INPUT_FILE = (
-    conf.RECOUNT2FULL["DATA_DIR"]
-    / f"data_tmp.pkl"
-)
+INPUT_FILE = conf.RECOUNT2FULL["DATA_DIR"] / f"data_tmp.pkl"
 display(INPUT_FILE)
 
 # %%
@@ -484,12 +479,12 @@ def get_cm_contingency_table(max_parts, parts):
     """
     # get the clustermatch partitions that maximize the coefficient
     x_max_part = parts[0][max_parts[0]]
-    
+
     y_max_part = parts[1][max_parts[1]]
     new_y_max_part = np.full(y_max_part.shape, np.nan)
     for new_k, k in enumerate(np.flip(np.unique(y_max_part))):
         new_y_max_part[y_max_part == k] = new_k
-    
+
     return get_contingency_matrix(new_y_max_part, x_max_part)
 
 
@@ -509,6 +504,13 @@ cont_mat
 
 # %%
 _cont_mat_expected = expected_freq(cont_mat)
-sns.heatmap(cont_mat / _cont_mat_expected, annot=True, fmt='.2f', cmap="Blues", cbar=False, vmin=0.0)
+sns.heatmap(
+    cont_mat / _cont_mat_expected,
+    annot=True,
+    fmt=".2f",
+    cmap="Blues",
+    cbar=False,
+    vmin=0.0,
+)
 
 # %%

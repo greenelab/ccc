@@ -62,9 +62,7 @@ assert (
 ), "Manuscript dir not set"
 
 # %% tags=[]
-OUTPUT_FIGURE_DIR = (
-    conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / dataset_name
-)
+OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / dataset_name
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
