@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from clustermatch.utils import simplify_string, human_format
+from clustermatch.utils import simplify_string, human_format, chunker
 
 
 def test_utils_module_load():
@@ -180,6 +180,27 @@ def test_simplify_string_other_special_chars():
     obs_value = simplify_string(orig_value.lower())
     assert obs_value is not None
     assert obs_value == exp_value
+
+
+def test_chunker_simple():
+    assert list(chunker([0, 1, 2, 3], 1)) == [[0], [1], [2], [3]]
+    assert list(chunker([0, 1, 2, 3], 2)) == [[0, 1], [2, 3]]
+    assert list(chunker([0, 1, 2, 3], 3)) == [[0, 1, 2], [3]]
+
+
+def test_chunker_larger():
+    assert list(chunker(list(range(100)), 33)) == [
+        list(range(0, 33)),
+        list(range(33, 66)),
+        list(range(66, 99)),
+        [99],
+    ]
+
+    assert list(chunker(list(range(100)), 34)) == [
+        list(range(0, 34)),
+        list(range(34, 68)),
+        list(range(68, 100)),
+    ]
 
 
 def test_human_format():
