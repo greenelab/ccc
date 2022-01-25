@@ -31,12 +31,12 @@ from clustermatch import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # maximum amount of gene pairs to sample
 MAX_SAMPLE_SIZE = 1000
 
@@ -66,37 +66,37 @@ display(OUTPUT_FILE)
 # %% [markdown] tags=[]
 # ## Gene pairs intersection
 
-# %%
+# %% tags=[]
 df_plot = pd.read_pickle(INPUT_GENE_PAIRS_INTERSECTIONS_FILE)
 
-# %%
+# %% tags=[]
 df_plot.shape
 
-# %%
+# %% tags=[]
 df_plot.head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # CHANGE - Look at specific gene pair cases
 
-# %%
+# %% tags=[]
 df_r_data = df_plot
 
-# %%
+# %% tags=[]
 df_r_data.head()
 
-# %%
+# %% tags=[]
 df_r_data_boolean_cols = set(
     [x for x in df_r_data.columns if " (high)" in x or " (low)" in x]
 )
 
-# %%
+# %% tags=[]
 df_r_data_boolean_cols
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Functions
 
-# %%
+# %% tags=[]
 def get_gene_pairs(first_coef, query_set):
     """
     FIXME: move this function to the library
@@ -157,16 +157,16 @@ def get_gene_pairs(first_coef, query_set):
     return _tmp_df
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Get intersections dataframe
 
-# %%
+# %% tags=[]
 intersections = {}
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Agreements
 
-# %%
+# %% tags=[]
 _queries = [
     [
         "Clustermatch (high)",
@@ -247,24 +247,24 @@ for idx, _query in enumerate(_queries):
         n=min(_tmp_df.shape[0], MAX_SAMPLE_SIZE), random_state=idx
     ).index.to_frame(index=False, name=["gene0", "gene1"])
 
-# %%
+# %% tags=[]
 assert len(intersections) == 8
 
-# %%
+# %% tags=[]
 _sizes = set()
 for _query_str in intersections.keys():
     _sizes.add(intersections[_query_str].shape[0])
 
-# %%
+# %% tags=[]
 assert _sizes == {MAX_SAMPLE_SIZE}
 
-# %%
+# %% tags=[]
 intersections[_query_str].head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Disagreements
 
-# %%
+# %% tags=[]
 _queries = [
     [
         "Clustermatch (high)",
@@ -345,31 +345,31 @@ for idx, _query in enumerate(_queries):
         n=min(_tmp_df.shape[0], MAX_SAMPLE_SIZE), random_state=idx
     ).index.to_frame(index=False, name=["gene0", "gene1"])
 
-# %%
+# %% tags=[]
 assert len(intersections) == 16
 
-# %%
+# %% tags=[]
 _sizes = set()
 for _query_str in intersections.keys():
     _sizes.add(intersections[_query_str].shape[0])
 
-# %%
+# %% tags=[]
 _sizes
 
-# %%
+# %% tags=[]
 assert _sizes == {MAX_SAMPLE_SIZE, 28, 8, 87, 531, 527}
 
-# %%
+# %% tags=[]
 intersections[_query_str].head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Save
 
-# %%
+# %% tags=[]
 import pickle
 
-# %%
+# %% tags=[]
 with open(OUTPUT_FILE, "wb") as handle:
     pickle.dump(intersections, handle)
 
-# %%
+# %% tags=[]
