@@ -26,10 +26,6 @@
 import pandas as pd
 import numpy as np
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-from clustermatch.plots import jointplot
 from clustermatch import conf
 
 # %% [markdown] tags=[]
@@ -249,9 +245,7 @@ for idx, _query in enumerate(_queries):
 
     intersections[_query_str] = _tmp_df.sample(
         n=min(_tmp_df.shape[0], MAX_SAMPLE_SIZE), random_state=idx
-    ).index.to_frame(
-        index=False, name=["gene0", "gene1"]
-    )
+    ).index.to_frame(index=False, name=["gene0", "gene1"])
 
 # %%
 assert len(intersections) == 8
