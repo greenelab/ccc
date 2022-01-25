@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from clustermatch.utils import simplify_string
+from clustermatch.utils import simplify_string, human_format
 
 
 def test_utils_module_load():
@@ -180,3 +180,16 @@ def test_simplify_string_other_special_chars():
     obs_value = simplify_string(orig_value.lower())
     assert obs_value is not None
     assert obs_value == exp_value
+
+
+def test_human_format():
+    assert human_format(1) == "1"
+    assert human_format(10) == "10"
+    assert human_format(100) == "100"
+    assert human_format(500) == "500"
+    assert human_format(1000) == "1K"
+    assert human_format(1100) == "1.1K"
+    assert human_format(10000) == "10K"
+    assert human_format(100000) == "100K"
+    assert human_format(1000000) == "1M"
+    assert human_format(1390000) == "1.39M"
