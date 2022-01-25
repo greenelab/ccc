@@ -1,3 +1,9 @@
+import sys
+import pytest
+
+if sys.platform.startswith("win"):
+    pytest.skip("Skipping plot tests on Windows", allow_module_level=True)
+
 import tempfile
 from pathlib import Path
 
