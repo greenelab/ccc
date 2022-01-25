@@ -136,7 +136,7 @@ def test_plots_jointplot_save():
         grid = jointplot(df, x="pearson", y="spearman", output_dir=dirpath)
         assert grid is not None
 
-        assert (dirpath / f"dist-pearson_vs_spearman.svg").exists()
+        assert (dirpath / "dist-pearson_vs_spearman.svg").exists()
 
 
 def test_MyUpSet():
