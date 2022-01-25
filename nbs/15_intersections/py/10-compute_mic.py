@@ -31,7 +31,7 @@ from clustermatch import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
@@ -63,7 +63,7 @@ display(INPUT_GENE_PAIRS_INTERSECTIONS_FILE)
 
 assert INPUT_GENE_PAIRS_INTERSECTIONS_FILE.exists()
 
-# %%
+# %% tags=[]
 OUTPUT_FILE = (
     INPUT_GENE_PAIRS_INTERSECTIONS_FILE.parent
     / f"{INPUT_GENE_PAIRS_INTERSECTIONS_FILE.stem}-mic.pkl"
@@ -77,40 +77,40 @@ display(OUTPUT_FILE)
 # %% [markdown] tags=[]
 # ## Gene expression
 
-# %%
+# %% tags=[]
 gene_expr_dict = pd.read_pickle(INPUT_GENE_EXPR_FILE).T.to_dict(orient="series")
 
-# %%
+# %% tags=[]
 len(gene_expr_dict)
 
-# %%
+# %% tags=[]
 gene_expr_dict[list(gene_expr_dict.keys())[0]]
 
 # %% [markdown] tags=[]
 # ## Gene pairs intersection
 
-# %%
+# %% tags=[]
 intersections = pd.read_pickle(INPUT_GENE_PAIRS_INTERSECTIONS_FILE)
 
-# %%
+# %% tags=[]
 len(intersections)
 
-# %%
+# %% tags=[]
 intersections["Clustermatch (high), Pearson (high), Spearman (high)"]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Compute Maximal Information Coefficient (MIC)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Functions
 
-# %%
+# %% tags=[]
 import warnings
 from sklearn.metrics import pairwise_distances
 from minepy.mine import MINE
 
 
-# %%
+# %% tags=[]
 def _mic(x, y):
     """
     FIXME: move to library
@@ -123,13 +123,13 @@ def _mic(x, y):
         return mine.mic()
 
 
-# %%
+# %% tags=[]
 _mic(np.random.rand(10), np.random.rand(10))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Run
 
-# %%
+# %% tags=[]
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from collections import defaultdict
 
@@ -138,7 +138,7 @@ from tqdm import tqdm
 from clustermatch.utils import chunker
 
 
-# %%
+# %% tags=[]
 def _compute_mic(gene_sets):
     res = {
         (gs[0], gs[1]): _mic(
@@ -150,7 +150,7 @@ def _compute_mic(gene_sets):
     return pd.Series(res, index=gene_sets)
 
 
-# %%
+# %% tags=[]
 # testing
 gene_set_key = "Clustermatch (high), Pearson (high), Spearman (high)"
 gene_set = intersections[gene_set_key].sample(n=10)
@@ -158,7 +158,7 @@ gene_set = intersections[gene_set_key].sample(n=10)
 _res = _compute_mic(list(gene_set.itertuples(index=False)))
 assert _res.index.to_list() == list(gene_set.itertuples(index=False, name=None))
 
-# %%
+# %% tags=[]
 all_chunks = []
 
 for (
@@ -175,13 +175,13 @@ for (
 #     for gene_set_key in ["Clustermatch (high), Pearson (low), Spearman (low)"] # intersections.keys()
 # ]
 
-# %%
+# %% tags=[]
 len(all_chunks)
 
-# %%
+# %% tags=[]
 all_chunks[:1]
 
-# %%
+# %% tags=[]
 all_results = defaultdict(list)
 
 with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
@@ -205,17 +205,17 @@ for k in all_results.keys():
 
 all_results = _tmp
 
-# %%
+# %% tags=[]
 assert len(all_results) == len(intersections.keys())
 
 # %% [markdown] tags=[]
 # # Save
 
-# %%
+# %% tags=[]
 import pickle
 
-# %%
+# %% tags=[]
 with open(OUTPUT_FILE, "wb") as handle:
     pickle.dump(all_results, handle)
 
-# %%
+# %% tags=[]
