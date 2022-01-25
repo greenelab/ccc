@@ -2,7 +2,37 @@
 Contains some plotting functions to compare a set of correlation coefficients.
 These functions are intended to be used within Jupyter notebooks.
 
-TODO i should add the Seaborn's license here
+Some code (indicated in each function) is based on seaborns's code base
+(https://github.com/mwaskom/seaborn/), for which the copyright notice and
+license are shown below.
+
+Copyright (c) 2012-2021, Michael L. Waskom
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the project nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from pathlib import Path
@@ -28,10 +58,21 @@ def plot_histogram(
     **kwargs,
 ):
     """
-    TODO
+    It plots, in the same figure, the histograms of all the columns in the
+    given dataframe. The function is mainly used to plot the distribution
+    of correlation coefficients (columns) across gene pairs (rows). It sets
+    some visual parameters to general the final figures.
 
     Args:
-        data: a dataframe with gene pairs in rows and coefficient values in columns.
+        data: a dataframe with gene pairs in rows and coefficient values
+        in columns.
+        figsize: figure's size.
+        output_dir: if not None, the figure will be saved in this directory.
+          The file name is "dist-histograms.svg"
+        **kwargs: other parameter passed to seaborn.histplot.
+
+    Returns:
+        The figure and axis objects.
     """
     fig, ax = plt.subplots(figsize=figsize)
 
@@ -66,9 +107,19 @@ def plot_cumulative_histogram(
     output_dir: Path = None,
 ):
     """
-    TODO
+    Very similar to plot_histogram, but this plots the cummulative histogram
+    instead.
 
-    data, figsize and output_dir are the same as in plot_histogram
+    Args:
+        data: same as in plot_histogram, but in this case it assumes that
+          columns "pearson", "spearman" and "clustermatch" exist and are the
+          only ones.
+        figsize: same as in plot_histogram
+        output_dir: same as in plot_histogram. The file name is
+          "dist-cum_histograms.svg"
+
+    Returns:
+        The figure and axis objects.
     """
     fig, ax = plt.subplots(figsize=figsize)
 
@@ -141,28 +192,32 @@ def jointplot(
     data: pd.DataFrame,
     x: str,
     y: str,
-    bins="log",
-    add_corr_coefs=True,
+    bins: str = "log",
+    add_corr_coefs: bool = True,
     output_dir: Path = None,
 ):
     """
-    TODO
-    Function based on Seaborn's jointplot, but without marginal plots.
+    It mimics some part of the functionality of seaborn's jointplot function,
+    but without marginal plots. This function is based on function jointplot in
+    https://github.com/mwaskom/seaborn/blob/v0.11/seaborn/axisgrid.py
 
     Args:
         data: same as in plot_histogram
-        x, y: name of column in data (it is the name of a correlation coefficient)
+        x: name of a correlation method name (should be a column of data).
+        y: name of a correlation method name (should be a column of data).
+        bins: bins parameter passed to function seaborn.plot_joint
+        add_corr_coefs: if True, the correlation coefficient of x and y is added
+          in a text box using pearson, spearman and clustermatch.
+        output_dir: if given, the output directory where the figure will be
+          saved. The file name is "dist-{x}_vs_{y}.svg".
 
     Returns:
-        JointGrid instance.
+        A seaborn.JointGrid instance.
     """
 
     # compute correlations
     x_values = data[x].to_numpy()
     y_values = data[y].to_numpy()
-    r = stats.pearsonr(x_values, y_values)[0]
-    rs = stats.spearmanr(x_values, y_values)[0]
-    c = cm(x_values, y_values)
 
     grid = sns.JointGrid(
         data=data,
@@ -198,6 +253,11 @@ def jointplot(
 
     # add text box for the statistics
     if add_corr_coefs:
+        # compute correlations
+        r = stats.pearsonr(x_values, y_values)[0]
+        rs = stats.spearmanr(x_values, y_values)[0]
+        c = cm(x_values, y_values)
+
         ax = grid.ax_joint
         corr_vals = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
         bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.15)
@@ -224,9 +284,10 @@ def jointplot(
 
 class MyUpSet(UpSet):
     """
-    This class tweaks the UpSet class (to create an UpSet plot) to show numbers
-    in a more short format. It assumes that both numbers and percentages are
-    shown, and only at the top (no left/right position of labels is supported).
+    This class tweaks the UpSet class (used to create an UpSet plot) to show
+    numbers in a short format. It assumes that both numbers and percentages
+    are shown, and only at the top (no left/right position of labels is
+    supported).
     """
 
     def _label_sizes(self, ax, rects, where):
