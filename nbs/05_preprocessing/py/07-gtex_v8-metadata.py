@@ -92,18 +92,6 @@ gtex_phenotypes.head()
 pd.read_pickle(next(TISSUE_DIR.glob("*.pkl"))).head()
 
 # %% [markdown] tags=[]
-# ## Gene Ensembl ID -> Symbol mapping
-
-# %% tags=[]
-gene_map = pd.read_pickle(conf.GTEX["DATA_DIR"] / "gtex_gene_id_symbol_mappings.pkl")
-
-# %% tags=[]
-gene_map = gene_map.set_index("gene_ens_id")["gene_symbol"].to_dict()
-
-# %% tags=[]
-assert gene_map["ENSG00000145309.5"] == "CABS1"
-
-# %% [markdown] tags=[]
 # # Get GTEx sample metadata
 
 # %% tags=[]
