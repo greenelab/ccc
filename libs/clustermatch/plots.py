@@ -1,6 +1,8 @@
 """
 Contains some plotting functions to compare a set of correlation coefficients.
-These functions are intended to be used within Jupyter notebooks.
+These functions are intended to be used within Jupyter notebooks. The idea is
+to make them very specific, not for general use, so many parameters (such as
+`bins` for histograms) are fixed.
 
 Some code (indicated in each function) is based on seaborns's code base
 (https://github.com/mwaskom/seaborn/), for which the copyright notice and
