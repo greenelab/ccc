@@ -27,19 +27,19 @@
 
 # %% tags=[]
 import pandas as pd
+from tqdm import tqdm
 
 from clustermatch import conf
-from clustermatch.corr import spearman
+from clustermatch.corr import pearson
 
 # %% [markdown] tags=[]
 # # Settings
 
 # %% tags=[]
-# we don't have gene subsets for recount2
-# GENE_SELECTION_STRATEGY = "var_raw"
+GENE_SELECTION_STRATEGY = "var_pc_log2"
 
 # %% tags=[]
-CORRELATION_METHOD = spearman
+CORRELATION_METHOD = pearson
 
 method_name = CORRELATION_METHOD.__name__
 display(method_name)
@@ -51,13 +51,13 @@ PERFORMANCE_TEST_N_TOP_GENES = 500
 # # Paths
 
 # %% tags=[]
-INPUT_FILE = conf.RECOUNT2["DATA_FILE"]
-display(INPUT_FILE)
+INPUT_DIR = conf.GTEX["GENE_SELECTION_DIR"]
+display(INPUT_DIR)
 
-assert INPUT_FILE.exists()
+assert INPUT_DIR.exists()
 
 # %% tags=[]
-OUTPUT_DIR = conf.RECOUNT2["SIMILARITY_MATRICES_DIR"]
+OUTPUT_DIR = conf.GTEX["SIMILARITY_MATRICES_DIR"]
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_DIR)
 
@@ -65,13 +65,11 @@ display(OUTPUT_DIR)
 # # Data loading
 
 # %% tags=[]
-data = pd.read_pickle(INPUT_FILE)
+input_files = sorted(list(INPUT_DIR.glob(f"*-{GENE_SELECTION_STRATEGY}.pkl")))
+display(len(input_files))
 
-# %% tags=[]
-data.shape
-
-# %% tags=[]
-data.head()
+assert len(input_files) == conf.GTEX["N_TISSUES"], len(input_files)
+display(input_files[:5])
 
 # %% [markdown] tags=[]
 # # Compute similarity
@@ -80,8 +78,8 @@ data.head()
 # ## Performance test
 
 # %% tags=[]
-# select a subset of the genes
-test_data = data.sample(n=PERFORMANCE_TEST_N_TOP_GENES, random_state=0)
+display(input_files[0])
+test_data = pd.read_pickle(input_files[0]).iloc[:PERFORMANCE_TEST_N_TOP_GENES]
 
 # %% tags=[]
 test_data.shape
@@ -105,23 +103,19 @@ display(_tmp)
 # ## Run
 
 # %% tags=[]
-# compute correlations
-data_corrs = CORRELATION_METHOD(data)
+pbar = tqdm(input_files, ncols=100)
 
-# %% tags=[]
-display(data_corrs.shape)
+for tissue_data_file in pbar:
+    pbar.set_description(tissue_data_file.stem)
 
-assert data.shape[0] == data_corrs.shape[0]
+    # read
+    data = pd.read_pickle(tissue_data_file)
 
-# %% tags=[]
-data_corrs.head()
+    # compute correlations
+    data_corrs = CORRELATION_METHOD(data)
 
-# %% tags=[]
-output_filename = OUTPUT_DIR / f"{INPUT_FILE.stem}-{method_name}.pkl"
-display(output_filename)
-
-# %% tags=[]
-# save
-data_corrs.to_pickle(output_filename)
+    # save
+    output_filename = f"{tissue_data_file.stem}-{method_name}.pkl"
+    data_corrs.to_pickle(path=OUTPUT_DIR / output_filename)
 
 # %% tags=[]

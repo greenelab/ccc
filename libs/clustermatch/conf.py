@@ -96,32 +96,8 @@ GTEX["SIMILARITY_MATRICES_DIR"] = Path(
 GTEX[
     "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
 ] = "gtex_v8_data_{tissue}-{gene_sel_strategy}-{corr_method}.pkl"
-
 GTEX["GENE_PAIR_INTERSECTIONS"] = Path(
     GTEX["RESULTS_DIR"], "gene_pair_intersections"
-).resolve()
-
-
-#
-# recount2 (from MultiPLIER)
-#
-RECOUNT2 = {}
-
-# Input data
-RECOUNT2["DATA_DIR"] = Path(DATA_DIR, "recount2").resolve()
-
-RECOUNT2["DATA_RDS_FILE"] = Path(
-    RECOUNT2["DATA_DIR"], "recount_data_prep_PLIER.RDS"
-).resolve()
-RECOUNT2["DATA_FILE"] = Path(
-    RECOUNT2["DATA_DIR"], "recount_data_prep_PLIER.pkl"
-).resolve()
-
-# Results
-RECOUNT2["RESULTS_DIR"] = Path(RESULTS_DIR, "recount2").resolve()
-
-RECOUNT2["SIMILARITY_MATRICES_DIR"] = Path(
-    RECOUNT2["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
 
 

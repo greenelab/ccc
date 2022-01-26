@@ -3,9 +3,11 @@ General utility functions.
 """
 import re
 import hashlib
-
 from pathlib import Path
 from subprocess import run
+
+import numpy as np
+import pandas as pd
 
 from .log import get_logger
 
@@ -120,3 +122,21 @@ def human_format(num):
     return "{}{}".format(
         "{:f}".format(num).rstrip("0").rstrip("."), ["", "K", "M", "B", "T"][magnitude]
     )
+
+
+def get_upper_triag(similarity_matrix: pd.DataFrame, k: int = 1):
+    """
+    It returns the upper triangular matrix of a dataframe representing a
+    similarity matrix between n elements.
+
+    Args:
+        similarity_matrix: a squared dataframe with a pairwise similarity
+          matrix. That means the matrix is equal to its transposed version.
+        k: argument given to numpy.triu function. It indicates the that the
+          elements of the k-th diagonal to be zeroed.
+
+    Returns:
+        A dataframe with non-selected elements as NaNs.
+    """
+    mask = np.triu(np.ones(similarity_matrix.shape), k=k).astype(bool)
+    return similarity_matrix.where(mask)
