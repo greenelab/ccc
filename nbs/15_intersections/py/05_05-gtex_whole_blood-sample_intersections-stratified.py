@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# It reads all intersections groups (visualized in the UpSet plot) and sample gene pairs from them in a stratified way. This ensures that all intersections groups are represented (for instance, the group where clustermatch, pearson and spearman all agree on high values, or on low values, or a group where they disagree).
 
 # %% [markdown] tags=[]
 # # Modules
@@ -37,7 +37,7 @@ GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
 
 # %% tags=[]
-# maximum amount of gene pairs to sample
+# maximum amount of gene pairs to sample from each intersection group
 MAX_SAMPLE_SIZE = 1000
 
 # %% [markdown] tags=[]
@@ -55,7 +55,7 @@ assert INPUT_GENE_PAIRS_INTERSECTIONS_FILE.exists()
 # %% tags=[]
 OUTPUT_FILE = (
     INPUT_GENE_PAIRS_INTERSECTIONS_FILE.parent
-    / f"{INPUT_GENE_PAIRS_INTERSECTIONS_FILE.stem}-sample.pkl"
+    / f"{INPUT_GENE_PAIRS_INTERSECTIONS_FILE.stem}-sample_stratified.pkl"
 )
 
 display(OUTPUT_FILE)
