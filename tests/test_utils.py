@@ -4,9 +4,11 @@ Tests the utils.py module.
 from unittest.mock import MagicMock
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import pytest
 
-from clustermatch.utils import simplify_string
+from clustermatch.utils import simplify_string, get_upper_triag
 
 
 def test_utils_module_load():
@@ -180,3 +182,53 @@ def test_simplify_string_other_special_chars():
     obs_value = simplify_string(orig_value.lower())
     assert obs_value is not None
     assert obs_value == exp_value
+
+
+def test_upper_triag_square_dataframe():
+    sim_matrix_df = pd.DataFrame(
+        [
+            [0, 1, 2],
+            [1, 0, 3],
+            [2, 3, 0],
+        ]
+    )
+
+    up_matrix_df = get_upper_triag(sim_matrix_df)
+
+    assert up_matrix_df is not None
+    assert sim_matrix_df.shape == up_matrix_df.shape
+    pd.testing.assert_frame_equal(
+        up_matrix_df,
+        pd.DataFrame(
+            [
+                [np.nan, 1, 2],
+                [np.nan, np.nan, 3],
+                [np.nan, np.nan, np.nan],
+            ]
+        ),
+    )
+
+
+def test_upper_triag_square_dataframe_k0():
+    sim_matrix_df = pd.DataFrame(
+        [
+            [0, 1, 2],
+            [1, 0, 3],
+            [2, 3, 0],
+        ]
+    )
+
+    up_matrix_df = get_upper_triag(sim_matrix_df, k=0)
+
+    assert up_matrix_df is not None
+    assert sim_matrix_df.shape == up_matrix_df.shape
+    pd.testing.assert_frame_equal(
+        up_matrix_df,
+        pd.DataFrame(
+            [
+                [0, 1, 2],
+                [np.nan, 0, 3],
+                [np.nan, np.nan, 0],
+            ]
+        ),
+    )

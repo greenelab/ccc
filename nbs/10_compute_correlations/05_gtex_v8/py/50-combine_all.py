@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 
 from clustermatch import conf
+from clustermatch.utils import get_upper_triag
 
 # %% [markdown] tags=[]
 # # Settings
@@ -161,15 +162,8 @@ spearman_df.head()
 # %% tags=[]
 assert data.index.equals(spearman_df.index)
 
-
 # %% [markdown] tags=[]
 # ## Merge
-
-# %% tags=[]
-def get_upper_triag(data, k=1):
-    mask = np.triu(np.ones(data.shape), k=k).astype(bool)
-    return data.where(mask)
-
 
 # %% tags=[]
 # # make sure genes match
