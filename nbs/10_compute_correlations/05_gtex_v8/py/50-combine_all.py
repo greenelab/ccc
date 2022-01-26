@@ -23,7 +23,6 @@
 # # Modules loading
 
 # %% tags=[]
-import numpy as np
 import pandas as pd
 
 from clustermatch import conf
