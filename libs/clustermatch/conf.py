@@ -77,6 +77,9 @@ GTEX["DATA_DIR"] = Path(DATA_DIR, "gtex_v8").resolve()
 GTEX["SAMPLE_ATTRS_FILE"] = Path(
     GTEX["DATA_DIR"], "GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt"
 ).resolve()
+GTEX["SUBJECTS_ATTRS_FILE"] = Path(
+    GTEX["DATA_DIR"], "GTEx_Analysis_v8_Annotations_SubjectPhenotypesDS.txt"
+).resolve()
 GTEX["DATA_TPM_GCT_FILE"] = Path(
     GTEX["DATA_DIR"], "GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz"
 ).resolve()
@@ -86,12 +89,16 @@ GTEX["N_TISSUES"] = 54
 GTEX["RESULTS_DIR"] = Path(RESULTS_DIR, "gtex_v8").resolve()
 
 GTEX["GENE_SELECTION_DIR"] = Path(GTEX["RESULTS_DIR"], "gene_selection").resolve()
+
 GTEX["SIMILARITY_MATRICES_DIR"] = Path(
     GTEX["RESULTS_DIR"], "similarity_matrices"
 ).resolve()
 GTEX[
     "SIMILARITY_MATRIX_FILENAME_TEMPLATE"
 ] = "gtex_v8_data_{tissue}-{gene_sel_strategy}-{corr_method}.pkl"
+GTEX["GENE_PAIR_INTERSECTIONS"] = Path(
+    GTEX["RESULTS_DIR"], "gene_pair_intersections"
+).resolve()
 
 
 if __name__ == "__main__":

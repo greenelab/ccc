@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from clustermatch.utils import simplify_string, get_upper_triag
+from clustermatch.utils import simplify_string, chunker, human_format, get_upper_triag
 
 
 def test_utils_module_load():
@@ -182,6 +182,40 @@ def test_simplify_string_other_special_chars():
     obs_value = simplify_string(orig_value.lower())
     assert obs_value is not None
     assert obs_value == exp_value
+
+
+def test_chunker_simple():
+    assert list(chunker([0, 1, 2, 3], 1)) == [[0], [1], [2], [3]]
+    assert list(chunker([0, 1, 2, 3], 2)) == [[0, 1], [2, 3]]
+    assert list(chunker([0, 1, 2, 3], 3)) == [[0, 1, 2], [3]]
+
+
+def test_chunker_larger():
+    assert list(chunker(list(range(100)), 33)) == [
+        list(range(0, 33)),
+        list(range(33, 66)),
+        list(range(66, 99)),
+        [99],
+    ]
+
+    assert list(chunker(list(range(100)), 34)) == [
+        list(range(0, 34)),
+        list(range(34, 68)),
+        list(range(68, 100)),
+    ]
+
+
+def test_human_format():
+    assert human_format(1) == "1"
+    assert human_format(10) == "10"
+    assert human_format(100) == "100"
+    assert human_format(500) == "500"
+    assert human_format(1000) == "1K"
+    assert human_format(1100) == "1.1K"
+    assert human_format(10000) == "10K"
+    assert human_format(100000) == "100K"
+    assert human_format(1000000) == "1M"
+    assert human_format(1390000) == "1.39M"
 
 
 def test_upper_triag_square_dataframe():

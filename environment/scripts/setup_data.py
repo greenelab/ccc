@@ -77,6 +77,16 @@ def download_gtex_v8_sample_attributes(**kwargs):
     )
 
 
+def download_gtex_v8_subjects_phenotypes(**kwargs):
+    output_file = conf.GTEX["SUBJECTS_ATTRS_FILE"]
+    curl(
+        "https://storage.googleapis.com/gtex_analysis_v8/annotations/GTEx_Analysis_v8_Annotations_SubjectPhenotypesDS.txt",
+        output_file,
+        "90297fc31512902f4459c757180fe575",
+        logger=logger,
+    )
+
+
 def download_gtex_v8_data(**kwargs):
     output_file = conf.GTEX["DATA_TPM_GCT_FILE"]
     curl(
