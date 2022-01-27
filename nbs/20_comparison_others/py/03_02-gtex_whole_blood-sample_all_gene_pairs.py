@@ -38,7 +38,7 @@ GENE_SEL_STRATEGY = "var_pc_log2"
 
 # %% tags=[]
 # amount of gene pairs to sample
-SAMPLE_SIZE = 10000
+SAMPLE_SIZE = 30000
 
 # number of samples to take
 N_SAMPLES = 10
@@ -117,6 +117,7 @@ for sample_id in range(N_SAMPLES):
     data_sample.to_pickle(output_filepath)
 
 # %% tags=[]
+display(data_sample.dtypes)
 display(data_sample.shape)
 display(data_sample.head())
 
