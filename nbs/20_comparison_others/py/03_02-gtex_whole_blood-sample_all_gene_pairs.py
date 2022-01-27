@@ -47,13 +47,30 @@ N_SAMPLES = 1
 # # Paths
 
 # %% tags=[]
-INPUT_FILE = (
-    DATASET_CONFIG["GENE_SELECTION_DIR"]
-    / f"gtex_v8_data_{GTEX_TISSUE}-{GENE_SEL_STRATEGY}.pkl"
+INPUT_CORR_FILE_TEMPLATE = (
+    DATASET_CONFIG["SIMILARITY_MATRICES_DIR"]
+    / DATASET_CONFIG["SIMILARITY_MATRIX_FILENAME_TEMPLATE"]
+)
+display(INPUT_CORR_FILE_TEMPLATE)
+
+# %% tags=[]
+INPUT_FILE = DATASET_CONFIG["SIMILARITY_MATRICES_DIR"] / str(
+    INPUT_CORR_FILE_TEMPLATE
+).format(
+    tissue=GTEX_TISSUE,
+    gene_sel_strategy=GENE_SEL_STRATEGY,
+    corr_method="all",
 )
 display(INPUT_FILE)
 
-assert INPUT_FILE.exists()
+# %% tags=[]
+# INPUT_FILE = (
+#     DATASET_CONFIG["GENE_SELECTION_DIR"]
+#     / f"gtex_v8_data_{GTEX_TISSUE}-{GENE_SEL_STRATEGY}.pkl"
+# )
+# display(INPUT_FILE)
+
+# assert INPUT_FILE.exists()
 
 # %% tags=[]
 OUTPUT_DIR = INPUT_FILE.parent / "samples"
@@ -71,32 +88,12 @@ display(OUTPUT_FILE_TEMPLATE)
 # # Data
 
 # %% [markdown] tags=[]
-# ## Genes IDs universe
+# ## Gene pairs universe
 
 # %% tags=[]
-genes_ids = pd.read_pickle(INPUT_FILE).index.tolist()
-
-# %% tags=[]
-len(genes_ids)
-
-# %% tags=[]
-genes_ids[:10]
-
-# %% [markdown] tags=[]
-# # Create list of gene pairs
-
-# %% tags=[]
-gene_pairs = []
-
-for i in range(len(genes_ids) - 1):
-    for j in range(i + 1, len(genes_ids)):
-        gene_pairs.append((genes_ids[i], genes_ids[j]))
-
-gene_pairs_df = pd.DataFrame(data=gene_pairs, columns=["gene0", "gene1"])
-
-# %% tags=[]
-assert gene_pairs_df.shape[0] == len(genes_ids) * (len(genes_ids) - 1) / 2
-display(gene_pairs_df.shape)
+gene_pairs_df = (
+    pd.read_pickle(INPUT_FILE).index.rename(("gene0", "gene1")).to_frame(index=False)
+)
 
 # %% tags=[]
 gene_pairs_df.shape
