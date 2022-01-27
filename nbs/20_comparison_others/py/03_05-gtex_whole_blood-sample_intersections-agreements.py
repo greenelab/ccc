@@ -41,7 +41,7 @@ GENE_SEL_STRATEGY = "var_pc_log2"
 SAMPLE_SIZE = 33000
 
 # number of samples to take
-N_SAMPLES = 10
+N_SAMPLES = 1
 
 # %% [markdown] tags=[]
 # # Paths
