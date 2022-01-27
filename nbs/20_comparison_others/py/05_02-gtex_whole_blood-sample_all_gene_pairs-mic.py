@@ -232,7 +232,7 @@ all_results = defaultdict(list)
 with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
     tasks = {
         executor.submit(_compute_mic, chunk): sample_id
-        for sample_id, chunk in all_chunks[:3]  # FIXME debugging here!
+        for sample_id, chunk in all_chunks
     }
 
     pbar = tqdm(as_completed(tasks), total=len(all_chunks), ncols=100)
