@@ -150,7 +150,7 @@ _mic(np.random.rand(10), np.random.rand(10))
 # %% [markdown] tags=[]
 # ## Get all sample files
 
-# %%
+# %% tags=[]
 all_sample_files = []
 
 sample_id = 0
@@ -162,17 +162,17 @@ while sample_file.exists():
     sample_id += 1
     sample_file = Path(INPUT_GENE_PAIRS_FILE_TEMPLATE.format(sample_id=sample_id))
 
-# %%
+# %% tags=[]
 # all_sample_files = sorted(
 #     list(
 #         INPUT_GENE_PAIRS_FILE.parent.glob(INPUT_GENE_PAIRS_FILE.name.format(sample_id="*"))
 #     )
 # )
 
-# %%
+# %% tags=[]
 len(all_sample_files)
 
-# %%
+# %% tags=[]
 all_sample_files[:3]
 
 # %% [markdown] tags=[]
@@ -243,10 +243,10 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
 
         all_results[sample_id].append(sample_file_mic)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Save for each sample file
 
-# %%
+# %% tags=[]
 for sample_id in all_results.keys():
     sample_file_all_results_df = pd.concat(all_results[sample_id]).sort_index()
     assert not sample_file_all_results_df.isna().any()
@@ -278,7 +278,7 @@ for sample_id in all_results.keys():
         OUTPUT_FILE_TEMPLATE.format(sample_id=sample_id)
     )
 
-# %%
+# %% tags=[]
 # show how one result set looks like
 display(sample_file_all_results_df.shape)
 display(sample_file_all_results_df.head())
