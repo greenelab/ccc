@@ -84,18 +84,18 @@ def is_intersection_column(column_name):
     return " (high)" in column_name or " (low)" in column_name
 
 
-# %%
+# %% tags=[]
 gene_pairs_intersections = pd.read_pickle(INPUT_GENE_PAIRS_INTERSECTIONS_FILE)
 
-# %%
+# %% tags=[]
 gene_pairs_intersections = gene_pairs_intersections[
     [c for c in gene_pairs_intersections.columns if is_intersection_column(c)]
 ]
 
-# %%
+# %% tags=[]
 gene_pairs_intersections.shape
 
-# %%
+# %% tags=[]
 gene_pairs_intersections.head()
 
 
@@ -186,7 +186,7 @@ def get_gene_pairs(gene_pairs_intersections, query_set):
     return _tmp_df.rename_axis(("gene0", "gene1")).index.to_frame(index=False)
 
 
-# %%
+# %% tags=[]
 _tmp = get_gene_pairs(
     gene_pairs_intersections,
     {
@@ -208,7 +208,7 @@ assert _tmp.shape[0] > int(3.12e6)
 # %% [markdown] tags=[]
 # ## Agreements
 
-# %%
+# %% tags=[]
 _queries = [
     [
         "Clustermatch (high)",
@@ -276,7 +276,7 @@ _queries = [
     ],
 ]
 
-# %%
+# %% tags=[]
 display(len(_queries))
 assert len(_queries) == 8
 
@@ -289,18 +289,18 @@ for idx, _query in enumerate(_queries):
 
 gene_pairs_df = pd.concat(gene_pairs_df)
 
-# %%
+# %% tags=[]
 display(gene_pairs_df.shape)
 assert gene_pairs_df.drop_duplicates().shape == gene_pairs_df.shape
 assert (gene_pairs_df.shape[0] > 7.3e6) and (gene_pairs_df.shape[0] < 7.4e6)
 
-# %%
+# %% tags=[]
 gene_pairs_df.head()
 
 # %% [markdown] tags=[]
 # # Create samples and save
 
-# %%
+# %% tags=[]
 for sample_id in range(N_SAMPLES):
     data_sample = gene_pairs_df.sample(n=SAMPLE_SIZE, random_state=sample_id)
 
@@ -314,4 +314,4 @@ display(data_sample.dtypes)
 display(data_sample.shape)
 display(data_sample.head())
 
-# %%
+# %% tags=[]

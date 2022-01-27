@@ -85,7 +85,7 @@ genes_ids[:10]
 # %% [markdown] tags=[]
 # # Create list of gene pairs
 
-# %%
+# %% tags=[]
 gene_pairs = []
 
 for i in range(len(genes_ids) - 1):
@@ -94,20 +94,20 @@ for i in range(len(genes_ids) - 1):
 
 gene_pairs_df = pd.DataFrame(data=gene_pairs, columns=["gene0", "gene1"])
 
-# %%
+# %% tags=[]
 assert gene_pairs_df.shape[0] == len(genes_ids) * (len(genes_ids) - 1) / 2
 display(gene_pairs_df.shape)
 
-# %%
+# %% tags=[]
 gene_pairs_df.shape
 
-# %%
+# %% tags=[]
 gene_pairs_df.head()
 
 # %% [markdown] tags=[]
 # # Create samples and save
 
-# %%
+# %% tags=[]
 for sample_id in range(N_SAMPLES):
     data_sample = gene_pairs_df.sample(n=SAMPLE_SIZE, random_state=sample_id)
 
@@ -121,4 +121,4 @@ display(data_sample.dtypes)
 display(data_sample.shape)
 display(data_sample.head())
 
-# %%
+# %% tags=[]
