@@ -17,7 +17,9 @@
 # # Description
 
 # %% [markdown] tags=[]
-# From the intersections groups (visualized in the UpSet plot), it samples from the "Disagreements", that is, only intersection groups where there is agreement between methods (clustermatch, pearson and spearman).
+# From the intersections groups (visualized in the UpSet plot), it takes all gene pairs from the "Disagreements" groups and saves them.
+#
+# This notebook does not sample, since the "disagreements" group is small, but I keep the same for convienience.
 
 # %% [markdown] tags=[]
 # # Modules
@@ -292,26 +294,22 @@ gene_pairs_df = pd.concat(gene_pairs_df)
 # %%
 display(gene_pairs_df.shape)
 assert gene_pairs_df.drop_duplicates().shape == gene_pairs_df.shape
-assert (gene_pairs_df.shape[0] > 7.3e6) and (gene_pairs_df.shape[0] < 7.4e6)
+assert (gene_pairs_df.shape[0] > 3.3e3) and (gene_pairs_df.shape[0] < 3.4e3)
 
 # %%
 gene_pairs_df.head()
 
 # %% [markdown] tags=[]
-# # Create samples and save
+# # Save
+
+# %% [markdown] tags=[]
+# Since this "disagreements" set is small, just save the entire group.
 
 # %%
-for sample_id in range(N_SAMPLES):
-    data_sample = gene_pairs_df.sample(n=SAMPLE_SIZE, random_state=sample_id)
+output_filepath = OUTPUT_FILE_TEMPLATE.format(sample_id=0)
+display(output_filepath)
 
-    output_filepath = OUTPUT_FILE_TEMPLATE.format(sample_id=sample_id)
-    display(output_filepath)
-
-    data_sample.to_pickle(output_filepath)
-
-# %% tags=[]
-display(data_sample.dtypes)
-display(data_sample.shape)
-display(data_sample.head())
+# %%
+gene_pairs_df.to_pickle(output_filepath)
 
 # %%
