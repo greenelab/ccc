@@ -37,12 +37,12 @@ from clustermatch import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
 
-# %%
+# %% tags=[]
 # this specificies the threshold to compare coefficients (see below).
 # it basically takes the top Q_DIFF coefficient values for gene pairs
 # and compare with the bottom Q_DIFF of the other coefficients
@@ -88,36 +88,36 @@ assert INPUT_CORR_FILE.exists()
 # %% [markdown] tags=[]
 # ## Correlation
 
-# %%
+# %% tags=[]
 df = pd.read_pickle(INPUT_CORR_FILE)
 
-# %%
+# %% tags=[]
 df.shape
 
-# %%
+# %% tags=[]
 df.head()
 
-# %%
+# %% tags=[]
 # FIXME: this will not be necessary in new runs of clustermatch on GTEx
 df.loc[df["clustermatch"] < 0, "clustermatch"] = 0.0
 
-# %%
+# %% tags=[]
 df.describe()
 
-# %%
+# %% tags=[]
 # show quantiles
 df.apply(lambda x: x.quantile(np.linspace(0.20, 1.0, 20)))
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Prepare data for plotting
 
-# %%
+# %% tags=[]
 def get_lower_upper_quantile(method_name, q):
     return df[method_name].quantile([q, 1 - q])
 
 
-# %%
+# %% tags=[]
 # test
 _tmp = get_lower_upper_quantile("clustermatch", 0.20)
 display(_tmp)
@@ -128,7 +128,7 @@ display((_tmp0, _tmp1))
 assert _tmp0 == _tmp.iloc[0]
 assert _tmp1 == _tmp.iloc[1]
 
-# %%
+# %% tags=[]
 clustermatch_lq, clustermatch_hq = get_lower_upper_quantile("clustermatch", Q_DIFF)
 display((clustermatch_lq, clustermatch_hq))
 
@@ -138,31 +138,31 @@ display((pearson_lq, pearson_hq))
 spearman_lq, spearman_hq = get_lower_upper_quantile("spearman", Q_DIFF)
 display((spearman_lq, spearman_hq))
 
-# %%
+# %% tags=[]
 pearson_higher = df["pearson"] >= pearson_hq
 display(pearson_higher.sum())
 
 pearson_lower = df["pearson"] <= pearson_lq
 display(pearson_lower.sum())
 
-# %%
+# %% tags=[]
 spearman_higher = df["spearman"] >= spearman_hq
 display(spearman_higher.sum())
 
 spearman_lower = df["spearman"] <= spearman_lq
 display(spearman_lower.sum())
 
-# %%
+# %% tags=[]
 clustermatch_higher = df["clustermatch"] >= clustermatch_hq
 display(clustermatch_higher.sum())
 
 clustermatch_lower = df["clustermatch"] <= clustermatch_lq
 display(clustermatch_lower.sum())
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # UpSet plot
 
-# %%
+# %% tags=[]
 df_plot = pd.DataFrame(
     {
         "pearson_higher": pearson_higher,
@@ -174,16 +174,16 @@ df_plot = pd.DataFrame(
     }
 )
 
-# %%
+# %% tags=[]
 df_plot = pd.concat([df_plot, df], axis=1)
 
-# %%
+# %% tags=[]
 df_plot
 
-# %%
+# %% tags=[]
 assert not df_plot.isna().any().any()
 
-# %%
+# %% tags=[]
 df_plot = df_plot.rename(
     columns={
         "pearson_higher": "Pearson (high)",
@@ -195,32 +195,32 @@ df_plot = df_plot.rename(
     }
 )
 
-# %%
+# %% tags=[]
 categories = sorted(
     [x for x in df_plot.columns if " (" in x],
     reverse=True,
     key=lambda x: x.split(" (")[1] + " (" + x.split(" (")[0],
 )
 
-# %%
+# %% tags=[]
 categories
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## All subsets (original full plot)
 
-# %%
+# %% tags=[]
 df_r_data = df_plot
 
-# %%
+# %% tags=[]
 df_r_data.shape
 
-# %%
+# %% tags=[]
 gene_pairs_by_cats = from_indicators(categories, data=df_r_data)
 
-# %%
+# %% tags=[]
 gene_pairs_by_cats
 
-# %%
+# %% tags=[]
 fig = plt.figure(figsize=(18, 5))
 
 g = plot(
@@ -231,35 +231,35 @@ g = plot(
     fig=fig,
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Sort by categories of subsets
 
-# %%
+# %% tags=[]
 df_r_data = df_plot
 
-# %%
+# %% tags=[]
 df_r_data.shape
 
-# %%
+# %% tags=[]
 gene_pairs_by_cats = from_indicators(categories, data=df_r_data)
 
-# %%
+# %% tags=[]
 gene_pairs_by_cats
 
-# %%
+# %% tags=[]
 gene_pairs_by_cats = gene_pairs_by_cats.sort_index()
 
-# %%
+# %% tags=[]
 _tmp_index = gene_pairs_by_cats.index.unique().to_frame(False)
 display(_tmp_index)
 
-# %%
+# %% tags=[]
 _tmp_index[_tmp_index.sum(axis=1) == 3]
 
-# %%
+# %% tags=[]
 _tmp_index.apply(lambda x: x[0:3].sum() == 0, axis=1)
 
-# %%
+# %% tags=[]
 # agreements on top
 _tmp_index.loc[
     _tmp_index[
@@ -269,7 +269,7 @@ _tmp_index.loc[
     ].index
 ].apply(tuple, axis=1).to_numpy()
 
-# %%
+# %% tags=[]
 # agreements on bottom
 _tmp_index.loc[
     _tmp_index[
@@ -279,7 +279,7 @@ _tmp_index.loc[
     ].index
 ].apply(tuple, axis=1).to_numpy()
 
-# %%
+# %% tags=[]
 # diagreements
 _tmp_index.loc[
     _tmp_index[
@@ -289,7 +289,7 @@ _tmp_index.loc[
     ].index
 ].apply(tuple, axis=1).to_numpy()
 
-# %%
+# %% tags=[]
 # order subsets
 gene_pairs_by_cats = gene_pairs_by_cats.loc[
     [
@@ -322,7 +322,7 @@ gene_pairs_by_cats = gene_pairs_by_cats.loc[
     ]
 ]
 
-# %%
+# %% tags=[]
 fig = plt.figure(figsize=(14, 5))
 
 # g = plot(
@@ -350,27 +350,27 @@ plt.savefig(
 
 # plt.margins(x=-0.4)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # This plot has the sets that represent agreements on the left, and disagreements on the right. The plot shown here is not the final one for the manuscript.
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Save groups of gene pairs in each subset
 
-# %%
+# %% tags=[]
 display(df_plot.shape)
 display(df_plot.head())
 
-# %%
+# %% tags=[]
 conf.GTEX["GENE_PAIR_INTERSECTIONS"].mkdir(parents=True, exist_ok=True)
 
-# %%
+# %% tags=[]
 output_file = (
     conf.GTEX["GENE_PAIR_INTERSECTIONS"]
     / f"gene_pair_intersections-gtex_v8-{GTEX_TISSUE}-{GENE_SEL_STRATEGY}.pkl"
 )
 display(output_file)
 
-# %%
+# %% tags=[]
 df_plot.to_pickle(output_file)
 
-# %%
+# %% tags=[]
