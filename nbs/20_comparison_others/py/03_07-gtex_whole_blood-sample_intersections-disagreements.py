@@ -294,7 +294,7 @@ gene_pairs_df = pd.concat(gene_pairs_df)
 # %%
 display(gene_pairs_df.shape)
 assert gene_pairs_df.drop_duplicates().shape == gene_pairs_df.shape
-assert (gene_pairs_df.shape[0] > 3.3e3) and (gene_pairs_df.shape[0] < 3.4e3)
+assert (gene_pairs_df.shape[0] > 3.3e4) and (gene_pairs_df.shape[0] < 3.4e4)
 
 # %%
 gene_pairs_df.head()
