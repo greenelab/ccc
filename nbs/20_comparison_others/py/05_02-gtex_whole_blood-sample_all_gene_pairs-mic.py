@@ -68,7 +68,7 @@ display(GENE_PAIRS_FILE_SUFFIX)
 assert GENE_PAIRS_FILE_SUFFIX.exists()
 
 # %% tags=[]
-INPUT_DIR = DATASET_CONFIG["GENE_SELECTION_DIR"] / "samples"
+INPUT_DIR = GENE_PAIRS_FILE_SUFFIX.parent / "samples"
 display(INPUT_DIR)
 
 # %% tags=[]
