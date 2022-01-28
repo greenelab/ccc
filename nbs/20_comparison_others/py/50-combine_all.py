@@ -190,7 +190,7 @@ spearman_df.head()
 # %% [markdown] tags=[]
 # ## MIC
 
-# %%
+# %% tags=[]
 mic_all_df = (
     pd.read_pickle(
         INPUT_DIR
@@ -200,13 +200,13 @@ mic_all_df = (
     .to_frame()
 )
 
-# %%
+# %% tags=[]
 mic_all_df["mic_subset"] = "all"
 
-# %%
+# %% tags=[]
 mic_all_df.shape
 
-# %%
+# %% tags=[]
 # mic_agree_df = (
 #     pd.read_pickle(
 #         INPUT_DIR
@@ -216,13 +216,13 @@ mic_all_df.shape
 #     .to_frame()
 # )
 
-# %%
+# %% tags=[]
 # mic_agree_df["mic_subset"] = "agree"
 
-# %%
+# %% tags=[]
 # mic_agree_df.shape
 
-# %%
+# %% tags=[]
 # mic_disagree_df = (
 #     pd.read_pickle(
 #         INPUT_DIR
@@ -232,59 +232,59 @@ mic_all_df.shape
 #     .to_frame()
 # )
 
-# %%
+# %% tags=[]
 # mic_disagree_df["mic_subset"] = "disagree"
 
-# %%
+# %% tags=[]
 # mic_disagree_df.shape
 
-# %%
+# %% tags=[]
 # mic_df = pd.concat([mic_all_df, mic_agree_df, mic_disagree_df], axis=0).sort_index()
 mic_df = mic_all_df
 
-# %%
+# %% tags=[]
 mic_df
 
-# %%
+# %% tags=[]
 mic_df.index.is_unique
 
-# %%
+# %% tags=[]
 # indexes could not be unique (because one of the sames is from the entire universe of gene pairs)
 mic_df = mic_df[~mic_df.index.duplicated(keep="first")]
 
-# %%
+# %% tags=[]
 mic_df.shape
 
 # %% [markdown] tags=[]
 # ## Checks
 
-# %%
+# %% tags=[]
 assert (
     clustermatch_df.index.intersection(mic_df.index).shape[0] == mic_df.index.shape[0]
 )
 
-# %%
+# %% tags=[]
 assert pearson_df.index.intersection(mic_df.index).shape[0] == mic_df.index.shape[0]
 
-# %%
+# %% tags=[]
 assert spearman_df.index.intersection(mic_df.index).shape[0] == mic_df.index.shape[0]
 
 # %% [markdown] tags=[]
 # ## Merge
 
-# %%
+# %% tags=[]
 df = pd.concat(
     [clustermatch_df, pearson_df, spearman_df, mic_df], join="inner", axis=1
 ).sort_index()
 
-# %%
+# %% tags=[]
 display(df.shape)
 assert df.shape[0] == mic_df.shape[0]
 
 # %% tags=[]
 assert not df.isna().any().any()
 
-# %%
+# %% tags=[]
 df.head()
 
 # %% [markdown] tags=[]
