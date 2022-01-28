@@ -22,6 +22,15 @@
 # This notebook does not sample, since the "disagreements" group is small, but I keep the same for convienience.
 
 # %% [markdown] tags=[]
+# # Notebook disabled
+
+# %%
+display("This notebook is disabled, it won't run with papermill")
+
+import sys
+sys.exit(0)
+
+# %% [markdown] tags=[]
 # # Modules
 
 # %% tags=[]
