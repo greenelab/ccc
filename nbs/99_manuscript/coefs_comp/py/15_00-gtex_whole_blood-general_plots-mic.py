@@ -17,9 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# UPDATE
-#
-# It generates different general plots to compare coefficient values from Pearson, Spearman and Clustermatch, such as their distribution.
+# It generates different general plots to compare coefficient values from Pearson, Spearman, Clustermatch and Maximal Information Coefficient (MIC), such as their distribution. This notebook focuses on MIC.
 #
 # In `Settings` below, the data set and other options (such as tissue for GTEx) are specified.
 
@@ -60,13 +58,6 @@ OUTPUT_FIGURE_DIR = (
 )
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
-
-# %% tags=[]
-# INPUT_CORR_FILE_TEMPLATE = (
-#     DATASET_CONFIG["SIMILARITY_MATRICES_DIR"]
-#     / DATASET_CONFIG["SIMILARITY_MATRIX_FILENAME_TEMPLATE"]
-# )
-# display(INPUT_CORR_FILE_TEMPLATE)
 
 # %% tags=[]
 COMPARISONS_DIR = DATASET_CONFIG["RESULTS_DIR"] / "comparison_others"
@@ -112,10 +103,6 @@ mic_subset = "all"
 
 # %%
 df = corrs_df[corrs_df["mic_subset"].isin((mic_subset,))].drop(columns=["mic_subset"])
-
-# %%
-# define order
-# df = df[["clustermatch", "mic", "pearson", "spearman"]]
 
 # %%
 df.shape
@@ -201,228 +188,6 @@ with sns.plotting_context("talk", font_scale=1.0):
         dpi=300,
         facecolor="white",
     )
-
-# %% [markdown] tags=[]
-# ## Compute correlations
-
-# %%
-df.corr()
-
-# %%
-df.corr("spearman")
-
-# %% [markdown]
-# # MIC subset: "agree" gene pairs
-
-# %%
-# this is supposed to be one of the values of column "mic_subset"
-mic_subset = "agree"
-
-# %% [markdown] tags=[]
-# ## Select MIC subset
-
-# %%
-df = corrs_df[corrs_df["mic_subset"].isin((mic_subset,))].drop(columns=["mic_subset"])
-
-# %%
-# define order
-# df = df[["clustermatch", "mic", "pearson", "spearman"]]
-
-# %%
-df.shape
-
-# %%
-df.head()
-
-# %% [markdown] tags=[]
-# ## Histogram plot
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    plot_histogram(df, output_dir=None, fill=False)
-
-# %% [markdown] tags=[]
-# **UPDATE**
-#
-# Coefficients' values distribute very differently. Clustermatch is skewed to the left, whereas Pearson and specially Spearman seem more uniform.
-
-# %% [markdown] tags=[]
-# ## Cumulative histogram plot
-
-# %% [markdown] tags=[]
-# I include also a cumulative histogram without specifying `bins`.
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    plot_cumulative_histogram(df, GENE_PAIRS_PERCENT, output_dir=None)
-
-# %% [markdown] tags=[]
-# ## Joint plots comparing each coefficient
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    jointplot(
-        data=df,
-        x="pearson",
-        y="mic",
-        add_corr_coefs=False,
-        output_dir=None,
-    )
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    x, y = "spearman", "mic"
-
-    g = jointplot(
-        data=df,
-        x=x,
-        y=y,
-        add_corr_coefs=False,
-    )
-
-    sns.despine(ax=g.ax_joint, left=True)
-    g.ax_joint.set_yticks([])
-    g.ax_joint.set_ylabel(None)
-
-    # g.savefig(
-    #     OUTPUT_FIGURE_DIR / f"dist-{x}_vs_{y}.svg",
-    #     bbox_inches="tight",
-    #     dpi=300,
-    #     facecolor="white",
-    # )
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    x, y = "clustermatch", "mic"
-
-    g = jointplot(
-        data=df,
-        x=x,
-        y=y,
-        add_corr_coefs=False,
-    )
-
-    sns.despine(ax=g.ax_joint, left=True)
-    g.ax_joint.set_yticks([])
-    g.ax_joint.set_ylabel(None)
-
-    # g.savefig(
-    #     OUTPUT_FIGURE_DIR / f"dist-{x}_vs_{y}.svg",
-    #     bbox_inches="tight",
-    #     dpi=300,
-    #     facecolor="white",
-    # )
-
-# %% [markdown] tags=[]
-# ## Compute correlations
-
-# %%
-df.corr()
-
-# %%
-df.corr("spearman")
-
-# %% [markdown]
-# # MIC subset: "disagree" gene pairs
-
-# %%
-# this is supposed to be one of the values of column "mic_subset"
-mic_subset = "disagree"
-
-# %% [markdown] tags=[]
-# ## Select MIC subset
-
-# %%
-df = corrs_df[corrs_df["mic_subset"].isin((mic_subset,))].drop(columns=["mic_subset"])
-
-# %%
-# define order
-# df = df[["clustermatch", "mic", "pearson", "spearman"]]
-
-# %%
-df.shape
-
-# %%
-df.head()
-
-# %% [markdown] tags=[]
-# ## Histogram plot
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    plot_histogram(df, output_dir=None, fill=False)
-
-# %% [markdown] tags=[]
-# **UPDATE**
-#
-# Coefficients' values distribute very differently. Clustermatch is skewed to the left, whereas Pearson and specially Spearman seem more uniform.
-
-# %% [markdown] tags=[]
-# ## Cumulative histogram plot
-
-# %% [markdown] tags=[]
-# I include also a cumulative histogram without specifying `bins`.
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    plot_cumulative_histogram(df, GENE_PAIRS_PERCENT, output_dir=None)
-
-# %% [markdown] tags=[]
-# ## Joint plots comparing each coefficient
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    jointplot(
-        data=df,
-        x="pearson",
-        y="mic",
-        add_corr_coefs=False,
-        output_dir=None,
-    )
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    x, y = "spearman", "mic"
-
-    g = jointplot(
-        data=df,
-        x=x,
-        y=y,
-        add_corr_coefs=False,
-    )
-
-    sns.despine(ax=g.ax_joint, left=True)
-    g.ax_joint.set_yticks([])
-    g.ax_joint.set_ylabel(None)
-
-    # g.savefig(
-    #     OUTPUT_FIGURE_DIR / f"dist-{x}_vs_{y}.svg",
-    #     bbox_inches="tight",
-    #     dpi=300,
-    #     facecolor="white",
-    # )
-
-# %% tags=[]
-with sns.plotting_context("talk", font_scale=1.0):
-    x, y = "clustermatch", "mic"
-
-    g = jointplot(
-        data=df,
-        x=x,
-        y=y,
-        add_corr_coefs=False,
-    )
-
-    sns.despine(ax=g.ax_joint, left=True)
-    g.ax_joint.set_yticks([])
-    g.ax_joint.set_ylabel(None)
-
-    # g.savefig(
-    #     OUTPUT_FIGURE_DIR / f"dist-{x}_vs_{y}.svg",
-    #     bbox_inches="tight",
-    #     dpi=300,
-    #     facecolor="white",
-    # )
 
 # %% [markdown] tags=[]
 # ## Compute correlations
