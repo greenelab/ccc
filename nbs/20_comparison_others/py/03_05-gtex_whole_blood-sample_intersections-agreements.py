@@ -20,6 +20,15 @@
 # From the intersections groups (visualized in the UpSet plot), it samples from the "Agreements", that is, only intersection groups where there is agreement between methods (clustermatch, pearson and spearman).
 
 # %% [markdown] tags=[]
+# # Notebook disabled
+
+# %%
+display("This notebook is disabled, it won't run with papermill")
+
+import sys
+sys.exit(0)
+
+# %% [markdown] tags=[]
 # # Modules
 
 # %% tags=[]
