@@ -73,7 +73,7 @@ display(INPUT_DIR)
 
 # %% tags=[]
 INPUT_GENE_PAIRS_FILE = INPUT_DIR / (
-    f"{GENE_PAIRS_FILE_SUFFIX.stem}-gene_pairs-sample_" + "{sample_id}" + ".pkl"
+    f"{GENE_PAIRS_FILE_SUFFIX.stem}-all-gene_pairs-sample_" + "{sample_id}" + ".pkl"
 )
 display(INPUT_GENE_PAIRS_FILE)
 
@@ -155,6 +155,7 @@ all_sample_files = []
 
 sample_id = 0
 sample_file = Path(INPUT_GENE_PAIRS_FILE_TEMPLATE.format(sample_id=sample_id))
+display(sample_file)
 
 while sample_file.exists():
     all_sample_files.append((sample_id, sample_file))
@@ -170,7 +171,8 @@ while sample_file.exists():
 # )
 
 # %% tags=[]
-len(all_sample_files)
+display(len(all_sample_files))
+assert len(all_sample_files) > 0
 
 # %% tags=[]
 all_sample_files[:3]
