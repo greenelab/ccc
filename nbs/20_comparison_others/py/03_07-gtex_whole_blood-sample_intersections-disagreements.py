@@ -28,6 +28,7 @@
 display("This notebook is disabled, it won't run with papermill")
 
 import sys
+
 sys.exit(0)
 
 # %% [markdown] tags=[]
