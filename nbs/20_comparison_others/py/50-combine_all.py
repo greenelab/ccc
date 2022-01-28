@@ -207,39 +207,40 @@ mic_all_df["mic_subset"] = "all"
 mic_all_df.shape
 
 # %%
-mic_agree_df = (
-    pd.read_pickle(
-        INPUT_DIR
-        / f"gene_pair_intersections-gtex_v8-{GTEX_TISSUE}-{GENE_SEL_STRATEGY}-agreements_sample_0-mic.pkl"
-    )
-    .rename("mic")
-    .to_frame()
-)
+# mic_agree_df = (
+#     pd.read_pickle(
+#         INPUT_DIR
+#         / f"gene_pair_intersections-gtex_v8-{GTEX_TISSUE}-{GENE_SEL_STRATEGY}-agreements_sample_0-mic.pkl"
+#     )
+#     .rename("mic")
+#     .to_frame()
+# )
 
 # %%
-mic_agree_df["mic_subset"] = "agree"
+# mic_agree_df["mic_subset"] = "agree"
 
 # %%
-mic_agree_df.shape
+# mic_agree_df.shape
 
 # %%
-mic_disagree_df = (
-    pd.read_pickle(
-        INPUT_DIR
-        / f"gene_pair_intersections-gtex_v8-{GTEX_TISSUE}-{GENE_SEL_STRATEGY}-disagreements_sample_0-mic.pkl"
-    )
-    .rename("mic")
-    .to_frame()
-)
+# mic_disagree_df = (
+#     pd.read_pickle(
+#         INPUT_DIR
+#         / f"gene_pair_intersections-gtex_v8-{GTEX_TISSUE}-{GENE_SEL_STRATEGY}-disagreements_sample_0-mic.pkl"
+#     )
+#     .rename("mic")
+#     .to_frame()
+# )
 
 # %%
-mic_disagree_df["mic_subset"] = "disagree"
+# mic_disagree_df["mic_subset"] = "disagree"
 
 # %%
-mic_disagree_df.shape
+# mic_disagree_df.shape
 
 # %%
-mic_df = pd.concat([mic_all_df, mic_agree_df, mic_disagree_df], axis=0).sort_index()
+# mic_df = pd.concat([mic_all_df, mic_agree_df, mic_disagree_df], axis=0).sort_index()
+mic_df = mic_all_df
 
 # %%
 mic_df
