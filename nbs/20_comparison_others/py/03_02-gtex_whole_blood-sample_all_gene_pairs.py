@@ -119,4 +119,4 @@ display(data_sample.dtypes)
 display(data_sample.shape)
 display(data_sample.head())
 
-# %%
+# %% tags=[]
