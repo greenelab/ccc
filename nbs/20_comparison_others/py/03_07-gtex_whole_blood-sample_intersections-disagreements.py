@@ -24,7 +24,7 @@
 # %% [markdown] tags=[]
 # # Notebook disabled
 
-# %%
+# %% tags=[]
 display("This notebook is disabled, it won't run with papermill")
 
 import sys
