@@ -71,6 +71,22 @@ def test_plots_plot_cumulative_histogram_simple():
     assert len(ax.collections) == 0
 
 
+def test_plots_plot_cumulative_histogram_with_mic():
+    df = pd.DataFrame(
+        data=np.random.rand(100, 4), columns=["pearson", "spearman", "clustermatch", "mic"]
+    )
+
+    f, ax = plot_cumulative_histogram(df)
+    assert f is not None
+    assert ax is not None
+
+    assert hasattr(ax, "lines")
+    assert len(ax.lines) == 4
+
+    assert hasattr(ax, "collections")
+    assert len(ax.collections) == 0
+
+
 def test_plots_plot_cumulative_histogram_with_gene_percent():
     df = pd.DataFrame(
         data=np.random.rand(100, 3), columns=["pearson", "spearman", "clustermatch"]
@@ -85,6 +101,22 @@ def test_plots_plot_cumulative_histogram_with_gene_percent():
 
     assert hasattr(ax, "collections")
     assert len(ax.collections) == 4
+
+
+def test_plots_plot_cumulative_histogram_with_gene_percent_with_mic():
+    df = pd.DataFrame(
+        data=np.random.rand(100, 4), columns=["pearson", "spearman", "clustermatch", "mic"]
+    )
+
+    f, ax = plot_cumulative_histogram(df, gene_pairs_percent=0.70)
+    assert f is not None
+    assert ax is not None
+
+    assert hasattr(ax, "lines")
+    assert len(ax.lines) == 4
+
+    assert hasattr(ax, "collections")
+    assert len(ax.collections) == 5
 
 
 def test_plots_plot_cumulative_histogram_save():
