@@ -54,6 +54,7 @@ INPUT_CORR_FILE_TEMPLATE = (
 display(INPUT_CORR_FILE_TEMPLATE)
 
 # %% tags=[]
+# I read this files to get the gene pairs so I make sure that the gene pair order in index is exactly the same
 INPUT_FILE = DATASET_CONFIG["SIMILARITY_MATRICES_DIR"] / str(
     INPUT_CORR_FILE_TEMPLATE
 ).format(
@@ -73,7 +74,7 @@ display(INPUT_FILE)
 # assert INPUT_FILE.exists()
 
 # %% tags=[]
-OUTPUT_DIR = INPUT_FILE.parent / "samples"
+OUTPUT_DIR = DATASET_CONFIG["GENE_SELECTION_DIR"] / "samples"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_DIR)
 
@@ -118,4 +119,4 @@ display(data_sample.dtypes)
 display(data_sample.shape)
 display(data_sample.head())
 
-# %% tags=[]
+# %%
