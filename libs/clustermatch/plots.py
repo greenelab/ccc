@@ -166,21 +166,6 @@ def plot_cumulative_histogram(
                 linestyle="dotted",
             )
 
-        # ax.vlines(
-        #     x=coef_at_percent["pearson"],
-        #     ymin=0,
-        #     ymax=gene_pairs_percent * 100,
-        #     color="gray",
-        #     linestyle="dotted",
-        # )
-        # ax.vlines(
-        #     x=coef_at_percent["spearman"],
-        #     ymin=0,
-        #     ymax=gene_pairs_percent * 100,
-        #     color="gray",
-        #     linestyle="dotted",
-        # )
-
         ax.set_xlim(x_lim)
 
     if output_dir is not None:
