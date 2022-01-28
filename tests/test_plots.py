@@ -73,7 +73,8 @@ def test_plots_plot_cumulative_histogram_simple():
 
 def test_plots_plot_cumulative_histogram_with_mic():
     df = pd.DataFrame(
-        data=np.random.rand(100, 4), columns=["pearson", "spearman", "clustermatch", "mic"]
+        data=np.random.rand(100, 4),
+        columns=["pearson", "spearman", "clustermatch", "mic"],
     )
 
     f, ax = plot_cumulative_histogram(df)
@@ -105,7 +106,8 @@ def test_plots_plot_cumulative_histogram_with_gene_percent():
 
 def test_plots_plot_cumulative_histogram_with_gene_percent_with_mic():
     df = pd.DataFrame(
-        data=np.random.rand(100, 4), columns=["pearson", "spearman", "clustermatch", "mic"]
+        data=np.random.rand(100, 4),
+        columns=["pearson", "spearman", "clustermatch", "mic"],
     )
 
     f, ax = plot_cumulative_histogram(df, gene_pairs_percent=0.70)
