@@ -20,6 +20,16 @@
 # TODO
 
 # %% [markdown] tags=[]
+# # Notebook disabled
+
+# %% tags=[]
+display("This notebook is disabled, it won't run with papermill")
+
+import sys
+
+sys.exit(0)
+
+# %% [markdown] tags=[]
 # # Modules
 
 # %% tags=[]
