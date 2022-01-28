@@ -113,9 +113,7 @@ def plot_cumulative_histogram(
     instead.
 
     Args:
-        data: same as in plot_histogram, but in this case it assumes that
-          columns "pearson", "spearman" and "clustermatch" exist and are the
-          only ones.
+        data: same as in plot_histogram.
         figsize: same as in plot_histogram
         output_dir: same as in plot_histogram. The file name is
           "dist-cum_histograms.svg"
@@ -146,37 +144,42 @@ def plot_cumulative_histogram(
         coef_at_percent = data.quantile(gene_pairs_percent)
 
         # show values so it is saved in the notebook
-        display(coef_at_percent)
+        display(coef_at_percent.sort_values())
 
         x_lim = ax.get_xlim()
+        hline_x_max = coef_at_percent.max()
+
         ax.hlines(
             y=gene_pairs_percent * 100,
             xmin=x_lim[0],
-            xmax=coef_at_percent["spearman"],
+            xmax=hline_x_max,
             color="gray",
             linestyle="dotted",
         )
-        ax.vlines(
-            x=coef_at_percent["clustermatch"],
-            ymin=0,
-            ymax=gene_pairs_percent * 100,
-            color="gray",
-            linestyle="dotted",
-        )
-        ax.vlines(
-            x=coef_at_percent["pearson"],
-            ymin=0,
-            ymax=gene_pairs_percent * 100,
-            color="gray",
-            linestyle="dotted",
-        )
-        ax.vlines(
-            x=coef_at_percent["spearman"],
-            ymin=0,
-            ymax=gene_pairs_percent * 100,
-            color="gray",
-            linestyle="dotted",
-        )
+
+        for method_name in coef_at_percent.index:
+            ax.vlines(
+                x=coef_at_percent[method_name],
+                ymin=0,
+                ymax=gene_pairs_percent * 100,
+                color="gray",
+                linestyle="dotted",
+            )
+
+        # ax.vlines(
+        #     x=coef_at_percent["pearson"],
+        #     ymin=0,
+        #     ymax=gene_pairs_percent * 100,
+        #     color="gray",
+        #     linestyle="dotted",
+        # )
+        # ax.vlines(
+        #     x=coef_at_percent["spearman"],
+        #     ymin=0,
+        #     ymax=gene_pairs_percent * 100,
+        #     color="gray",
+        #     linestyle="dotted",
+        # )
 
         ax.set_xlim(x_lim)
 
