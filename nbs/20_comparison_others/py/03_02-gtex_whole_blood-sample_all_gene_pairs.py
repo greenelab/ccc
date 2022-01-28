@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# It samples all the universe of gene pairs within the top genes initially selected (5,000 genes with maximum variance).
+# It samples all the universe of gene pairs within the top genes initially selected (5,000 genes with maximum variance). This sample is needed to compare Clustermatch with other coefficients that are slower, like Maximal Information Coefficient.
 
 # %% [markdown] tags=[]
 # # Modules

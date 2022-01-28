@@ -17,18 +17,25 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# Runs Maximal Information Coefficient in a sample of gene pairs.
 
 # %% [markdown] tags=[]
 # # Modules
 
 # %% tags=[]
+import warnings
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
 import numpy as np
+from sklearn.metrics import pairwise_distances
+from tqdm import tqdm
+from minepy.mine import MINE
 
 from clustermatch import conf
+from clustermatch.utils import chunker
 
 # %% [markdown] tags=[]
 # # Settings
@@ -108,46 +115,6 @@ len(gene_expr_dict)
 gene_expr_dict[list(gene_expr_dict.keys())[0]]
 
 # %% [markdown] tags=[]
-# ## Gene pairs intersection
-
-# %% tags=[]
-# intersections = pd.read_pickle(INPUT_GENE_PAIRS_INTERSECTIONS_FILE)
-
-# %% tags=[]
-# len(intersections)
-
-# %% tags=[]
-# intersections["Clustermatch (high), Pearson (high), Spearman (high)"]
-
-# %% [markdown] tags=[]
-# # Compute Maximal Information Coefficient (MIC)
-
-# %% [markdown] tags=[]
-# ## Functions
-
-# %% tags=[]
-import warnings
-from sklearn.metrics import pairwise_distances
-from minepy.mine import MINE
-
-
-# %% tags=[]
-def _mic(x, y):
-    """
-    FIXME: move to library
-    """
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-        mine = MINE(alpha=0.6, c=15, est="mic_approx")
-        mine.compute_score(x, y)
-        return mine.mic()
-
-
-# %% tags=[]
-_mic(np.random.rand(10), np.random.rand(10))
-
-# %% [markdown] tags=[]
 # ## Get all sample files
 
 # %% tags=[]
@@ -164,33 +131,46 @@ while sample_file.exists():
     sample_file = Path(INPUT_GENE_PAIRS_FILE_TEMPLATE.format(sample_id=sample_id))
 
 # %% tags=[]
-# all_sample_files = sorted(
-#     list(
-#         INPUT_GENE_PAIRS_FILE.parent.glob(INPUT_GENE_PAIRS_FILE.name.format(sample_id="*"))
-#     )
-# )
-
-# %% tags=[]
 display(len(all_sample_files))
 assert len(all_sample_files) > 0
 
 # %% tags=[]
 all_sample_files[:3]
 
+
 # %% [markdown] tags=[]
-# ## Run
+# # Compute Maximal Information Coefficient (MIC)
+
+# %% [markdown] tags=[]
+# ## Functions
 
 # %% tags=[]
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from collections import defaultdict
+def _mic(x, y):
+    """
+    Given two arrays (x and y), it computes MIC with the default parameters.
+    """
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-from tqdm import tqdm
+        mine = MINE(alpha=0.6, c=15, est="mic_approx")
+        mine.compute_score(x, y)
+        return mine.mic()
 
-from clustermatch.utils import chunker
+
+# %% tags=[]
+# testing
+_mic_val = _mic(np.random.rand(10), np.random.rand(10))
+display(_mic_val)
+assert _mic_val > 0.0
 
 
 # %% tags=[]
 def _compute_mic(gene_sets: list):
+    """
+    It takes a list of gene pairs and computes MIC on all.
+    It returns a series with gene pairs as index and MIC values.
+    This function is used in concurrent.futures for parallel execution.
+    """
     res = [
         _mic(gene_expr_dict[gs[0]].to_numpy(), gene_expr_dict[gs[1]].to_numpy())
         for gs in gene_sets
@@ -212,7 +192,11 @@ display(_res.head())
 # make sure order is preserved
 assert _res.index.to_list() == list(gene_set.itertuples(index=False, name=None))
 
+# %% [markdown] tags=[]
+# ## Run
+
 # %% tags=[]
+# create chunks of gene pairs to compute in parallel
 all_chunks = []
 
 for (sample_id, sample_file) in all_sample_files:
