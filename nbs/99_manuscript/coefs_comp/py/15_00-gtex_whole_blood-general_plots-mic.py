@@ -192,6 +192,9 @@ with sns.plotting_context("talk", font_scale=1.0):
 # %% [markdown] tags=[]
 # ## Compute correlations
 
+# %% [markdown] tags=[]
+# These are the correlation between the correlation values (!). The idea is to see how coefficient match.
+
 # %%
 df.corr()
 
