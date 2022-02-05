@@ -386,8 +386,8 @@ for i in range(min(_tmp_df.shape[0], 5)):
 # %%
 gene_pair_subset = "c_vs_r"
 
-gene0_id = "ENSG00000236409.1"
-gene1_id = "ENSG00000151929.9"
+gene0_id = "ENSG00000275385.1"
+gene1_id = "ENSG00000160446.18"
 
 plot_and_save_gene_pair(
     gene_expr_df.T,
