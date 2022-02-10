@@ -117,6 +117,17 @@ df_plot.shape
 df_plot.head()
 
 # %% [markdown]
+# ## Gene pairs percentiles
+
+# %%
+df_plot_percentiles = df_plot[["clustermatch", "pearson", "spearman"]].quantile(
+    np.arange(0.1, 1.0, 0.05)
+)
+
+# %%
+df_plot_percentiles
+
+# %% [markdown]
 # # Look at specific gene pair cases
 
 # %%
@@ -436,6 +447,13 @@ plot_and_save_gene_pair(
     gene1_id,
     output_file_subset=gene_pair_subset,
 )
+
+# %%
+# get percentiles
+df_plot.loc[(gene0_id, gene1_id), ["clustermatch", "pearson", "spearman"]]
+
+# %%
+df_plot_percentiles
 
 # %%
 gene_pair_subset = "c_vs_rs"
