@@ -28,6 +28,7 @@ dependencies:
   - scikit-learn
   - scipy
   - seaborn
+  - svgutils
   - tabulate
   - tqdm
   - upsetplot
