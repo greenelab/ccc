@@ -263,7 +263,7 @@ def jointplot(
 
     if output_dir is not None:
         plt.savefig(
-            output_dir / f"dist-{x}_vs_{y}.svg",
+            output_dir / f"dist-{x.lower()}_vs_{y.lower()}.svg",
             bbox_inches="tight",
             dpi=300,
             facecolor="white",
