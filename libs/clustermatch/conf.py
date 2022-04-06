@@ -101,6 +101,15 @@ GTEX["GENE_PAIR_INTERSECTIONS"] = Path(
 ).resolve()
 
 
+#
+# GIANT networks
+#
+GIANT = {}
+
+# Results
+GIANT["RESULTS_DIR"] = Path(RESULTS_DIR, "giant").resolve()
+
+
 if __name__ == "__main__":
     # if this script is run, then it exports the configuration as environment
     # variables (for bash/R, etc)
