@@ -50,6 +50,11 @@ assert (
     conf.MANUSCRIPT["BASE_DIR"] is not None and conf.MANUSCRIPT["BASE_DIR"].exists()
 ), "Manuscript dir not set"
 
+# %%
+OUTPUT_DATA_DIR = DATASET_CONFIG["GENE_PAIR_INTERSECTIONS"]
+assert OUTPUT_DATA_DIR.exists()
+display(OUTPUT_DATA_DIR)
+
 # %% tags=[]
 OUTPUT_FIGURE_DIR = (
     conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / f"gtex_{GTEX_TISSUE}"
@@ -311,6 +316,28 @@ def plot_and_save_gene_pair(data, gene0_id, gene1_id, output_file_subset):
         )
 
 
+# %%
+def save_gene_pairs(df, gene_set_name):
+    """
+    Given a dataframe with gene pairs (prioritized by one correlation coefficient over the other coefficients)
+    and a gene set name, it simply saves the dataframe into a file. It also rename gene ensemble IDs to symbols.
+    """
+    # convert gene ids to gene symbols
+    df = (
+        df.reset_index()
+        .replace(
+            {
+                "level_0": gene_map,
+                "level_1": gene_map,
+            }
+        )
+        .set_index(["level_0", "level_1"])
+        .rename_axis([None, None])
+    )
+
+    df.to_pickle(OUTPUT_DATA_DIR / f"{gene_set_name}.pkl")
+
+
 # %% [markdown] tags=[]
 # ## Clustermatch/Spearman vs Pearson
 
@@ -378,6 +405,8 @@ _tmp_df = get_gene_pairs(
     },
 )
 
+save_gene_pairs(_tmp_df, "clustermatch_vs_pearson")
+
 display(_tmp_df.shape)
 display(_tmp_df)
 
@@ -418,6 +447,8 @@ _tmp_df = get_gene_pairs(
         "Spearman (low)",
     },
 )
+
+save_gene_pairs(_tmp_df, "clustermatch_vs_spearman")
 
 display(_tmp_df.shape)
 display(_tmp_df)
@@ -481,6 +512,8 @@ _tmp_df = get_gene_pairs(
     },
 )
 
+save_gene_pairs(_tmp_df, "clustermatch_vs_pearson_spearman")
+
 display(_tmp_df.shape)
 display(_tmp_df)
 
@@ -521,6 +554,8 @@ _tmp_df = get_gene_pairs(
         "Pearson (high)",
     },
 )
+
+save_gene_pairs(_tmp_df, "pearson_vs_clustermatch")
 
 display(_tmp_df.shape)
 display(_tmp_df)
@@ -591,6 +626,8 @@ _tmp_df = get_gene_pairs(
         "Pearson (high)",
     },
 )
+
+save_gene_pairs(_tmp_df, "pearson_vs_clustermatch_spearman")
 
 display(_tmp_df.shape)
 display(_tmp_df)
