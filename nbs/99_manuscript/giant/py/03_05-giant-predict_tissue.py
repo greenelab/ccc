@@ -32,6 +32,8 @@ from pathlib import Path
 
 import requests
 import pandas as pd
+from pandas.api.types import CategoricalDtype
+from tqdm import tqdm
 
 from clustermatch import conf
 
@@ -39,13 +41,12 @@ from clustermatch import conf
 # # Settings
 
 # %% tags=[]
-# DATASET_CONFIG = conf.GTEX
+DATASET_CONFIG = conf.GTEX
 # GTEX_TISSUE = "whole_blood"
 # GENE_SEL_STRATEGY = "var_pc_log2"
 
 # %% tags=[]
-# # this is used for the cumulative histogram
-# GENE_PAIRS_PERCENT = 0.70
+N_TOP_GENE_PAIRS = 100
 
 # %%
 # CLUSTERMATCH_LABEL = "Clustermatch"
@@ -56,10 +57,10 @@ from clustermatch import conf
 # # Paths
 
 # %% tags=[]
-# INPUT_DIR = DATASET_CONFIG["GENE_PAIR_INTERSECTIONS"]
-# display(INPUT_DIR)
+INPUT_DIR = DATASET_CONFIG["GENE_PAIR_INTERSECTIONS"]
+display(INPUT_DIR)
 
-# assert INPUT_DIR.exists()
+assert INPUT_DIR.exists()
 
 # %% tags=[]
 OUTPUT_DIR = conf.GIANT["RESULTS_DIR"] / "intersection_genes"
@@ -68,6 +69,9 @@ display(OUTPUT_DIR)
 
 # %% [markdown] tags=[]
 # # Load gene maps
+
+# %% [markdown]
+# These gene mappings include only query genes (gene pairs).
 
 # %%
 gene_id_mappings = pd.read_pickle(OUTPUT_DIR / "gene_map-symbol_to_entrezid.pkl")
@@ -201,13 +205,15 @@ def get_network(gene_entrezids=None, gene_symbols=None, max_genes=15):
             gene_entrezid_to_symbol[gene_entrezids[1]],
         )
     else:
+        if gene_symbols[0] not in gene_symbol_to_entrezid or gene_symbols[1] not in gene_symbol_to_entrezid:
+            return None
         gene_entrezids = gene_symbol_to_entrezid[gene_symbols[0]], gene_symbol_to_entrezid[gene_symbols[1]]
 
     tissue_prediction = predict_tissue(gene_entrezids)
     if tissue_prediction is None:
         return None
 
-    print(tissue_prediction[0])
+    # print(tissue_prediction[0])
 
     url = tissue_prediction[1] + "network/"
     params = [("entrez", gene_entrezids[0]), ("entrez", gene_entrezids[1])]
@@ -215,7 +221,7 @@ def get_network(gene_entrezids=None, gene_symbols=None, max_genes=15):
     data = r.json()
 
     mincut = data["mincut"]
-    print(mincut)
+    # print(mincut)
 
     temp_dir = Path(tempfile.mkdtemp(prefix="giant-"))
     genes_json_file = temp_dir / "genes.json"
@@ -235,6 +241,9 @@ def get_network(gene_entrezids=None, gene_symbols=None, max_genes=15):
 
     # prioritize genes
     all_genes = set(df["gene1"]).union(set(df["gene2"]))
+    if gene_symbols[0] not in all_genes or gene_symbols[1] not in all_genes:
+        return None
+    
     all_genes.remove(gene_symbols[0])
     all_genes.remove(gene_symbols[1])
 
@@ -243,18 +252,27 @@ def get_network(gene_entrezids=None, gene_symbols=None, max_genes=15):
     top_genes.update(gene_symbols)
     df = df[(df["gene1"].isin(top_genes)) & (df["gene2"].isin(top_genes))]
 
-    return df[df["weight"] > mincut].reset_index(drop=True)
+    return (
+        df[df["weight"] > mincut].reset_index(drop=True),
+        tissue_prediction[0],
+        mincut,
+    )
 
 
 # %%
 # testing
 assert get_network(("IFNG", "SDS")) is None
-# TODO
+assert get_network(gene_symbols=("IFNG", "nonExistingGene")) is None
+# in this case, UPK3B is not included in the network
+assert get_network(gene_symbols=("NR4A3", "UPK3B")) is None
 
 # %%
 gene_symbols = ("IFNG", "GLIPR1")
-df = get_network(gene_symbols=gene_symbols).round(4)
+df, df_tissue, _ = get_network(gene_symbols=gene_symbols)
+df = df.round(4)
 assert df.shape[0] == 134
+
+assert df_tissue == "blood"
 
 pd.testing.assert_series_equal(
     df.iloc[0],
@@ -279,8 +297,11 @@ pd.testing.assert_series_equal(
 
 # %%
 gene_symbols = ("ZDHHC12", "CCL18")
-df = get_network(gene_symbols=gene_symbols).round(4)
+df, df_tissue, _ = get_network(gene_symbols=gene_symbols)
+df = df.round(4)
 assert df.shape[0] == 129
+
+assert df_tissue == "macrophage"
 
 pd.testing.assert_series_equal(
     df.iloc[0],
@@ -303,6 +324,72 @@ pd.testing.assert_series_equal(
     check_index=False,
 )
 
+
+# %%
+def convert_gene_pairs(gene_pairs, convert_to_entrezid=False):
+    gene_pairs = gene_pairs.reset_index()
+    
+    if convert_to_entrezid:
+        gene_pairs = (
+            gene_pairs
+            .replace(
+                {
+                    "level_0": gene_symbol_to_entrezid,
+                    "level_1": gene_symbol_to_entrezid,
+                }
+            )
+        )
+    
+    gene_pairs = (
+        gene_pairs[["level_0", "level_1"]]
+        .itertuples(index=False, name=None)
+    )
+
+    return list(gene_pairs)
+
+
+# %%
+def process_tissue_networks(gene_pairs):
+    with tqdm(
+        total=min(N_TOP_GENE_PAIRS, len(gene_pairs)),
+        ncols=100
+    ) as pbar:
+        gp_idx = 0
+        
+        while pbar.n < N_TOP_GENE_PAIRS and gp_idx < len(gene_pairs):
+            gp = gene_pairs[gp_idx]
+            
+            pbar.set_description(",".join(gp))
+            
+            # check whether file already exists
+            output_filepath = output_dir / f"{gp_idx:03d}-{gp[0].lower()}_{gp[1].lower()}.h5"
+            if output_filepath.exists():
+                gp_idx += 1
+                pbar.update(1)
+                continue
+
+            _res = get_network(gene_symbols=gp)
+            if _res is None:
+                gp_idx += 1
+                continue
+
+            df, tissue, mincut = _res
+
+            assert not df.isna().any().any()
+
+            with pd.HDFStore(output_filepath, mode="w", complevel=4) as store:
+                store.put("data", df, format="table")
+
+                metadata = pd.DataFrame({
+                    "tissue": tissue,
+                    "mincut": mincut,
+                }, index=[0])
+                store.put("metadata", metadata, format="table")
+            
+            gp_idx += 1
+            pbar.update(1)
+
+
 # %% [markdown]
 # # Predict tissue for each gene pair
 
@@ -310,62 +397,140 @@ pd.testing.assert_series_equal(
 # ## Clustermatch vs Pearson
 
 # %%
-data = pd.read_pickle(OUTPUT_DIR / "clustermatch_vs_pearson.pkl").sort_values(
+output_dir = OUTPUT_DIR / "clustermatch_vs_pearson"
+output_dir.mkdir(exist_ok=True, parents=True)
+
+# %%
+data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_pearson.pkl").sort_values(
     "clustermatch", ascending=False
 )
+
+# %%
+data.shape
 
 # %%
 data.head()
 
 # %%
-gene_pairs = (
-    data.reset_index()
-    .replace(
-        {
-            "level_0": gene_symbol_to_entrezid,
-            "level_1": gene_symbol_to_entrezid,
-        }
-    )[["level_0", "level_1"]]
-    .to_records(index=False)
-)
-
-gene_pairs = list(gene_pairs)
+gene_pairs = convert_gene_pairs(data)
+display(len(gene_pairs))
 
 # %%
 gene_pairs[:10]
 
 # %%
-
-# %%
-
-# %%
-
-# %%
-
-# %%
+process_tissue_networks(gene_pairs)
 
 # %% [markdown]
 # ## Clustermatch vs Pearson/Spearman
 
 # %%
-data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_pearson_spearman.pkl")
+output_dir = OUTPUT_DIR / "clustermatch_vs_pearson_spearman"
+output_dir.mkdir(exist_ok=True, parents=True)
+
+# %%
+data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_pearson_spearman.pkl").sort_values(
+    "clustermatch", ascending=False
+)
+
+# %%
+data.shape
+
+# %%
+data.head()
+
+# %%
+gene_pairs = convert_gene_pairs(data)
+display(len(gene_pairs))
+
+# %%
+gene_pairs[:10]
+
+# %%
+process_tissue_networks(gene_pairs)
 
 # %% [markdown]
 # ## Clustermatch vs Spearman
 
 # %%
-data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_spearman.pkl")
+output_dir = OUTPUT_DIR / "clustermatch_vs_spearman"
+output_dir.mkdir(exist_ok=True, parents=True)
+
+# %%
+data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_spearman.pkl").sort_values(
+    "clustermatch", ascending=False
+)
+
+# %%
+data.shape
+
+# %%
+data.head()
+
+# %%
+gene_pairs = convert_gene_pairs(data)
+display(len(gene_pairs))
+
+# %%
+gene_pairs[:10]
+
+# %%
+process_tissue_networks(gene_pairs)
 
 # %% [markdown]
 # ## Pearson vs Clustermatch
 
 # %%
-data = pd.read_pickle(INPUT_DIR / "pearson_vs_clustermatch.pkl")
+output_dir = OUTPUT_DIR / "pearson_vs_clustermatch"
+output_dir.mkdir(exist_ok=True, parents=True)
+
+# %%
+data = pd.read_pickle(INPUT_DIR / "pearson_vs_clustermatch.pkl").sort_values(
+    "pearson", ascending=False
+)
+
+# %%
+data.shape
+
+# %%
+data.head()
+
+# %%
+gene_pairs = convert_gene_pairs(data)
+display(len(gene_pairs))
+
+# %%
+gene_pairs[:10]
+
+# %%
+process_tissue_networks(gene_pairs)
 
 # %% [markdown]
 # ## Pearson vs Clustermatch/Spearman
 
 # %%
-data = pd.read_pickle(INPUT_DIR / "pearson_vs_clustermatch_spearman.pkl")
+output_dir = OUTPUT_DIR / "pearson_vs_clustermatch_spearman"
+output_dir.mkdir(exist_ok=True, parents=True)
+
+# %%
+data = pd.read_pickle(INPUT_DIR / "pearson_vs_clustermatch_spearman.pkl").sort_values(
+    "pearson", ascending=False
+)
+
+# %%
+data.shape
+
+# %%
+data.head()
+
+# %%
+gene_pairs = convert_gene_pairs(data)
+display(len(gene_pairs))
+
+# %%
+gene_pairs[:10]
+
+# %%
+process_tissue_networks(gene_pairs)
 
 # %%
