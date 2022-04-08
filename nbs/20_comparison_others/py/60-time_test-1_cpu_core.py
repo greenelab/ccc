@@ -22,10 +22,10 @@
 # %% [markdown] tags=[]
 # # Modules loading
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Make sure only one core is used everywhere.
 
-# %%
+# %% tags=[]
 # %env CM_N_JOBS=1
 # %env NUMBA_NUM_THREADS=1
 # %env MKL_NUM_THREADS=1
@@ -47,7 +47,7 @@ from clustermatch.methods import mic
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 OUTPUT_FILENAME = "time_test.pkl"
 
 # %% tags=[]
@@ -63,7 +63,7 @@ DATA_SIZES = [
 
 N_REPS = 10
 
-# %%
+# %% tags=[]
 np.random.seed(0)
 
 # %% [markdown] tags=[]
@@ -77,11 +77,11 @@ display(OUTPUT_DIR)
 # %% [markdown] tags=[]
 # # Functions
 
-# %%
+# %% tags=[]
 time_results = pd.DataFrame(columns=["data_size", "method", "time", "sim"])
 
 
-# %%
+# %% tags=[]
 def run_method(func, method_name, size):
     n_reps = N_REPS
     if size < 500:
@@ -100,14 +100,14 @@ def run_method(func, method_name, size):
         time_results.loc[idx] = [d1.shape[0], method_name, met_time, sim]
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Run
 
-# %%
+# %% tags=[]
 # initialize methods
 cm(np.random.rand(100), np.random.rand(100))
 
-# %%
+# %% tags=[]
 for s in DATA_SIZES:
     print(f"Size: {s}")
 
@@ -127,4 +127,4 @@ for s in DATA_SIZES:
     print("Saving to pickle")
     time_results.to_pickle(OUTPUT_DIR / OUTPUT_FILENAME)
 
-# %%
+# %% tags=[]
