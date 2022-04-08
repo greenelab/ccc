@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# Make plots to show the computational complexity results comparing all coefficients.
 
 # %% [markdown] tags=[]
 # # Modules loading
@@ -79,10 +79,12 @@ time_results = time_results.replace(
             "s-1": "Spearman (1 core)",
             "cm-1": "CCC (1 core)",
             "mic-1": "MIC (1 core)",
+            "mic_e-1": "MICe (1 core)",
             "p-3": "Pearson (3 cores)",
             "s-3": "Spearman (3 cores)",
             "cm-3": "CCC (3 cores)",
             "mic-3": "MIC (3 cores)",
+            "mic_e-3": "MICe (3 cores)",
         }
     }
 )
@@ -97,29 +99,28 @@ time_results.head()
 # # Run numbers
 
 # %%
-plot_data = time_results  # [time_results["data_size"] >= 500]
+plot_data = time_results
 
 # %%
-run_numbers = plot_data.groupby(["data_size", "method"])["time"].describe()
+run_numbers = plot_data[
+    plot_data["method"].str.contains("1 core", regex=False) |
+    plot_data["method"].str.contains("CCC (3 cores)", regex=False)
+].groupby(["data_size", "method"])["time"].describe()
 display(run_numbers)
 
 # %% [markdown]
 # # Plot
 
 # %%
-hue_order = None  # ["CCC", "MIC", "Pearson", "Spearman"]
+hue_order = sorted(time_results["method"].unique())
+
+# %%
+hue_order
 
 # %%
 deep_colors = sns.color_palette("deep")
 display(deep_colors)
 
-
-# %%
-# colors = {
-#     "CCC": deep_colors[0],
-#     "Pearson": deep_colors[1],
-#     "Spearman": deep_colors[2],
-# }
 
 # %%
 def format_data_size(x):
@@ -141,49 +142,39 @@ plot_data = plot_data.assign(data_size=plot_data["data_size"].apply(format_data_
 
 # %%
 with sns.plotting_context("paper", font_scale=1.5):
-    ax = sns.pointplot(
+    g = sns.catplot(
+        kind="point",
         data=plot_data,
         x="data_size",
         y="time",
         hue="method",
         hue_order=hue_order,
         palette=deep_colors,
-        legend=False,
+        height=5,
+        aspect=1.4,
     )
-    sns.despine()
-    plt.legend(loc="best")
+
     plt.xlabel("Number of measured objects")
     plt.ylabel("Time (seconds)")
-    plt.tight_layout()
-    # plt.savefig(
-    #     OUTPUT_FIGURE_DIR / f"{INPUT_FILENAME_TEMPLATE}.svg",
-    #     bbox_inches="tight",
-    #     facecolor="white",
-    # )
-    # ax.set_yscale('log')
 
 # %%
 with sns.plotting_context("paper", font_scale=1.5):
-    ax = sns.pointplot(
+    g = sns.catplot(
+        kind="point",
         data=plot_data,
         x="data_size",
         y="time",
         hue="method",
         hue_order=hue_order,
         palette=deep_colors,
-        legend=False,
+        height=5,
+        aspect=1.4,
     )
-    sns.despine()
-    plt.legend([], [], frameon=False)
+
     plt.xlabel("Number of measured objects")
     plt.ylabel("Time (seconds) in log scale")
-    plt.tight_layout()
-    # plt.savefig(
-    #     OUTPUT_FIGURE_DIR / f"{INPUT_FILENAME_TEMPLATE}-log.svg",
-    #     bbox_inches="tight",
-    #     facecolor="white",
-    # )
-    ax.set_yscale("log")
+
+    g.ax.set_yscale("log")
 
 # %% [markdown]
 # Only CCC is really taking advantage of more than 1 core, so I'll remove the rest below.
@@ -199,6 +190,7 @@ plot_data = plot_data.replace(
             "Pearson (3 cores)": "Pearson",
             "Spearman (3 cores)": "Spearman",
             "MIC (3 cores)": "MIC",
+            "MICe (3 cores)": "$\mathregular{MIC_e}$",
         }
     }
 )
@@ -207,24 +199,34 @@ plot_data = plot_data.replace(
 plot_data["method"].unique()
 
 # %%
-hue_order = ["MIC", "CCC (1 core)", "CCC (3 cores)", "Spearman", "Pearson"]
+hue_order = [
+    "MIC",
+    "$\mathregular{MIC_e}$",
+    "CCC (1 core)",
+    "CCC (3 cores)",
+    "Spearman",
+    "Pearson",
+]
 
 # %%
 with sns.plotting_context("paper", font_scale=1.5):
-    ax = sns.pointplot(
+    g = sns.catplot(
+        kind="point",
         data=plot_data,
         x="data_size",
         y="time",
         hue="method",
         hue_order=hue_order,
         palette=deep_colors,
+        height=5,
+        aspect=1.1,
         legend=False,
     )
-    sns.despine()
+
     plt.legend(loc="best")
     plt.xlabel("Number of measured objects")
     plt.ylabel("Time (seconds)")
-    plt.tight_layout()
+
     plt.savefig(
         OUTPUT_FIGURE_DIR / f"{INPUT_FILENAME_TEMPLATE}.svg",
         bbox_inches="tight",
@@ -233,21 +235,23 @@ with sns.plotting_context("paper", font_scale=1.5):
 
 # %%
 with sns.plotting_context("paper", font_scale=1.5):
-    ax = sns.pointplot(
+    g = sns.catplot(
+        kind="point",
         data=plot_data,
         x="data_size",
         y="time",
         hue="method",
         hue_order=hue_order,
         palette=deep_colors,
+        height=5,
+        aspect=1.1,
         legend=False,
     )
-    sns.despine()
-    plt.legend([], [], frameon=False)
+
     plt.xlabel("Number of measured objects")
     plt.ylabel("Time (seconds) in log scale")
-    plt.tight_layout()
-    ax.set_yscale("log")
+    g.ax.set_yscale("log")
+
     plt.savefig(
         OUTPUT_FIGURE_DIR / f"{INPUT_FILENAME_TEMPLATE}-log.svg",
         bbox_inches="tight",
@@ -262,17 +266,13 @@ from svgutils.compose import Figure, SVG, Panel, Text
 
 # %%
 Figure(
-    "434.7513cm",
-    "135.00382cm",
+    "396.75125cm",
+    "170.93350cm",
     SVG(OUTPUT_FIGURE_DIR / "time_test.svg").scale(0.5),
-    SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.5).move(220, 0),
+    SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.5).move(200, 0),
 ).save(OUTPUT_FIGURE_DIR / "time_test-main.svg")
 
 # %% [markdown]
-# Now open the file, reside to fit drawing to page, and add a white rectangle to the background.
-
-# %% [markdown]
-# I think it's important to open the file with Inkscape and save it, just to make sure the content is right.
-# Because sometimes Inkscape crashed when opening it.
+# **Now open the file**, reside to fit drawing to page, and add a white rectangle to the background.
 
 # %%
