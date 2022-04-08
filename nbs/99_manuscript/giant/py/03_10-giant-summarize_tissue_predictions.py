@@ -524,9 +524,9 @@ Figure(
     Text("+", 67, 71, size=6),
     SVG(COEF_COMP_DIR / "triangles-p_vs_cs.svg").scale(1.50).move(75, 65),
     # another
-    SVG(
-        OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.svg"
-    ).scale(0.5).move(130, 0),
+    SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.svg")
+    .scale(0.5)
+    .move(130, 0),
 ).save(OUTPUT_FIGURE_DIR / "top_gene_pairs-main.svg")
 
 # %% [markdown]
