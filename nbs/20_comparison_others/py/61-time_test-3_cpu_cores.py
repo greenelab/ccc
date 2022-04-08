@@ -54,6 +54,7 @@ DATA_SIZES = [
     1000,
     5000,
     10000,
+    50000,
     100000,
     1000000,
 ]
@@ -124,6 +125,10 @@ for s in DATA_SIZES:
     if s <= 10000:
         print(f"  mic")
         run_method(lambda x, y: mic(x, y), "mic-3", s)
+
+    if s <= 50000:
+        print(f"  mic_e")
+        run_method(lambda x, y: mic(x, y, estimator="mic_e"), "mic_e-3", s)
 
     print("Saving to pickle")
     time_results.to_pickle(OUTPUT_DIR / OUTPUT_FILENAME)
