@@ -106,7 +106,7 @@ def run_method(func, method_name, size):
 
 # %%
 # initialize methods
-run_method(lambda x, y: cm(x, y), "cm", 100)
+cm(np.random.rand(100), np.random.rand(100))
 
 # %%
 for s in DATA_SIZES:
