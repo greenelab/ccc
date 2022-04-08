@@ -104,7 +104,7 @@ run_numbers = plot_data.groupby(["data_size", "method"])["time"].describe()
 display(run_numbers)
 
 # %% [markdown]
-# # Plot#
+# # Plot
 
 # %%
 hue_order = None  # ["CCC", "MIC", "Pearson", "Spearman"]
@@ -192,6 +192,7 @@ with sns.plotting_context("paper", font_scale=1.5):
 # # Final analysis
 
 # %%
+# select runs with 3 cores for the other methods
 plot_data = plot_data.replace(
     {
         "method": {
@@ -252,5 +253,26 @@ with sns.plotting_context("paper", font_scale=1.5):
         bbox_inches="tight",
         facecolor="white",
     )
+
+# %% [markdown] tags=[]
+# # Create final figure
+
+# %%
+from svgutils.compose import Figure, SVG, Panel, Text
+
+# %%
+Figure(
+    "434.7513cm",
+    "135.00382cm",
+    SVG(OUTPUT_FIGURE_DIR / "time_test.svg").scale(0.5),
+    SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.5).move(220, 0),
+).save(OUTPUT_FIGURE_DIR / "time_test-main.svg")
+
+# %% [markdown]
+# Now open the file, reside to fit drawing to page, and add a white rectangle to the background.
+
+# %% [markdown]
+# I think it's important to open the file with Inkscape and save it, just to make sure the content is right.
+# Because sometimes Inkscape crashed when opening it.
 
 # %%
