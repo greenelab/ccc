@@ -205,9 +205,15 @@ def get_network(gene_entrezids=None, gene_symbols=None, max_genes=15):
             gene_entrezid_to_symbol[gene_entrezids[1]],
         )
     else:
-        if gene_symbols[0] not in gene_symbol_to_entrezid or gene_symbols[1] not in gene_symbol_to_entrezid:
+        if (
+            gene_symbols[0] not in gene_symbol_to_entrezid
+            or gene_symbols[1] not in gene_symbol_to_entrezid
+        ):
             return None
-        gene_entrezids = gene_symbol_to_entrezid[gene_symbols[0]], gene_symbol_to_entrezid[gene_symbols[1]]
+        gene_entrezids = (
+            gene_symbol_to_entrezid[gene_symbols[0]],
+            gene_symbol_to_entrezid[gene_symbols[1]],
+        )
 
     tissue_prediction = predict_tissue(gene_entrezids)
     if tissue_prediction is None:
@@ -243,7 +249,7 @@ def get_network(gene_entrezids=None, gene_symbols=None, max_genes=15):
     all_genes = set(df["gene1"]).union(set(df["gene2"]))
     if gene_symbols[0] not in all_genes or gene_symbols[1] not in all_genes:
         return None
-    
+
     all_genes.remove(gene_symbols[0])
     all_genes.remove(gene_symbols[1])
 
@@ -328,41 +334,34 @@ pd.testing.assert_series_equal(
 # %%
 def convert_gene_pairs(gene_pairs, convert_to_entrezid=False):
     gene_pairs = gene_pairs.reset_index()
-    
+
     if convert_to_entrezid:
-        gene_pairs = (
-            gene_pairs
-            .replace(
-                {
-                    "level_0": gene_symbol_to_entrezid,
-                    "level_1": gene_symbol_to_entrezid,
-                }
-            )
+        gene_pairs = gene_pairs.replace(
+            {
+                "level_0": gene_symbol_to_entrezid,
+                "level_1": gene_symbol_to_entrezid,
+            }
         )
-    
-    gene_pairs = (
-        gene_pairs[["level_0", "level_1"]]
-        .itertuples(index=False, name=None)
-    )
+
+    gene_pairs = gene_pairs[["level_0", "level_1"]].itertuples(index=False, name=None)
 
     return list(gene_pairs)
 
 
 # %%
 def process_tissue_networks(gene_pairs):
-    with tqdm(
-        total=min(N_TOP_GENE_PAIRS, len(gene_pairs)),
-        ncols=100
-    ) as pbar:
+    with tqdm(total=min(N_TOP_GENE_PAIRS, len(gene_pairs)), ncols=100) as pbar:
         gp_idx = 0
-        
+
         while pbar.n < N_TOP_GENE_PAIRS and gp_idx < len(gene_pairs):
             gp = gene_pairs[gp_idx]
-            
+
             pbar.set_description(",".join(gp))
-            
+
             # check whether file already exists
-            output_filepath = output_dir / f"{gp_idx:03d}-{gp[0].lower()}_{gp[1].lower()}.h5"
+            output_filepath = (
+                output_dir / f"{gp_idx:03d}-{gp[0].lower()}_{gp[1].lower()}.h5"
+            )
             if output_filepath.exists():
                 gp_idx += 1
                 pbar.update(1)
@@ -380,12 +379,15 @@ def process_tissue_networks(gene_pairs):
             with pd.HDFStore(output_filepath, mode="w", complevel=4) as store:
                 store.put("data", df, format="table")
 
-                metadata = pd.DataFrame({
-                    "tissue": tissue,
-                    "mincut": mincut,
-                }, index=[0])
+                metadata = pd.DataFrame(
+                    {
+                        "tissue": tissue,
+                        "mincut": mincut,
+                    },
+                    index=[0],
+                )
                 store.put("metadata", metadata, format="table")
-            
+
             gp_idx += 1
             pbar.update(1)
 

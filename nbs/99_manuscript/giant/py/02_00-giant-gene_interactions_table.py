@@ -26,6 +26,7 @@
 import re
 
 import pandas as pd
+
 # from scipy import stats
 # import seaborn as sns
 
@@ -118,12 +119,11 @@ def read_data(gene0, gene1, tissue_name, mode="visible"):
     assert input_filepath.exists()
 
     data = pd.read_csv(input_filepath)
-    
+
     assert (
-        ((gene0 in data["GENE1"].unique()) or (gene0 in data["GENE2"].unique())) and
-        ((gene1 in data["GENE1"].unique()) or (gene1 in data["GENE2"].unique()))
-    )
-    
+        (gene0 in data["GENE1"].unique()) or (gene0 in data["GENE2"].unique())
+    ) and ((gene1 in data["GENE1"].unique()) or (gene1 in data["GENE2"].unique()))
+
     return data
 
 
@@ -178,7 +178,9 @@ def get_gene_content(blood_stats, pred_stats, gene_name, gene_template):
 
 # %%
 # testing
-_tmp_gene_cont = get_gene_content(_tmp0_stats, _tmp0_stats, "IFNG", GENE0_STATS_TEMPLATE)
+_tmp_gene_cont = get_gene_content(
+    _tmp0_stats, _tmp0_stats, "IFNG", GENE0_STATS_TEMPLATE
+)
 assert "IFNG" in _tmp_gene_cont
 assert "0.19" in _tmp_gene_cont
 assert "0.42" in _tmp_gene_cont
@@ -206,14 +208,21 @@ def process_genes(gene0, gene1):
     data_blood = read_data(gene0, gene1, "blood")
     data_pred = read_data(gene0, gene1, "pred")
 
-    for gene_name, gene_template in ((gene0, GENE0_STATS_TEMPLATE), (gene1, GENE1_STATS_TEMPLATE)):
-        blood_stats = get_gene_stats(data_blood, gene_name).rename(f"{gene_name} - blood")
+    for gene_name, gene_template in (
+        (gene0, GENE0_STATS_TEMPLATE),
+        (gene1, GENE1_STATS_TEMPLATE),
+    ):
+        blood_stats = get_gene_stats(data_blood, gene_name).rename(
+            f"{gene_name} - blood"
+        )
         display(blood_stats)
 
         pred_stats = get_gene_stats(data_pred, gene_name).rename(f"{gene_name} - pred")
         display(pred_stats)
 
-        new_content = get_gene_content(blood_stats, pred_stats, gene_name, gene_template) + "\n"
+        new_content = (
+            get_gene_content(blood_stats, pred_stats, gene_name, gene_template) + "\n"
+        )
 
         gene_file_mark = GENE_FILE_MARK_TEMPLATE.format(gene=gene_name)
 
