@@ -79,7 +79,6 @@ time_results = time_results.replace(
             "s-1": "Spearman (1 core)",
             "cm-1": "CCC (1 core)",
             "mic-1": "MIC (1 core)",
-            
             "p-3": "Pearson (3 cores)",
             "s-3": "Spearman (3 cores)",
             "cm-3": "CCC (3 cores)",
@@ -108,7 +107,7 @@ display(run_numbers)
 # # Plot#
 
 # %%
-hue_order = None#["CCC", "MIC", "Pearson", "Spearman"]
+hue_order = None  # ["CCC", "MIC", "Pearson", "Spearman"]
 
 # %%
 deep_colors = sns.color_palette("deep")
