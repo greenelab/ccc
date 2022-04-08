@@ -48,7 +48,7 @@ from clustermatch.methods import mic
 # # Settings
 
 # %%
-OUTPUT_FILENAME = "time_test-ccc_p_s.pkl"
+OUTPUT_FILENAME = "time_test.pkl"
 
 # %% tags=[]
 DATA_SIZES = [
@@ -70,9 +70,7 @@ np.random.seed(0)
 # # Paths
 
 # %% tags=[]
-OUTPUT_DIR = (
-    conf.RESULTS_DIR / "time_test"
-)
+OUTPUT_DIR = conf.RESULTS_DIR / "time_test"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_DIR)
 
@@ -80,12 +78,16 @@ display(OUTPUT_DIR)
 # # Functions
 
 # %%
-time_results = pd.DataFrame(columns=['data_size', 'method', 'time', 'sim'])
+time_results = pd.DataFrame(columns=["data_size", "method", "time", "sim"])
 
 
 # %%
 def run_method(func, method_name, size):
-    for r in range(N_REPS):
+    n_reps = N_REPS
+    if size < 500:
+        n_reps = 1000
+
+    for r in range(n_reps):
         d1 = np.random.rand(size)
         d2 = np.random.rand(size)
 
@@ -102,19 +104,27 @@ def run_method(func, method_name, size):
 # # Run
 
 # %%
+# initialize methods
+cm(np.random.rand(100), np.random.rand(100))
+
+# %%
 for s in DATA_SIZES:
-    print(f'Size: {s}')
+    print(f"Size: {s}")
 
-    print(f'  p')
-    run_method(lambda x, y: pearsonr(x, y)[0], 'p', s)
-    
-    print(f'  s')
-    run_method(lambda x, y: spearmanr(x, y)[0], 's', s)
-    
-    print(f'  cm')
-    run_method(lambda x, y: cm(x, y), 'cm', s)
+    print(f"  p")
+    run_method(lambda x, y: pearsonr(x, y)[0], "p-1", s)
 
-    print('Saving to pickle')
+    print(f"  s")
+    run_method(lambda x, y: spearmanr(x, y)[0], "s-1", s)
+
+    print(f"  cm")
+    run_method(lambda x, y: cm(x, y), "cm-1", s)
+
+    if s <= 10000:
+        print(f"  mic")
+        run_method(lambda x, y: mic(x, y), "mic-1", s)
+
+    print("Saving to pickle")
     time_results.to_pickle(OUTPUT_DIR / OUTPUT_FILENAME)
 
 # %%

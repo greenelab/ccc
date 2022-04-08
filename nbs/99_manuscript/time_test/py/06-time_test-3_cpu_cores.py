@@ -22,22 +22,20 @@
 # %% [markdown] tags=[]
 # # Modules loading
 
-# %% [markdown]
-# Make sure only one core is used everywhere.
-
 # %%
-# %env CM_N_JOBS=1
-# %env NUMBA_NUM_THREADS=1
-# %env MKL_NUM_THREADS=1
-# %env OPEN_BLAS_NUM_THREADS=1
-# %env NUMEXPR_NUM_THREADS=1
-# %env OMP_NUM_THREADS=1
+# %env CM_N_JOBS=3
+# %env NUMBA_NUM_THREADS=3
+# %env MKL_NUM_THREADS=3
+# %env OPEN_BLAS_NUM_THREADS=3
+# %env NUMEXPR_NUM_THREADS=3
+# %env OMP_NUM_THREADS=3
 
 # %% tags=[]
 from time import time
 
 import numpy as np
 import pandas as pd
+from scipy.stats import pearsonr, spearmanr
 
 from clustermatch import conf
 from clustermatch.coef import cm
@@ -47,7 +45,7 @@ from clustermatch.methods import mic
 # # Settings
 
 # %%
-OUTPUT_FILENAME = "time_test-ccc_mic.pkl"
+OUTPUT_FILENAME = "time_test.pkl"
 
 # %% tags=[]
 DATA_SIZES = [
@@ -56,6 +54,8 @@ DATA_SIZES = [
     1000,
     5000,
     10000,
+    100000,
+    1000000,
 ]
 
 N_REPS = 10
@@ -67,9 +67,7 @@ np.random.seed(0)
 # # Paths
 
 # %% tags=[]
-OUTPUT_DIR = (
-    conf.RESULTS_DIR / "time_test"
-)
+OUTPUT_DIR = conf.RESULTS_DIR / "time_test"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_DIR)
 
@@ -77,12 +75,20 @@ display(OUTPUT_DIR)
 # # Functions
 
 # %%
-time_results = pd.DataFrame(columns=['data_size', 'method', 'time', 'sim'])
+# append to previous run
+time_results = pd.read_pickle(OUTPUT_DIR / OUTPUT_FILENAME)
+
+# %%
+time_results.shape
 
 
 # %%
 def run_method(func, method_name, size):
-    for r in range(N_REPS):
+    n_reps = N_REPS
+    if size < 500:
+        n_reps = 1000
+
+    for r in range(n_reps):
         d1 = np.random.rand(size)
         d2 = np.random.rand(size)
 
@@ -99,16 +105,30 @@ def run_method(func, method_name, size):
 # # Run
 
 # %%
-for s in DATA_SIZES:
-    print(f'Size: {s}')
-    
-    print(f'  cm')
-    run_method(lambda x, y: cm(x, y), 'cm', s)
-    
-    print(f'  mic')
-    run_method(lambda x, y: mic(x, y), 'mic', s)
+# initialize methods
+run_method(lambda x, y: cm(x, y), "cm", 100)
 
-    print('Saving to pickle')
+# %%
+for s in DATA_SIZES:
+    print(f"Size: {s}")
+
+    print(f"  p")
+    run_method(lambda x, y: pearsonr(x, y)[0], "p-3", s)
+
+    print(f"  s")
+    run_method(lambda x, y: spearmanr(x, y)[0], "s-3", s)
+
+    print(f"  cm")
+    run_method(lambda x, y: cm(x, y), "cm-3", s)
+
+    if s <= 10000:
+        print(f"  mic")
+        run_method(lambda x, y: mic(x, y), "mic-3", s)
+
+    print("Saving to pickle")
     time_results.to_pickle(OUTPUT_DIR / OUTPUT_FILENAME)
+
+# %%
+time_results.shape
 
 # %%
