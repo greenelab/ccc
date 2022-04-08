@@ -54,7 +54,6 @@ OUTPUT_FIGURE_DIR = (
     conf.MANUSCRIPT["FIGURES_DIR"]
     / "coefs_comp"
     / f"{gene0_symbol.lower()}_vs_{gene1_symbol.lower()}"
-    / "tissues"
 )
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
@@ -156,6 +155,16 @@ assert _tmp.exists()
 
 
 # %%
+def simplify_tissue_name(tissue_name):
+    return f"{tissue_name[0].upper()}{tissue_name[1:].replace('_', ' ')}"
+
+
+# %%
+assert simplify_tissue_name("whole_blood") == "Whole blood"
+assert simplify_tissue_name("uterus") == "Uterus"
+
+
+# %%
 def plot_gene_pair(
     tissue_name, gene0, gene1, hue=None, kind="hex", ylim=None, bins="log"
 ):
@@ -184,7 +193,7 @@ def plot_gene_pair(
     _pearson = pearsonr(tissue_data[gene0], tissue_data[gene1])[0]
     _spearman = spearmanr(tissue_data[gene0], tissue_data[gene1])[0]
 
-    _title = f"{tissue_name}\n$c={_clustermatch:.2f}$  $p={_pearson:.2f}$  $s={_spearman:.2f}$"
+    _title = f"{simplify_tissue_name(tissue_name)}\n$c={_clustermatch:.2f}$  $p={_pearson:.2f}$  $s={_spearman:.2f}$"
 
     other_args = {
         "kind": kind,  # if hue is None else "scatter",
@@ -221,7 +230,7 @@ def plot_gene_pair(
         # save
         output_file = (
             OUTPUT_FIGURE_DIR
-            / f"gtex_{tissue_name}-{gene_x_symbol}_vs_{gene_y_symbol}.pdf"
+            / f"gtex_{tissue_name}-{gene_x_symbol}_vs_{gene_y_symbol}.svg"
         )
         display(output_file)
 
@@ -260,24 +269,6 @@ _tissue_data = plot_gene_pair(
 )
 
 # %%
-# _tissue_data = plot_gene_pair(
-#     "fallopian_tube",
-#     gene0_id,
-#     gene1_id,
-#     hue="SEX",
-#     kind="scatter",
-# )
-
-# %%
-# _tissue_data = plot_gene_pair(
-#     "kidney_medulla",
-#     gene0_id,
-#     gene1_id,
-#     hue="SEX",
-#     kind="scatter",
-# )
-
-# %%
 _tissue_data = plot_gene_pair(
     "ovary",
     gene0_id,
@@ -294,15 +285,6 @@ _tissue_data = plot_gene_pair(
     hue="SEX",
     kind="scatter",
 )
-
-# %%
-# _tissue_data = plot_gene_pair(
-#     "cervix_endocervix",
-#     gene0_id,
-#     gene1_id,
-#     hue="SEX",
-#     kind="scatter",
-# )
 
 # %%
 _tissue_data = plot_gene_pair(
@@ -448,12 +430,54 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %% [markdown]
-# # Generate main figure
+# %% [markdown] tags=[]
+# # Create final figure
+
+# %%
+from svgutils.compose import Figure, SVG, Panel, Text
+
+# %%
+Figure(
+    "607.67480cm",
+    "870.45984cm",
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "gtex_whole_blood-KDM6A_vs_UTY.svg").scale(0.5),
+        SVG(OUTPUT_FIGURE_DIR / "gtex_testis-KDM6A_vs_UTY.svg").scale(0.5).move(200, 0),
+        SVG(OUTPUT_FIGURE_DIR / "gtex_cells_cultured_fibroblasts-KDM6A_vs_UTY.svg")
+        .scale(0.5)
+        .move(200 * 2, 0),
+    ),
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "gtex_brain_cerebellum-KDM6A_vs_UTY.svg").scale(0.5),
+        SVG(OUTPUT_FIGURE_DIR / "gtex_small_intestine_terminal_ileum-KDM6A_vs_UTY.svg")
+        .scale(0.5)
+        .move(200, 0),
+        SVG(OUTPUT_FIGURE_DIR / "gtex_breast_mammary_tissue-KDM6A_vs_UTY.svg")
+        .scale(0.5)
+        .move(200 * 2, 0),
+    ).move(0, 220),
+    Panel(
+        SVG(
+            OUTPUT_FIGURE_DIR
+            / "gtex_brain_anterior_cingulate_cortex_ba24-KDM6A_vs_UTY.svg"
+        ).scale(0.5),
+        SVG(OUTPUT_FIGURE_DIR / "gtex_brain_amygdala-KDM6A_vs_UTY.svg")
+        .scale(0.5)
+        .move(200, 0),
+        SVG(OUTPUT_FIGURE_DIR / "gtex_heart_atrial_appendage-KDM6A_vs_UTY.svg")
+        .scale(0.5)
+        .move(200 * 2, 0),
+    ).move(0, 220 * 2),
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "gtex_vagina-KDM6A_vs_UTY.svg").scale(0.5),
+        SVG(OUTPUT_FIGURE_DIR / "gtex_ovary-KDM6A_vs_UTY.svg").scale(0.5).move(200, 0),
+        SVG(OUTPUT_FIGURE_DIR / "gtex_uterus-KDM6A_vs_UTY.svg")
+        .scale(0.5)
+        .move(200 * 2, 0),
+    ).move(0, 220 * 3),
+).save(OUTPUT_FIGURE_DIR / "gtex-KDM6A_vs_UTY-main.svg")
 
 # %% [markdown]
-# To generate this main figure, you need to have texlive and pdf2svg installed in your system.
-#
-# In the output figure directory, you'll find a file named `generate_figure` that you need to run.
+# Now open the file, reside to fit drawing to page, and add a white rectangle to the background.
 
 # %%
