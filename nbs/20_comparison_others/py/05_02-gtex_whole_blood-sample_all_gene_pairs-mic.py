@@ -31,10 +31,10 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from minepy.mine import MINE
 
 from clustermatch import conf
 from clustermatch.utils import chunker
+from clustermatch.methods import mic
 
 # %% [markdown] tags=[]
 # # Settings
@@ -136,7 +136,6 @@ assert len(all_sample_files) > 0
 # %% tags=[]
 all_sample_files[:3]
 
-
 # %% [markdown] tags=[]
 # # Compute Maximal Information Coefficient (MIC)
 
@@ -144,34 +143,21 @@ all_sample_files[:3]
 # ## Functions
 
 # %% tags=[]
-def _mic(x, y):
-    """
-    Given two arrays (x and y), it computes MIC with the default parameters.
-    """
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-        mine = MINE(alpha=0.6, c=15, est="mic_approx")
-        mine.compute_score(x, y)
-        return mine.mic()
-
-
-# %% tags=[]
 # testing
-_mic_val = _mic(np.random.rand(10), np.random.rand(10))
+_mic_val = mic(np.random.rand(10), np.random.rand(10))
 display(_mic_val)
 assert _mic_val > 0.0
 
 
 # %% tags=[]
-def _compute_mic(gene_sets: list):
+def _compute_mic(gene_sets: list, gene_expr_dict):
     """
     It takes a list of gene pairs and computes MIC on all.
     It returns a series with gene pairs as index and MIC values.
     This function is used in concurrent.futures for parallel execution.
     """
     res = [
-        _mic(gene_expr_dict[gs[0]].to_numpy(), gene_expr_dict[gs[1]].to_numpy())
+        mic(gene_expr_dict[gs[0]].to_numpy(), gene_expr_dict[gs[1]].to_numpy())
         for gs in gene_sets
     ]
 
@@ -184,7 +170,7 @@ def _compute_mic(gene_sets: list):
 gene_set = pd.read_pickle(all_sample_files[0][1]).sample(n=10)
 display(gene_set)
 
-_res = _compute_mic(list(gene_set.itertuples(index=False)))
+_res = _compute_mic(list(gene_set.itertuples(index=False)), gene_expr_dict)
 display(_res.shape)
 display(_res.head())
 
