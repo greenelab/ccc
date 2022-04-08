@@ -44,6 +44,12 @@ GENE_SEL_STRATEGY = "var_pc_log2"
 # this is used for the cumulative histogram
 GENE_PAIRS_PERCENT = 0.70
 
+# %%
+CLUSTERMATCH_LABEL = "CCC"
+PEARSON_LABEL = "Pearson"
+SPEARMAN_LABEL = "Spearman"
+MIC_LABEL = "MIC"
+
 # %% [markdown] tags=[]
 # # Paths
 
@@ -73,7 +79,14 @@ assert INPUT_FILE.exists()
 # # Data
 
 # %% tags=[]
-corrs_df = pd.read_pickle(INPUT_FILE)
+corrs_df = pd.read_pickle(INPUT_FILE).rename(
+    columns={
+        "clustermatch": CLUSTERMATCH_LABEL,
+        "pearson": PEARSON_LABEL,
+        "spearman": SPEARMAN_LABEL,
+        "mic": MIC_LABEL,
+    }
+)
 
 # %% tags=[]
 corrs_df.shape
@@ -118,9 +131,7 @@ with sns.plotting_context("talk", font_scale=1.0):
     plot_histogram(df, output_dir=OUTPUT_FIGURE_DIR, fill=False)
 
 # %% [markdown] tags=[]
-# **UPDATE**
-#
-# Coefficients' values distribute very differently. Clustermatch is skewed to the left, whereas Pearson and specially Spearman seem more uniform.
+# The distribution of CCC and MIC are very similar
 
 # %% [markdown] tags=[]
 # ## Cumulative histogram plot
@@ -139,15 +150,15 @@ with sns.plotting_context("talk", font_scale=1.0):
 with sns.plotting_context("talk", font_scale=1.0):
     jointplot(
         data=df,
-        x="pearson",
-        y="mic",
+        x=PEARSON_LABEL,
+        y=MIC_LABEL,
         add_corr_coefs=False,
         output_dir=OUTPUT_FIGURE_DIR,
     )
 
 # %% tags=[]
 with sns.plotting_context("talk", font_scale=1.0):
-    x, y = "spearman", "mic"
+    x, y = SPEARMAN_LABEL, MIC_LABEL
 
     g = jointplot(
         data=df,
@@ -161,7 +172,7 @@ with sns.plotting_context("talk", font_scale=1.0):
     g.ax_joint.set_ylabel(None)
 
     g.savefig(
-        OUTPUT_FIGURE_DIR / f"dist-{x}_vs_{y}.svg",
+        OUTPUT_FIGURE_DIR / f"dist-{x.lower()}_vs_{y.lower()}.svg",
         bbox_inches="tight",
         dpi=300,
         facecolor="white",
@@ -169,7 +180,7 @@ with sns.plotting_context("talk", font_scale=1.0):
 
 # %% tags=[]
 with sns.plotting_context("talk", font_scale=1.0):
-    x, y = "clustermatch", "mic"
+    x, y = CLUSTERMATCH_LABEL, MIC_LABEL
 
     g = jointplot(
         data=df,
@@ -183,7 +194,7 @@ with sns.plotting_context("talk", font_scale=1.0):
     g.ax_joint.set_ylabel(None)
 
     g.savefig(
-        OUTPUT_FIGURE_DIR / f"dist-{x}_vs_{y}.svg",
+        OUTPUT_FIGURE_DIR / f"dist-{x.lower()}_vs_{y.lower()}.svg",
         bbox_inches="tight",
         dpi=300,
         facecolor="white",
@@ -200,5 +211,38 @@ df.corr()
 
 # %%
 df.corr("spearman")
+
+# %% [markdown] tags=[]
+# # Create final figure
+
+# %%
+from svgutils.compose import Figure, SVG, Panel, Text
+
+# %%
+Figure(
+    "643.71cm",
+    "427.66cm",
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "dist-histograms.svg").scale(0.5),
+        Text("a)", 2, 10, size=9, weight="bold"),
+    ),
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "dist-cum_histograms.svg").scale(0.5),
+        Text("b)", 2, 10, size=9, weight="bold"),
+    ).move(320, 0),
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "dist-pearson_vs_mic.svg").scale(0.595),
+        Panel(
+            SVG(OUTPUT_FIGURE_DIR / "dist-spearman_vs_mic.svg")
+            .scale(0.595)
+            .move(215, 0)
+        ),
+        Panel(SVG(OUTPUT_FIGURE_DIR / "dist-ccc_vs_mic.svg").scale(0.595).move(460, 0)),
+        Text("c)", 2, 10, size=9, weight="bold"),
+    ).move(0, 220),
+).save(OUTPUT_FIGURE_DIR / "dist-main.svg")
+
+# %% [markdown]
+# Now open `dist-main.svg`, reside to fit drawing to page, and add a white rectangle to the background.
 
 # %%
