@@ -45,7 +45,7 @@ GENE_SEL_STRATEGY = "var_pc_log2"
 GENE_PAIRS_PERCENT = 0.70
 
 # %%
-CLUSTERMATCH_LABEL = "Clustermatch"
+CLUSTERMATCH_LABEL = "CCC"
 PEARSON_LABEL = "Pearson"
 SPEARMAN_LABEL = "Spearman"
 
@@ -195,9 +195,9 @@ Figure(
         Text("b)", 2, 10, size=9, weight="bold"),
     ).move(320, 0),
     Panel(
-        SVG(OUTPUT_FIGURE_DIR / "dist-pearson_vs_clustermatch.svg").scale(0.595),
+        SVG(OUTPUT_FIGURE_DIR / "dist-pearson_vs_ccc.svg").scale(0.595),
         Panel(
-            SVG(OUTPUT_FIGURE_DIR / "dist-spearman_vs_clustermatch.svg")
+            SVG(OUTPUT_FIGURE_DIR / "dist-spearman_vs_ccc.svg")
             .scale(0.595)
             .move(215, 0)
         ),
