@@ -15,6 +15,7 @@ dependencies:
   - pandas
   - papermill
   - pip
+  - pytables
   - pytest
   - python=3.9.*
   - pyyaml
