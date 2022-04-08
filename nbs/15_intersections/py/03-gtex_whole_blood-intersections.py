@@ -322,6 +322,25 @@ gene_pairs_by_cats = gene_pairs_by_cats.loc[
     ]
 ]
 
+# %%
+gene_pairs_by_cats.head()
+
+# %%
+gene_pairs_by_cats = gene_pairs_by_cats.rename(
+    columns={
+        "Clustermatch (high)": "CCC (high)",
+        "Clustermatch (low)": "CCC (low)",
+    }
+)
+
+gene_pairs_by_cats.index.set_names(
+    {
+        "Clustermatch (high)": "CCC (high)",
+        "Clustermatch (low)": "CCC (low)",
+    },
+    inplace=True,
+)
+
 # %% tags=[]
 fig = plt.figure(figsize=(14, 5))
 
@@ -351,7 +370,19 @@ plt.savefig(
 # plt.margins(x=-0.4)
 
 # %% [markdown] tags=[]
-# This plot has the sets that represent agreements on the left, and disagreements on the right. The plot shown here is not the final one for the manuscript.
+# This plot has the sets that represent agreements on the left, and disagreements on the right.
+
+# %% [markdown]
+# The plot shown here is **not the final one for the manuscript**:
+#
+# 1. Open the main output svg file (`upsetplot-main.svg`)
+# 1. Include the file generated here (`upsetplot.svg`)
+# 1. Rearrange the `1e6` at the top, which is overlapping other numbers.
+# 1. Add the triangles (red and green). For this I need to move the category names at the left to make space.
+# 1. Add a rectangle and clip it to remove the extra space on the left
+# 1. Add the "Agreements" and "Disagreements" labels below.
+# 1. Automatically resize page to drawing.
+# 1. Add a rectangle that covers the entire drawing with white background. And send it to the background.
 
 # %% [markdown] tags=[]
 # # Save groups of gene pairs in each subset
