@@ -423,7 +423,7 @@ with sns.plotting_context("paper", font_scale=1.0):
 
     g.set_titles(row_template="")
 
-    g.fig.text(0, 0.30, N_GENE_PAIRS_LABEL, rotation=90)
+    g.fig.text(0.03, 0.30, N_GENE_PAIRS_LABEL, rotation=90)
 
     g.savefig(
         OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_count.svg",
@@ -460,10 +460,6 @@ plot_data.shape
 plot_data.head()
 
 # %%
-# g = sns.catplot(data=plot_df, x="subset", y="weight", kind="box", orient="v", hue="tissue", height=5, aspect=1.5, sharex=False)
-# g.set_xticklabels(rotation=30)
-
-# %%
 with sns.plotting_context("paper", font_scale=1.0):
     g = sns.FacetGrid(
         plot_data,
@@ -485,7 +481,7 @@ with sns.plotting_context("paper", font_scale=1.0):
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
 
-    g.fig.text(1.09, 0.25, AVG_PROB_INTERACTION_LABEL, rotation=90, ha="center")
+    g.fig.text(1.10, 0.25, AVG_PROB_INTERACTION_LABEL, rotation=90, ha="center")
     # g.axes[2][0].set_ylabel(AVG_PROB_INTERACTION_LABEL)
 
     g.savefig(
@@ -530,10 +526,6 @@ Figure(
 ).save(OUTPUT_FIGURE_DIR / "top_gene_pairs-main.svg")
 
 # %% [markdown]
-# Now open `top_gene_pairs-main.svg`, reside to fit drawing to page, and add a white rectangle to the background.
-
-# %% [markdown]
-# I think it's important to open the file with Inkscape and save it, just to make sure the content is right.
-# Because sometimes Inkscape crashed when opening it.
+# Now open the output svg file, reside to fit drawing to page, and add a white rectangle to the background.
 
 # %%
