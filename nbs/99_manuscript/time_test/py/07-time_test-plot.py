@@ -102,10 +102,14 @@ time_results.head()
 plot_data = time_results
 
 # %%
-run_numbers = plot_data[
-    plot_data["method"].str.contains("1 core", regex=False) |
-    plot_data["method"].str.contains("CCC (3 cores)", regex=False)
-].groupby(["data_size", "method"])["time"].describe()
+run_numbers = (
+    plot_data[
+        plot_data["method"].str.contains("1 core", regex=False)
+        | plot_data["method"].str.contains("CCC (3 cores)", regex=False)
+    ]
+    .groupby(["data_size", "method"])["time"]
+    .describe()
+)
 display(run_numbers)
 
 # %% [markdown]
