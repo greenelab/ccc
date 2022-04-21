@@ -46,6 +46,7 @@ from clustermatch import conf
 
 # %% tags=[]
 N_TOP_GENE_PAIRS = 100
+N_TOP_TISSUES = 5
 
 # %%
 # CLUSTERMATCH_LABEL = "Clustermatch"
@@ -87,6 +88,20 @@ display(OUTPUT_DIR)
 # %%
 all_subsets_dfs = []
 
+
+# %% [markdown]
+# ## Functions
+
+# %%
+def read_hdf(filepath, subset):
+    return pd.read_hdf(filepath, key="data").assign(
+        order=int(filepath.name.split("-")[0]),
+        gene_pair=filepath.name.split("-")[1].split(".")[0].upper(),
+        tissue=pd.read_hdf(filepath, key="metadata")["tissue"].squeeze(),
+        subset=subset,
+    )
+
+
 # %% [markdown]
 # ## Clustermatch vs Pearson
 
@@ -99,14 +114,7 @@ display(len(subset_files))
 display(subset_files[:3])
 
 # %%
-_dfs = [
-    pd.read_hdf(f, key="data").assign(
-        gene_pair=f.name.split("-")[1].split(".")[0].upper(),
-        tissue=pd.read_hdf(f, key="metadata")["tissue"].squeeze(),
-        subset=subset,
-    )
-    for f in subset_files
-]
+_dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
@@ -124,14 +132,7 @@ display(len(subset_files))
 display(subset_files[:3])
 
 # %%
-_dfs = [
-    pd.read_hdf(f, key="data").assign(
-        gene_pair=f.name.split("-")[1].split(".")[0].upper(),
-        tissue=pd.read_hdf(f, key="metadata")["tissue"].squeeze(),
-        subset=subset,
-    )
-    for f in subset_files
-]
+_dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
@@ -149,14 +150,7 @@ display(len(subset_files))
 display(subset_files[:3])
 
 # %%
-_dfs = [
-    pd.read_hdf(f, key="data").assign(
-        gene_pair=f.name.split("-")[1].split(".")[0].upper(),
-        tissue=pd.read_hdf(f, key="metadata")["tissue"].squeeze(),
-        subset=subset,
-    )
-    for f in subset_files
-]
+_dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
@@ -174,14 +168,7 @@ display(len(subset_files))
 display(subset_files[:3])
 
 # %%
-_dfs = [
-    pd.read_hdf(f, key="data").assign(
-        gene_pair=f.name.split("-")[1].split(".")[0].upper(),
-        tissue=pd.read_hdf(f, key="metadata")["tissue"].squeeze(),
-        subset=subset,
-    )
-    for f in subset_files
-]
+_dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
@@ -199,14 +186,7 @@ display(len(subset_files))
 display(subset_files[:3])
 
 # %%
-_dfs = [
-    pd.read_hdf(f, key="data").assign(
-        gene_pair=f.name.split("-")[1].split(".")[0].upper(),
-        tissue=pd.read_hdf(f, key="metadata")["tissue"].squeeze(),
-        subset=subset,
-    )
-    for f in subset_files
-]
+_dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
@@ -223,6 +203,9 @@ df.shape
 
 # %%
 df.head()
+
+# %%
+df["order"].unique()
 
 # %% [markdown]
 # # Stats
@@ -266,21 +249,54 @@ assert df["subset"].unique().shape[0] == 2
 # # Analyses
 
 # %%
-plot_stats = df.groupby(["subset", "tissue"])["gene_pair"].nunique()
+# for each subset (clustermatch vs etc, pearson vs etc), sort by top gene pairs
+# for that, for each subset, sort by "order", which indicates, for each subset
+# the gene pairs with the largest correlation value
+top_gene_pairs = df.groupby(["subset"], group_keys=False).apply(
+    lambda x: x.sort_values(["order", "gene_pair"], ascending=True)[
+        "gene_pair"
+    ].unique()
+)
+
+# %%
+top_gene_pairs
+
+# %%
+# now use the order of gene pairs within subsets to actually select the top ones
+top_df = df.groupby(["subset"], group_keys=False).apply(
+    lambda x: x[x["gene_pair"].isin(top_gene_pairs.loc[x.name][:N_TOP_GENE_PAIRS])]
+)
+
+# %%
+top_df.shape
+
+# %%
+top_df.head()
+
+# %%
+plot_stats = top_df.groupby(["subset", "tissue"])["gene_pair"].nunique()
 
 # %%
 plot_stats.head()
 
 # %%
 plot_stats = (
-    plot_stats.groupby("subset").apply(lambda grp: grp.nlargest(5)).droplevel(0)
-)
+    plot_stats.groupby("subset")
+    .apply(lambda grp: grp.nlargest(N_TOP_TISSUES))
+    .droplevel(0)
+).rename("n_gene_pairs")
 
 # by percentage
 # plot_stats = plot_stats.groupby("subset").apply(lambda x: x / x.sum())
 
 # %%
 plot_stats
+
+# %%
+# sum gene pairs, it should be less than 100 (100 is the total number of gene pairs taken)
+tmp = plot_stats.groupby("subset").sum()
+display(tmp)
+assert (tmp < N_TOP_GENE_PAIRS).all()
 
 # %%
 plot_stats.index.get_level_values("tissue").unique().shape
@@ -295,7 +311,7 @@ plot_stats["subset"].unique()
 # %%
 plot_stats["tissue"].unique()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Plots
 
 # %%
@@ -304,9 +320,6 @@ N_GENE_PAIRS_LABEL = "Number of gene pairs"
 AVG_PROB_INTERACTION_LABEL = (
     "Average probability of interaction\nin tissue-specific networks"
 )
-
-# %% [markdown]
-# ## Tissues
 
 # %%
 subset_renames = {
@@ -323,24 +336,25 @@ tissue_renames = {
     "natural-killer-cell": "Natural killer cell",
     "leukocyte": "Leukocyte",
     "macrophage": "Macrophage",
-    "central-nervous-system": "Central nervous system",
     "granulocyte": "Granulocyte",
-    "b-lymphocyte": "B-lymphocyte",
     "skeletal-muscle": "Skeletal muscle",
     "liver": "Liver",
     "placenta": "Placenta",
-    "renal-tubule": "Renal tubule",
-    "placenta": "Placenta",
-    "placenta": "Placenta",
 }
 
+# %% [markdown]
+# ## First plot version
+
 # %%
-plot_data = plot_stats.replace(
+count_data = plot_stats.replace(
     {
         "subset": subset_renames,
         "tissue": tissue_renames,
     }
 )
+
+# %% [markdown]
+# ### Tissues order
 
 # %%
 blood_related_tissues = set(
@@ -350,8 +364,6 @@ blood_related_tissues = set(
         "Natural killer cell",
         "Leukocyte",
         "Macrophage",
-        "Granulocyte",
-        "B-lymphocyte",
     ]
 )
 
@@ -362,17 +374,16 @@ tissues_order = [
     "Natural killer cell",
     "Leukocyte",
     "Macrophage",
-    # "Granulocyte",
-    # "B-lymphocyte",
     "Skeletal muscle",
     "Liver",
     "Placenta",
-    # "Renal tubule",
-    # "Central nervous system",
 ]
 
+# %% [markdown]
+# ### Tissues colors
+
 # %%
-deep_colors = sns.color_palette("deep")
+deep_colors = sns.color_palette("tab10")
 display(deep_colors)
 
 # %%
@@ -385,11 +396,13 @@ tissue_colors = {
     for t in tissues_order
 }
 
+# %% [markdown]
+# ### Plot: number of gene pairs by tissue and method
+
 # %%
-# first plot to show order of subset
 with sns.plotting_context("paper", font_scale=1.0):
     g = sns.FacetGrid(
-        plot_data,
+        count_data,
         row="subset",
         sharex=True,
         sharey=True,
@@ -397,18 +410,160 @@ with sns.plotting_context("paper", font_scale=1.0):
         aspect=2.1,
     )
     g.map(
-        sns.barplot, "tissue", "gene_pair", order=tissues_order, palette=tissue_colors
+        sns.barplot,
+        "tissue",
+        "n_gene_pairs",
+        order=tissues_order,
+        palette=tissue_colors,
     )
     g.set_xticklabels(rotation=35, ha="right")
     g.set_axis_labels(PREDICTED_TISSUE_LABEL, "")
 
     g.fig.text(0, 0.30, N_GENE_PAIRS_LABEL, rotation=90)
 
+# %% [markdown]
+# ### Plot: gene networks connectivity by tissue and method
+
 # %%
-# now again without row titles and save the plot
+conn_data = pd.merge(
+    top_df,
+    plot_stats,
+    left_on=["subset", "tissue"],
+    right_on=["subset", "tissue"],
+    how="inner",
+)
+
+# %%
+conn_data = conn_data.replace(
+    {
+        "subset": subset_renames,
+        "tissue": tissue_renames,
+    }
+)
+
+# %%
+conn_data.shape
+
+# %%
+conn_data.head()
+
+# %%
+# # only keep connections with query genes
+# conn_data = conn_data.assign(query_genes=conn_data["gene_pair"].apply(lambda x: set(x.split("_"))))
+
+# %%
+# conn_data = conn_data[conn_data.apply(
+#     lambda x:
+#         (x["gene1"] in x["query_genes"]) | (x["gene2"] in x["query_genes"]),
+#     axis=1
+# )]
+
+# %%
+# conn_data.shape
+
+# %%
+# conn_data.head()
+
+# %%
 with sns.plotting_context("paper", font_scale=1.0):
     g = sns.FacetGrid(
-        plot_data,
+        conn_data,
+        row="subset",
+        sharex=True,
+        sharey=True,
+        height=2.0,
+        aspect=2.1,
+    )
+    g.map(sns.boxplot, "tissue", "weight", order=tissues_order, palette=tissue_colors)
+    g.set_xticklabels(rotation=30, ha="right")
+    g.set_axis_labels(PREDICTED_TISSUE_LABEL, "")
+
+    for ax in g.axes:
+        ax = ax[0]
+        sns.despine(ax=ax, left=True, right=False)
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+
+    g.fig.text(1.10, 0.25, AVG_PROB_INTERACTION_LABEL, rotation=90, ha="center")
+
+# %% [markdown]
+# ## Second plot version
+
+# %%
+# plot_data = plot_stats.replace(
+#     {
+#         "subset": subset_renames,
+#         "tissue": tissue_renames,
+#     }
+# )
+
+# %% [markdown]
+# ### Tissues order
+
+# %%
+ccc_tissues = {
+    "Natural killer cell",
+    "Leukocyte",
+    "Macrophage",
+}
+
+pcc_tissues = {
+    "Skeletal muscle",
+    "Liver",
+    "Placenta",
+}
+
+shared_tissues = {
+    "Blood",
+    "Mononuclear phagocyte",
+}
+
+# make sure I'm not missing a tissue
+assert set(tissues_order) == (ccc_tissues | pcc_tissues | shared_tissues)
+
+# new tissues_order
+tissues_order = [
+    "Macrophage",
+    "Leukocyte",
+    "Natural killer cell",
+    "Blood",
+    "Mononuclear phagocyte",
+    "Skeletal muscle",
+    "Liver",
+    "Placenta",
+]
+
+assert set(tissues_order) == (ccc_tissues | pcc_tissues | shared_tissues)
+
+# %% [markdown]
+# ### Tissues colors
+
+# %%
+display(deep_colors)
+
+# %%
+# by specific or shared
+ccc_color = deep_colors[3]
+shared_color = deep_colors[4]
+pcc_color = deep_colors[0]
+
+# %%
+tissue_colors = {
+    t: ccc_color
+    if t in ccc_tissues
+    else pcc_color
+    if t in pcc_tissues
+    else shared_color
+    for t in tissues_order
+}
+
+# %% [markdown]
+# ### Plot: number of gene pairs by tissue and method
+
+# %%
+with sns.plotting_context("paper", font_scale=1.0):
+    g = sns.FacetGrid(
+        count_data,
         row="subset",
         sharex=True,
         sharey=True,
@@ -416,7 +571,11 @@ with sns.plotting_context("paper", font_scale=1.0):
         aspect=2.1,
     )
     g.map(
-        sns.barplot, "tissue", "gene_pair", order=tissues_order, palette=tissue_colors
+        sns.barplot,
+        "tissue",
+        "n_gene_pairs",
+        order=tissues_order,
+        palette=tissue_colors,
     )
     g.set_xticklabels(rotation=30, ha="right")
     g.set_axis_labels(PREDICTED_TISSUE_LABEL, "")
@@ -434,35 +593,12 @@ with sns.plotting_context("paper", font_scale=1.0):
     )
 
 # %% [markdown]
-# ## Connectivity
-
-# %%
-plot_data = pd.merge(
-    df,
-    plot_stats,
-    left_on=["subset", "tissue"],
-    right_on=["subset", "tissue"],
-    how="inner",
-)
-
-# %%
-plot_data = plot_data.replace(
-    {
-        "subset": subset_renames,
-        "tissue": tissue_renames,
-    }
-)
-
-# %%
-plot_data.shape
-
-# %%
-plot_data.head()
+# ### Plot: gene networks connectivity by tissue and method
 
 # %%
 with sns.plotting_context("paper", font_scale=1.0):
     g = sns.FacetGrid(
-        plot_data,
+        conn_data,
         row="subset",
         sharex=True,
         sharey=True,
@@ -496,7 +632,7 @@ with sns.plotting_context("paper", font_scale=1.0):
 # # Raw numbers
 
 # %%
-plot_data.groupby(["subset", "tissue"])["weight"].describe()
+conn_data.groupby(["subset", "tissue"])["weight"].describe()
 
 # %% [markdown] tags=[]
 # # Create final figure
@@ -506,19 +642,19 @@ from svgutils.compose import Figure, SVG, Panel, Text
 
 # %%
 Figure(
-    "309.02272cm",
-    "164.7096cm",
+    "303.21992cm",
+    "164.70964cm",
     SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_count.svg").scale(0.5),
     # cm vs rest
-    SVG(COEF_COMP_DIR / "triangles-c_vs_p.svg").scale(1.50).move(35, 4),
-    Text("+", 67, 10, size=6),
-    SVG(COEF_COMP_DIR / "triangles-c_vs_ps.svg").scale(1.50).move(75, 4),
-    Text("+", 108, 10, size=6),
-    SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(1.50).move(115, 4),
+    SVG(COEF_COMP_DIR / "triangles-c_vs_p.svg").scale(1.50).move(30, 4),
+    Text("+", 52, 10, size=6),
+    SVG(COEF_COMP_DIR / "triangles-c_vs_ps.svg").scale(1.50).move(60, 4),
+    Text("+", 83, 10, size=6),
+    SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(1.50).move(90, 4),
     # p vs rest
-    SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(1.50).move(35, 65),
-    Text("+", 67, 71, size=6),
-    SVG(COEF_COMP_DIR / "triangles-p_vs_cs.svg").scale(1.50).move(75, 65),
+    SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(1.50).move(30, 65),
+    Text("+", 52, 71, size=6),
+    SVG(COEF_COMP_DIR / "triangles-p_vs_cs.svg").scale(1.50).move(60, 65),
     # another
     SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.svg")
     .scale(0.5)
