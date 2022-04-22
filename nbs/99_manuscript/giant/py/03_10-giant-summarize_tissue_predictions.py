@@ -632,6 +632,9 @@ with sns.plotting_context("paper", font_scale=1.0):
 # # Raw numbers
 
 # %%
+count_data.sort_values(["subset", "n_gene_pairs"], ascending=[True, False])
+
+# %%
 conn_data.groupby(["subset", "tissue"])["weight"].describe()
 
 # %% [markdown] tags=[]
@@ -641,24 +644,58 @@ conn_data.groupby(["subset", "tissue"])["weight"].describe()
 from svgutils.compose import Figure, SVG, Panel, Text
 
 # %%
+BLOOD_NETWORKS_DIR = OUTPUT_FIGURE_DIR / "blood_tissues" / "gene_pair_networks"
+AUTO_SELECTED_NETWORKS_DIR = (
+    OUTPUT_FIGURE_DIR / "auto_selected_tissues" / "gene_pair_networks"
+)
+
+# %%
 Figure(
-    "303.21992cm",
-    "164.70964cm",
-    SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_count.svg").scale(0.5),
-    # cm vs rest
-    SVG(COEF_COMP_DIR / "triangles-c_vs_p.svg").scale(1.50).move(30, 4),
-    Text("+", 52, 10, size=6),
-    SVG(COEF_COMP_DIR / "triangles-c_vs_ps.svg").scale(1.50).move(60, 4),
-    Text("+", 83, 10, size=6),
-    SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(1.50).move(90, 4),
-    # p vs rest
-    SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(1.50).move(30, 65),
-    Text("+", 52, 71, size=6),
-    SVG(COEF_COMP_DIR / "triangles-p_vs_cs.svg").scale(1.50).move(60, 65),
-    # another
-    SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.svg")
-    .scale(0.5)
-    .move(130, 0),
+    "30.50629cm",
+    "24.44741cm",
+    Panel(
+        Panel(
+            SVG(BLOOD_NETWORKS_DIR / "GIANT-RASSF2_vs_CYTIP-blood.svg").move(10, 0),
+            SVG(
+                AUTO_SELECTED_NETWORKS_DIR / "GIANT-RASSF2_vs_CYTIP-leukocyte.svg"
+            ).move(420, 0),
+            SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(7.00).move(20, 350),
+            Text("a)", 0, 30, size=28, weight="bold"),
+            SVG(BLOOD_NETWORKS_DIR / "color_bar.svg").scale(3.50).move(270, 410),
+        )
+        .scale(0.0175)
+        .move(0, 0),
+        Panel(
+            SVG(BLOOD_NETWORKS_DIR / "GIANT-MYOZ1_vs_TNNI2-blood.svg").move(10, 0),
+            SVG(
+                AUTO_SELECTED_NETWORKS_DIR / "GIANT-MYOZ1_vs_TNNI2-skeletal_muscle.svg"
+            ).move(420, 0),
+            Text("b)", 0, 30, size=28, weight="bold"),
+            SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(7.00).move(20, 350),
+        )
+        .scale(0.0175)
+        .move(16, 0),
+    ),
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_count.svg").scale(0.5),
+        # cm vs rest
+        SVG(COEF_COMP_DIR / "triangles-c_vs_p.svg").scale(1.50).move(30, 4),
+        Text("+", 52, 10, size=6),
+        SVG(COEF_COMP_DIR / "triangles-c_vs_ps.svg").scale(1.50).move(60, 4),
+        Text("+", 83, 10, size=6),
+        SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(1.50).move(90, 4),
+        # p vs rest
+        SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(1.50).move(30, 65),
+        Text("+", 52, 71, size=6),
+        SVG(COEF_COMP_DIR / "triangles-p_vs_cs.svg").scale(1.50).move(60, 65),
+        # another
+        SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.svg")
+        .scale(0.5)
+        .move(130, 0),
+        Text("c)", 0, 9, size=6, weight="bold"),
+    )
+    .scale(0.10)
+    .move(0, 8),
 ).save(OUTPUT_FIGURE_DIR / "top_gene_pairs-main.svg")
 
 # %% [markdown]
