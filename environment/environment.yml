@@ -5,7 +5,7 @@ channels:
 dependencies:
   - ipython=7.*
   - ipywidgets
-  - jupyterlab=3.1.*
+  - jupyterlab=3.3.*
   - jupytext=1.11.*
   - matplotlib=3.4.*
   - minepy=1.2.*
