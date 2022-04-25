@@ -1,5 +1,5 @@
 """
-TODO
+Contains other correlation methods.
 """
 import warnings
 
