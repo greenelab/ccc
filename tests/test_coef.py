@@ -292,6 +292,44 @@ def test_cm_basic():
     assert isinstance(cm_value, float)
 
 
+def test_cm_basic_internal_n_clusters_is_integer():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects (random data)
+    feature0 = np.random.rand(100)
+    feature1 = np.random.rand(100)
+
+    # Run
+    cm_value = cm(feature0, feature1)
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert cm_value > 0.0
+
+    # Run with internal_n_clusters equals to default value but as integer
+    cm_value2 = cm(feature0, feature1, internal_n_clusters=10)
+    assert cm_value == cm_value2
+
+
+def test_cm_basic_internal_n_clusters_is_integer_more_checks():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects (random data)
+    feature0 = np.random.rand(100)
+    feature1 = np.random.rand(100)
+
+    # Run
+    cm_value = cm(feature0, feature1, internal_n_clusters=[2, 3, 4])
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert cm_value > 0.0
+
+    # Run with internal_n_clusters equals to default value but as integer
+    cm_value2 = cm(feature0, feature1, internal_n_clusters=4)
+    assert cm_value == cm_value2
+
+
 def test_cm_ari_is_negative():
     # Prepare
     np.random.seed(123)

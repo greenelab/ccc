@@ -275,7 +275,7 @@ def get_chunks(
 def cm(
     x: NDArray,
     y: NDArray = None,
-    internal_n_clusters: Iterable[int] = None,
+    internal_n_clusters: Union[int, Iterable[int]] = None,
     return_parts: bool = False,
     n_chunks_threads_ratio: int = 3,
 ) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
@@ -293,8 +293,9 @@ def cm(
           If it is 2d, then the coefficient is computed for each pair of rows.
         y: an optional 1d numerical array. If x is 1d and y is given, it computes
           the coefficient between x and y.
-        internal_n_clusters: a list of integer values indicating the number of
-          clusters used to split x and y.
+        internal_n_clusters: this parameter can be an integer (the maximum number
+          of clusters used to split x and y, starting from k=2) or a list of
+          integer values (a custom list of k values).
         return_parts: if True, for each object pair, it returns the partitions
           that maximized the coefficient.
         n_chunks_threads_ratio: allows to modify how pairwise comparisons are
@@ -355,6 +356,11 @@ def cm(
 
     if internal_n_clusters is not None:
         _tmp_list = List()
+
+        if isinstance(internal_n_clusters, int):
+            # this interprets internal_n_clusters as the maximum k
+            internal_n_clusters = range(2, internal_n_clusters + 1)
+
         for x in internal_n_clusters:
             _tmp_list.append(x)
         internal_n_clusters = _tmp_list
