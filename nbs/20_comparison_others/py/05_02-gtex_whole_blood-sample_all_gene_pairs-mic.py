@@ -23,7 +23,6 @@
 # # Modules
 
 # %% tags=[]
-import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from collections import defaultdict
 from pathlib import Path
