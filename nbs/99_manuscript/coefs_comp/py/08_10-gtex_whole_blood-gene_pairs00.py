@@ -434,7 +434,7 @@ _tissue_data = plot_gene_pair(
 # # Create final figure
 
 # %%
-from svgutils.compose import Figure, SVG, Panel, Text
+from svgutils.compose import Figure, SVG, Panel
 
 # %%
 Figure(
