@@ -17,7 +17,9 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# It generates random variables of varying sizes to compare the time taken by CCC and MIC.
+#
+# This notebook uses 3 CPU core.
 
 # %% [markdown] tags=[]
 # # Modules loading
