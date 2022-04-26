@@ -23,13 +23,7 @@
 # # Modules
 
 # %% tags=[]
-import json
-import tempfile
-from pathlib import Path
-
-import requests
 import pandas as pd
-from pandas.api.types import CategoricalDtype
 from tqdm import tqdm
 
 from clustermatch import conf

@@ -1,12 +1,9 @@
-import os
-
-import pytest
 import pandas as pd
 
 from clustermatch.giant import gene_exists, predict_tissue, get_network
 
 
-# Gene mappings used in the unit tests
+# Gene mappings used in unit tests
 gene_mappings = pd.DataFrame(
     [
         ("IFNG", "3458"),
@@ -20,7 +17,7 @@ gene_mappings = pd.DataFrame(
     columns=["SYMBOL", "ENTREZID"],
 )
 
-# @pytest.mark.skipif("GITHUB_ACTION" in os.environ, reason="Do not run in Github Actions")
+
 def test_gene_exists_gene_does_exist():
     assert gene_exists(3458)
 
