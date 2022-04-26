@@ -13,7 +13,13 @@ URL_GENE_INFO = "https://hb.flatironinstitute.org/api/genes/"
 URL_TISSUE_PREDICTION = "https://hb.flatironinstitute.org/api/integrations/relevant/"
 
 
-def gene_exists(gene_entrez_id):
+def gene_exists(gene_entrez_id: str) -> bool:
+    """
+    Given a gene Entrez ID, it checks whether it exists in GIANT models.
+
+    Returns:
+        True if gene exists, False otherwise.
+    """
     url = URL_GENE_INFO + str(gene_entrez_id)
     r = requests.get(url)
 
@@ -24,16 +30,29 @@ def gene_exists(gene_entrez_id):
     return "entrez" in data and "standard_name" in data
 
 
-def predict_tissue(gene_pair_tuple):
-    for gene in gene_pair_tuple:
+def predict_tissue(gene_pair: tuple[str, str]) -> tuple[str, str]:
+    """
+    Given a gene pair (Entrez IDs) as a tuple, it predicts a tissue or cell type
+    where they are specifically expressed.
+
+    Args:
+        gene_pair: a tuple with a gene pair (two elements as string) with
+          Entrez IDs.
+
+    Returns:
+        A tuple with two elements: the tissue name and the URL to predict a
+        network on this tissue.
+    """
+    for gene in gene_pair:
         if not gene_exists(gene):
             return None
 
-    params = {"entrez": list(gene_pair_tuple)}
+    params = {"entrez": list(gene_pair)}
     r = requests.post(URL_TISSUE_PREDICTION, json=params)
     data = r.json()
 
     # check if top tissue is brenda
+    # looks like GIANT only considers BRENDA terms when predicting a tissue
     top_id = 0
     while data[top_id]["context"]["term"]["database"]["name"] != "BRENDA Ontology":
         top_id += 1
@@ -41,10 +60,25 @@ def predict_tissue(gene_pair_tuple):
     return data[top_id]["slug"], data[top_id]["url"]
 
 
-def rank_genes(all_genes, edges, query_gene_symbols):
+def rank_genes(
+    all_genes: set[str], edges: pd.DataFrame, query_gene_symbols: tuple[str, str]
+) -> pd.Series:
     """
-    This function was coded following the HumanBase ranking of genes in networks.
-    EXPLAIN MORE
+    This function was coded following the HumanBase ranking of genes in
+    networks. It takes all the genes and their edges in a network and ranks them
+    according to how much connected they are to the query gene pair.
+
+    Args:
+        all_genes: a set with all genes in the network (gene symbols).
+        edges: a dataframe with three columns: gene0 (str, gene symbol), gene1
+          (str, gene symbol) and weight (float).
+        query_gene_symbols: a tuple with a gene pair (gene symbols) originally
+          used to obtain the network.
+
+    Returns:
+        A series with gene symbols in index and the ranks (int) as values.
+        Genes with a lower rank are more important for the network because they
+        are more connected to the gene pair (query_gene_symbols).
     """
     genes_query_degrees = {}
     genes_degrees = {}
@@ -67,7 +101,8 @@ def rank_genes(all_genes, edges, query_gene_symbols):
         genes_query_degrees[g] = g_query_degree
         genes_degrees[g] = g_degree
 
-    # no degree correction
+    # no degree correction (actually, genes_degrees is not used here, following
+    # the default behavior of GIANT)
     gene_ranks = [
         (gene, idx)
         for idx, (gene, weight) in enumerate(
@@ -85,22 +120,38 @@ def rank_genes(all_genes, edges, query_gene_symbols):
 
 
 def get_network(
-    gene_entrezids: tuple[str] = None,
-    gene_symbols: tuple[str] = None,
+    gene_entrezids: tuple[str, str] = None,
+    gene_symbols: tuple[str, str] = None,
     gene_ids_mappings: pd.DataFrame = None,
-    max_genes=15,
-    tissue=None,
-):
+    max_genes: int = 15,
+    tissue: tuple[str, str] = None,
+) -> tuple[pd.DataFrame, str, float]:
     """
-    TODO
+    Given a gene pair (either with Entrez IDs or symbols), it predicts a
+    tissue-specific network using GIANT. If tissue is given, then it predict the
+    network in that tissue, otherwise it autoselects the tissue/cell type (see
+    predict_tissue).
 
     Args:
-        gene_ids_mappings:
+        gene_entrezids: a gene pair with Entrez IDs. It can be None, in that case
+            gene_symbols has to be provided.
+        gene_symbols: a gene pair with symbols. It can be None, in that case
+            gene_entrezids has to be provided.
+        gene_ids_mappings: a dataframe with gene IDs mappings with two columns:
+            SYMBOL and ENTREZID.
+        max_genes: maximum number of genes to be included in the network (it
+            does not include query genes). All genes are ranked (see rank_genes
+            function) and the top ones are taken using this parameter. Default to 15
+            (same as in GIANT).
         tissue: if None, autodetect tissue; otherwise, it has to be a tuple with
-          the tissue name in the first element and the GIANT URL to query in the
-          second element. For example, for blood:
-            ("blood", "http://hb.flatironinstitute.org/api/integrations/blood/")
+            the tissue name in the first element and the GIANT URL to query in the
+            second element. For example, for blood:
+                ("blood", "http://hb.flatironinstitute.org/api/integrations/blood/")
+
     Returns:
+        A tuple with three elements about the network: the network itself as a
+        dataframe (with columns gene1, gene2 (both gene symbols) and weight);
+        the name of the predicted tissue; the minimum cut suggested by GIANT.
     """
     if gene_entrezids is None and gene_symbols is None:
         raise ValueError("No arguments provided")
@@ -153,14 +204,17 @@ def get_network(
     else:
         raise ValueError("Invalid tissue value")
 
+    # predict a tissue-specific network
     url = tissue_prediction[1] + "network/"
     params = [("entrez", gene_entrezids[0]), ("entrez", gene_entrezids[1])]
     r = requests.get(url, params)
     data = r.json()
 
+    # mincut will be used to filter out genes and keep only those with a weight
+    # larger than mincut
     mincut = data["mincut"]
-    # print(mincut)
 
+    # save the network to json files
     temp_dir = Path(tempfile.mkdtemp(prefix="giant-"))
     genes_json_file = temp_dir / "genes.json"
     edges_json_file = temp_dir / "edges.json"
@@ -168,6 +222,7 @@ def get_network(
         json.dump(data["genes"], gf)
         json.dump(data["edges"], ef)
 
+    # load network as panda objects
     genes = pd.read_json(genes_json_file)["standard_name"]
     edges = pd.read_json(edges_json_file)[["source", "target", "weight"]]
 
@@ -175,7 +230,7 @@ def get_network(
         genes.rename("gene2"), on="target", how="left"
     )[["gene1", "gene2", "weight"]]
 
-    # prioritize genes
+    # rank genes
     all_genes = set(df["gene1"]).union(set(df["gene2"]))
     if gene_symbols[0] not in all_genes or gene_symbols[1] not in all_genes:
         return None
@@ -185,6 +240,7 @@ def get_network(
 
     genes_ranks = rank_genes(all_genes, df, gene_symbols)
     top_genes = set(genes_ranks.head(max_genes).index)
+    # add query genes to the ranked list of genes
     top_genes.update(gene_symbols)
     df = df[(df["gene1"].isin(top_genes)) & (df["gene2"].isin(top_genes))]
 
