@@ -340,12 +340,12 @@ def cm(
     x = to_numpy(x)
     y = to_numpy(y)
 
-    if x.ndim == 1 and y is not None:
+    if x.ndim == 1 and (y is not None and y.ndim == 1):
         assert x.shape == y.shape
         X = np.zeros((2, x.shape[0]))
         X[0, :] = x
         X[1, :] = y
-    elif x.ndim == 2:
+    elif x.ndim == 2 and y is None:
         X = x
     else:
         raise ValueError("Wrong combination of parameters x and y")

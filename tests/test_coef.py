@@ -3,6 +3,7 @@ from random import shuffle
 
 import numpy as np
 import pandas as pd
+import pytest
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
 
@@ -463,6 +464,18 @@ def test_cm_x_is_pandas_dataframe():
     assert np.issubdtype(cm_value.dtype, float)
 
 
+def test_cm_x_and_y_are_pandas_dataframe():
+    # two arguments are dataframes (invalid)
+    x = pd.DataFrame(np.random.rand(10, 100))
+    y = pd.DataFrame(np.random.rand(10, 100))
+
+    # Run
+    with pytest.raises(ValueError) as e:
+        cm(x, y)
+
+    assert "wrong combination" in str(e).lower()
+
+
 def test_cm_integer_overflow_random():
     # Prepare
     np.random.seed(0)
@@ -813,6 +826,35 @@ def test_cm_return_parts_linear():
 
     # Run
     cm_value, max_parts, parts = cm(feature0, feature1, return_parts=True)
+
+    # Validate
+    assert cm_value == 1.0
+
+    assert parts is not None
+    assert len(parts) == 2
+    assert parts[0].shape == (9, 100)
+    assert parts[1].shape == (9, 100)
+
+    assert max_parts is not None
+    assert hasattr(max_parts, "shape")
+    assert max_parts.shape == (2,)
+    # even in this test we do not specify internal_n_clusters (so it goes from
+    # k=2 to k=10, nine partitions), k=2 for both features should already have
+    # the maximum value
+    np.testing.assert_array_equal(max_parts, np.array([0, 0]))
+
+
+def test_cm_return_parts_with_matrix_as_input():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+    X = pd.DataFrame([feature0, feature1])
+
+    # Run
+    cm_value, max_parts, parts = cm(X, return_parts=True)
 
     # Validate
     assert cm_value == 1.0
