@@ -73,13 +73,13 @@ def read_data(gene0, gene1, tissue_name=None, return_predicted_tissue=False):
     If None, it means the autodetected tissue/cell type.
     """
     tissue_suffix = f"-{tissue_name}" if tissue_name is not None else ""
-    
+
     file_pattern = f"???-{gene0.lower()}_{gene1.lower()}{tissue_suffix}.h5"
     files = list(INPUT_DIR.rglob(file_pattern))
     if len(files) == 0:
         file_pattern = f"???-{gene1.lower()}_{gene0.lower()}{tissue_suffix}.h5"
         files = list(INPUT_DIR.rglob(file_pattern))
-    
+
     assert len(files) == 1
     input_filepath = files[0]
     assert input_filepath.exists()
@@ -92,7 +92,7 @@ def read_data(gene0, gene1, tissue_name=None, return_predicted_tissue=False):
 
     if return_predicted_tissue:
         return data, pd.read_hdf(input_filepath, key="metadata").iloc[0]["tissue"]
-    
+
     return data
 
 
@@ -158,7 +158,7 @@ def get_gene_content(blood_stats, pred_stats, gene_name, gene_template, cell_typ
         pred_avg=format_number(pred_stats["mean"]),
         pred_max=format_number(pred_stats["max"]),
     )
-    
+
     if "{cell_type}" in gene_template and cell_type is not None:
         return s(cell_type=cell_type)
 
@@ -253,7 +253,14 @@ def process_genes(gene0, gene1):
         display(pred_stats)
 
         new_content = (
-            get_gene_content(blood_stats, pred_stats, gene_name, gene_template, format_tissue_name(pred_tissue)) + "\n"
+            get_gene_content(
+                blood_stats,
+                pred_stats,
+                gene_name,
+                gene_template,
+                format_tissue_name(pred_tissue),
+            )
+            + "\n"
         )
 
         gene_file_mark = GENE_FILE_MARK_TEMPLATE.format(gene=gene_name)
