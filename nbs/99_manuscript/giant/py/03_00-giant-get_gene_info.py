@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# It gets all the gene pairs prioritized by different correlation coefficients and writes a file with gene ID mappings (symbols and Entrez IDs).
 
 # %% [markdown] tags=[]
 # # Modules
@@ -40,17 +40,6 @@ from clustermatch import conf
 
 # %% tags=[]
 DATASET_CONFIG = conf.GTEX
-# GTEX_TISSUE = "whole_blood"
-# GENE_SEL_STRATEGY = "var_pc_log2"
-
-# %% tags=[]
-# # this is used for the cumulative histogram
-# GENE_PAIRS_PERCENT = 0.70
-
-# %%
-# CLUSTERMATCH_LABEL = "Clustermatch"
-# PEARSON_LABEL = "Pearson"
-# SPEARMAN_LABEL = "Spearman"
 
 # %% [markdown] tags=[]
 # # Paths
