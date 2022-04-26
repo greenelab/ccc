@@ -114,21 +114,21 @@ cm(np.random.rand(100), np.random.rand(100))
 for s in DATA_SIZES:
     print(f"Size: {s}")
 
-    print(f"  p")
+    print("  p")
     run_method(lambda x, y: pearsonr(x, y)[0], "p-1", s)
 
-    print(f"  s")
+    print("  s")
     run_method(lambda x, y: spearmanr(x, y)[0], "s-1", s)
 
-    print(f"  cm")
+    print("  cm")
     run_method(lambda x, y: cm(x, y), "cm-1", s)
 
     if s <= 50000:
-        print(f"  mic_e")
+        print("  mic_e")
         run_method(lambda x, y: mic(x, y, estimator="mic_e"), "mic_e-1", s)
 
     if s <= 10000:
-        print(f"  mic")
+        print("  mic")
         run_method(lambda x, y: mic(x, y), "mic-1", s)
 
     print("Saving to pickle")
