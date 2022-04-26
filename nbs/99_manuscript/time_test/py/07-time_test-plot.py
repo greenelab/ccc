@@ -269,10 +269,10 @@ from svgutils.compose import Figure, SVG
 
 # %%
 Figure(
-    "396.75125cm",
-    "170.93350cm",
-    SVG(OUTPUT_FIGURE_DIR / "time_test.svg").scale(0.5),
-    SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.5).move(200, 0),
+    "39.67513cm",
+    "17.09335cm",
+    SVG(OUTPUT_FIGURE_DIR / "time_test.svg").scale(0.05),
+    SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.05).move(20, 0),
 ).save(OUTPUT_FIGURE_DIR / "time_test-main.svg")
 
 # %% [markdown]
