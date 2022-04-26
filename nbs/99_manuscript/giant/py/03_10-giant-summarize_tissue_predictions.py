@@ -17,13 +17,10 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# Creates a plot to summarize predicted cell types and interaction probabilities across the top genes for each correlation coefficients.
 
 # %% [markdown] tags=[]
 # # Modules
-
-# %%
-# # %load_ext rpy2.ipython
 
 # %% tags=[]
 import json
@@ -40,18 +37,8 @@ from clustermatch import conf
 # # Settings
 
 # %% tags=[]
-# DATASET_CONFIG = conf.GTEX
-# GTEX_TISSUE = "whole_blood"
-# GENE_SEL_STRATEGY = "var_pc_log2"
-
-# %% tags=[]
 N_TOP_GENE_PAIRS = 100
 N_TOP_TISSUES = 5
-
-# %%
-# CLUSTERMATCH_LABEL = "Clustermatch"
-# PEARSON_LABEL = "Pearson"
-# SPEARMAN_LABEL = "Spearman"
 
 # %% [markdown] tags=[]
 # # Paths
@@ -70,12 +57,6 @@ display(COEF_COMP_DIR)
 OUTPUT_FIGURE_DIR = COEF_COMP_DIR / "giant_networks"
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
-
-# %% tags=[]
-# INPUT_DIR = DATASET_CONFIG["GENE_PAIR_INTERSECTIONS"]
-# display(INPUT_DIR)
-
-# assert INPUT_DIR.exists()
 
 # %% tags=[]
 OUTPUT_DIR = conf.GIANT["RESULTS_DIR"] / "intersection_genes"
@@ -488,14 +469,6 @@ with sns.plotting_context("paper", font_scale=1.0):
 
 # %% [markdown]
 # ## Second plot version
-
-# %%
-# plot_data = plot_stats.replace(
-#     {
-#         "subset": subset_renames,
-#         "tissue": tissue_renames,
-#     }
-# )
 
 # %% [markdown]
 # ### Tissues order
