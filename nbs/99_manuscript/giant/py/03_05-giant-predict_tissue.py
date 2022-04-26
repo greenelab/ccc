@@ -117,7 +117,7 @@ def process_tissue_networks(gene_pairs, output_directory, force_tissue=None):
     Given a list of tuples with gene pairs, it uses the GIANT web services to predict a
     relevant tissue for each gene pair and its gene network. Then it saves all the genes
     in the networks with their edges' values.
-    
+
     If force_tissue is None, then autodetect the cell type for gene pairs.
     Otherwise, force_tissue should be a string, which will be used as key to query in
     dictionary TISSUE_SPECIFIC_URLS.
@@ -134,9 +134,10 @@ def process_tissue_networks(gene_pairs, output_directory, force_tissue=None):
             suffix = ""
             if force_tissue is not None:
                 suffix = f"-{force_tissue}"
-            
+
             output_filepath = (
-                output_directory / f"{gp_idx:03d}-{gp[0].lower()}_{gp[1].lower()}{suffix}.h5"
+                output_directory
+                / f"{gp_idx:03d}-{gp[0].lower()}_{gp[1].lower()}{suffix}.h5"
             )
             if output_filepath.exists():
                 gp_idx += 1
@@ -144,12 +145,14 @@ def process_tissue_networks(gene_pairs, output_directory, force_tissue=None):
                 continue
 
             output_directory.mkdir(exist_ok=True, parents=True)
-            
+
             # predict a network for a gene pair
             _res = get_network(
                 gene_symbols=gp,
                 gene_ids_mappings=gene_id_mappings,
-                tissue=TISSUE_SPECIFIC_URLS[force_tissue] if force_tissue is not None else None,
+                tissue=TISSUE_SPECIFIC_URLS[force_tissue]
+                if force_tissue is not None
+                else None,
             )
             if _res is None:
                 gp_idx += 1
@@ -206,14 +209,15 @@ output_dir = OUTPUT_DIR / "custom" / "blood"
 
 # %%
 process_tissue_networks(
-    gene_pairs + [
+    gene_pairs
+    + [
         ("ZDHHC12", "CCL18"),
         ("RASSF2", "CYTIP"),
         ("MYOZ1", "TNNI2"),
         ("PYGM", "TPM2"),
     ],
     output_dir,
-    force_tissue="blood"
+    force_tissue="blood",
 )
 
 # %% [markdown]
