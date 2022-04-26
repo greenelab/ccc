@@ -11,24 +11,41 @@
 # We assume the repo code is in the current directory, so the user has to make
 # sure this is right.
 
+# general settings
+DOCKER_IMAGE_NAMESPACE="miltondp"
+DOCKER_IMAGE_NAME="clustermatch_gene_expr"
+DOCKER_TAG="latest"
+JUPYTERLAB_PORT="8893"
+
+# project-specific environment variables
+ROOT_DIR="${CM_ROOT_DIR}"
+MANUSCRIPT_DIR="${CM_MANUSCRIPT_DIR}"
+N_JOBS_VARNAME="CM_N_JOBS"
+N_JOBS=${!N_JOBS_VARNAME}
+
 echo "Configuration:"
 
 CODE_DIR=`pwd`
 echo "  Code dir: ${CODE_DIR}"
 
-if [ -z "${CM_ROOT_DIR}" ]; then
+# root dir
+if [ -z "${MANUSCRIPT_DIR}" ]; then
   ROOT_DIR="${CODE_DIR}/base"
-else
-  ROOT_DIR="${CM_ROOT_DIR}"
 fi
 
-if [ -z "${CM_N_JOBS}" ]; then
-  CM_N_JOBS=1
+# manuscript dir
+if [ -z "${MANUSCRIPT_DIR}" ]; then
+  MANUSCRIPT_DIR="/tmp/${DOCKER_IMAGE_NAME}_manuscript"
+  mkdir -p ${MANUSCRIPT_DIR}
+fi
+
+if [ -z "${N_JOBS}" ]; then
+  N_JOBS=1
 fi
 
 echo "  Root dir: ${ROOT_DIR}"
-echo "  Manuscript dir: ${CM_MANUSCRIPT_DIR}"
-echo "  CPU cores: ${CM_N_JOBS}"
+echo "  Manuscript dir: ${MANUSCRIPT_DIR}"
+echo "  CPU cores: ${N_JOBS}"
 
 echo ""
 echo "Waiting 2 seconds before starting"
@@ -38,7 +55,7 @@ sleep 2
 mkdir -p ${ROOT_DIR}
 
 COMMAND="$@"
-PORT_ARG="-p 8888:8893"
+PORT_ARG="-p 8888:${JUPYTERLAB_PORT}"
 if [ -z "${COMMAND}" ]; then
   FULL_COMMAND=()
 else
@@ -53,15 +70,15 @@ set -x
 
 # run
 docker run --rm ${PORT_ARG} \
-  -e CM_N_JOBS=${CM_N_JOBS} \
-  -e NUMBA_NUM_THREADS=${CM_N_JOBS} \
-  -e MKL_NUM_THREADS=${CM_N_JOBS} \
-  -e OPEN_BLAS_NUM_THREADS=${CM_N_JOBS} \
-  -e NUMEXPR_NUM_THREADS=${CM_N_JOBS} \
-  -e OMP_NUM_THREADS=${CM_N_JOBS} \
+  -e ${N_JOBS_VARNAME}=${N_JOBS} \
+  -e NUMBA_NUM_THREADS=${N_JOBS} \
+  -e MKL_NUM_THREADS=${N_JOBS} \
+  -e OPEN_BLAS_NUM_THREADS=${N_JOBS} \
+  -e NUMEXPR_NUM_THREADS=${N_JOBS} \
+  -e OMP_NUM_THREADS=${N_JOBS} \
   -v "${CODE_DIR}:/opt/code" \
   -v "${ROOT_DIR}:/opt/data" \
-  -v "${CM_MANUSCRIPT_DIR}:/opt/manuscript" \
+  -v "${MANUSCRIPT_DIR}:/opt/manuscript" \
   --user "$(id -u):$(id -g)" \
-  miltondp/clustermatch_gene_expr "${FULL_COMMAND[@]}"
+  ${DOCKER_IMAGE_NAMESPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_TAG} "${FULL_COMMAND[@]}"
 
