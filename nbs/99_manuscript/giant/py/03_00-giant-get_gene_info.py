@@ -26,11 +26,6 @@
 # %load_ext rpy2.ipython
 
 # %% tags=[]
-import json
-import tempfile
-from pathlib import Path
-
-import requests
 import pandas as pd
 
 from clustermatch import conf
