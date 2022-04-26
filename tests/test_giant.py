@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from clustermatch.giant import gene_exists, predict_tissue, get_network
 
@@ -45,6 +46,39 @@ def test_predict_tissue_top_tissue_is_not_brenda():
     )
 
 
+def test_get_network_parameters_not_provided():
+    with pytest.raises(ValueError) as e:
+        get_network()
+
+    assert "no arguments" in str(e).lower()
+
+
+def test_get_network_gene_mappings_not_provided():
+    with pytest.raises(ValueError) as e:
+        get_network(gene_symbols=("IFNG", "SDS"))
+
+    assert "gene mappings" in str(e).lower()
+
+
+def test_get_network_gene_mappings_is_invalid():
+    with pytest.raises(ValueError) as e:
+        get_network(
+            gene_symbols=("IFNG", "SDS"), gene_ids_mappings=gene_mappings.iloc[:, 0]
+        )
+
+    assert "gene_ids_mappings" in str(e).lower()
+
+
+def test_get_network_gene_mappings_with_invalid_columns():
+    with pytest.raises(ValueError) as e:
+        get_network(
+            gene_symbols=("IFNG", "SDS"),
+            gene_ids_mappings=gene_mappings.rename(columns={"SYMBOL": "symbol"}),
+        )
+
+    assert "SYMBOL and ENTREZID" in str(e)
+
+
 def test_get_network_genes_do_not_exist():
     # this case is wrong because gene symbols are given as entrezids
     assert get_network(("IFNG", "SDS"), gene_ids_mappings=gene_mappings) is None
@@ -73,6 +107,45 @@ def test_get_network_ifng_glipr1():
 
     # Run
     res = get_network(gene_symbols=gene_symbols, gene_ids_mappings=gene_mappings)
+    assert res is not None
+
+    df, df_tissue, _ = res
+    df = df.round(4)
+    assert df.shape[0] == 134
+
+    assert df_tissue == "blood"
+
+    pd.testing.assert_series_equal(
+        df.iloc[0],
+        pd.Series(["HLA-DPA1", "GBP2", 0.8386]),
+        check_names=False,
+        check_index=False,
+    )
+
+    pd.testing.assert_series_equal(
+        df.iloc[54],
+        pd.Series(["LCP2", "CASP1", 0.7856]),
+        check_names=False,
+        check_index=False,
+    )
+
+    pd.testing.assert_series_equal(
+        df.iloc[-1],
+        pd.Series(["ITGB2", "HLA-DQB1", 0.8782]),
+        check_names=False,
+        check_index=False,
+    )
+
+
+def test_get_network_ifng_glipr1_with_entrezids():
+    # these cases were obtained from the web application and are validated here
+
+    # Go to https://hb.flatironinstitute.org/gene/3458+11010
+    # and download the visible network as text file
+    gene_entrezids = ("3458", "11010")
+
+    # Run
+    res = get_network(gene_entrezids=gene_entrezids, gene_ids_mappings=gene_mappings)
     assert res is not None
 
     df, df_tissue, _ = res
@@ -187,3 +260,24 @@ def test_get_network_zdhhc12_ccl18_specify_tissue_blood():
         check_names=False,
         check_index=False,
     )
+
+
+def test_get_network_zdhhc12_ccl18_with_invalid_tissue():
+    # these cases were obtained from the web application and are validated here
+
+    # Go to https://hb.flatironinstitute.org/gene/84885+6362
+    # select blood as tissue and download the visible network as text file
+    gene_symbols = ("ZDHHC12", "CCL18")
+
+    # Run
+    # invalid tissue info
+    blood_tissue_info = ("blood",)
+
+    with pytest.raises(ValueError) as e:
+        get_network(
+            gene_symbols=gene_symbols,
+            gene_ids_mappings=gene_mappings,
+            tissue=blood_tissue_info,
+        )
+
+    assert "invalid tissue" in str(e).lower()
