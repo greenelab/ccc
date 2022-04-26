@@ -23,7 +23,6 @@
 # # Modules loading
 
 # %% tags=[]
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -194,7 +193,7 @@ plot_data = plot_data.replace(
             "Pearson (3 cores)": "Pearson",
             "Spearman (3 cores)": "Spearman",
             "MIC (3 cores)": "MIC",
-            "MICe (3 cores)": "$\mathregular{MIC_e}$",
+            "MICe (3 cores)": r"$\mathregular{MIC_e}$",
         }
     }
 )
@@ -205,7 +204,7 @@ plot_data["method"].unique()
 # %%
 hue_order = [
     "MIC",
-    "$\mathregular{MIC_e}$",
+    r"$\mathregular{MIC_e}$",
     "CCC (1 core)",
     "CCC (3 cores)",
     "Spearman",
@@ -266,7 +265,7 @@ with sns.plotting_context("paper", font_scale=1.5):
 # # Create final figure
 
 # %%
-from svgutils.compose import Figure, SVG, Panel, Text
+from svgutils.compose import Figure, SVG
 
 # %%
 Figure(
