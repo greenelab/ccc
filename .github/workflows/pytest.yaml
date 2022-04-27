@@ -26,7 +26,7 @@ jobs:
           lfs: false
       - name: Cache conda
         id: cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: "${{ env.PY_ENV }}.tar.gz"
           key: ${{ runner.os }}-${{ env.PY_CACHE_NUMBER }}-${{ hashFiles('environment/environment.yml', 'environment/scripts/install_r_packages.r', 'environment/scripts/install_other_packages.sh') }}
