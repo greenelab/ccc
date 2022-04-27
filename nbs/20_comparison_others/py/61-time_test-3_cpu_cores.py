@@ -140,10 +140,10 @@ for s in DATA_SIZES:
 # %% [markdown] tags=[]
 # # Summary of results
 
-# %%
+# %% tags=[]
 time_results.shape
 
-# %%
+# %% tags=[]
 time_results.head()
 
-# %%
+# %% tags=[]
