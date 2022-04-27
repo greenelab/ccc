@@ -15,7 +15,9 @@
 DOCKER_IMAGE_NAMESPACE="miltondp"
 DOCKER_IMAGE_NAME="clustermatch_gene_expr"
 DOCKER_TAG="latest"
-JUPYTERLAB_PORT="8893"
+DOCKER_PUBLISH_HOST="127.0.0.1"
+DOCKER_CONTAINER_PORT="8893"
+DOCKER_HOST_PORT="8888"
 
 # project-specific environment variables
 ROOT_DIR="${CM_ROOT_DIR}"
@@ -55,7 +57,7 @@ sleep 2
 mkdir -p ${ROOT_DIR}
 
 COMMAND="$@"
-PORT_ARG="-p 8888:${JUPYTERLAB_PORT}"
+PORT_ARG="-p ${DOCKER_PUBLISH_HOST}:${DOCKER_HOST_PORT}:${DOCKER_CONTAINER_PORT}"
 if [ -z "${COMMAND}" ]; then
   FULL_COMMAND=()
 else
