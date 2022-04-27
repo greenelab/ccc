@@ -121,7 +121,7 @@ hue_order = sorted(time_results["method"].unique())
 hue_order
 
 # %%
-deep_colors = sns.color_palette("deep")
+deep_colors = sns.color_palette("Paired")
 display(deep_colors)
 
 
