@@ -135,7 +135,15 @@ for s in DATA_SIZES:
     print("Saving to pickle")
     time_results.to_pickle(OUTPUT_DIR / OUTPUT_FILENAME)
 
-# %% tags=[]
+    print("\n")
+
+# %% [markdown] tags=[]
+# # Summary of results
+
+# %%
 time_results.shape
 
-# %% tags=[]
+# %%
+time_results.head()
+
+# %%
