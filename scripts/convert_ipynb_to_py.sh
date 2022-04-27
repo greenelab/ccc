@@ -23,7 +23,7 @@ fi
 
 # select code formatter according to file extension
 PIPE_CMD=("black {}")
-if [ "$fext" = ".r" ]; then
+if [ "$fext" = ".r" ] || [ "$fext" = ".R" ]; then
   PIPE_CMD=("${SCRIPT_DIR}/styler.r {}")
 fi
 
