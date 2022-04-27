@@ -1,10 +1,25 @@
-# Clustermatch on gene expression data (code)
+# Clustermatch Correlation Coefficient (CCC)
 
 [![Code tests](https://github.com/greenelab/clustermatch-gene-expr/actions/workflows/pytest.yaml/badge.svg)](https://github.com/greenelab/clustermatch-gene-expr/actions/workflows/pytest.yaml)
 [![codecov](https://codecov.io/gh/greenelab/clustermatch-gene-expr/branch/main/graph/badge.svg?token=QNK6O3Y1VF)](https://codecov.io/gh/greenelab/clustermatch-gene-expr)
 [![HTML Manuscript](https://img.shields.io/badge/manuscript-HTML-blue.svg)](https://greenelab.github.io/clustermatch-gene-expr-manuscript/)
 [![PDF Manuscript](https://img.shields.io/badge/manuscript-PDF-blue.svg)](https://greenelab.github.io/clustermatch-gene-expr-manuscript/manuscript.pdf)
 
+The Clustermatch Correlation Coefficient (CCC) is a highly-efficient, next-generation not-only-linear correlation coefficient that can work on numerical and categorical data types.
+CCC is available as a Python package (`ccc`).
+
+This repository contains the code of CCC, instructions to install and use it, and all the scripts/notebooks to run the experiments/analyses for the [CCC manuscript](https://greenelab.github.io/clustermatch-gene-expr-manuscript/) (built with [Manubot](https://manubot.org/); manuscript Github repository is [here](https://github.com/greenelab/ccc-manuscript)).
+
+## Installation
+
+pip, conda forge?
+
+## Usage
+
+numerical data example
+categorical data example
+matrix example
+specifying the number of jobs (it would be great to have a n_jobs)
 
 ## Overview
 
