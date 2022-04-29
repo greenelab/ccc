@@ -224,6 +224,11 @@ assert df["subset"].unique().shape[0] == 2
 # %% [markdown]
 # # Analyses
 
+# %% [markdown]
+# Here we read the gene pair queries sent to GIANT to see 1) which cell type were predicted for each of them and 2) the characteristics of the predicted networks for each gene pair.
+#
+# This allows us to assess whether gene pairs found by our correlation coefficients in GTEx (whole blood) replicate in GIANT by seeing if the predicted cell types is a blood cell lineage (leukocyte, etc) and the network connectivity is high.
+
 # %%
 # for each subset (clustermatch vs etc, pearson vs etc), sort by top gene pairs
 # for that, for each subset, sort by "order", which indicates, for each subset
@@ -320,6 +325,10 @@ tissue_renames = {
 
 # %% [markdown]
 # ## First plot version
+
+# %% [markdown]
+# These first plot versions are drafts, just to see how the pattern are.
+# The final plots are generated in the `Second plot version` below.
 
 # %%
 count_data = plot_stats.replace(
