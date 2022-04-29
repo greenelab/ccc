@@ -22,6 +22,9 @@
 # Two networks per gene pair are read/written: blood and an autodetected cell type (from GIANT).
 
 # %% [markdown] tags=[]
+# From GIANT, we use all interaction data types, the suggested minimum cut and top 15 genes for each networks (there are all default values in the GIANT web app).
+
+# %% [markdown] tags=[]
 # # Modules
 
 # %% tags=[]

@@ -232,6 +232,10 @@ data.shape
 # %%
 data.head()
 
+# %% [markdown]
+# From the `data` dataframe, only gene pairs (index) are used.
+# The other numbers are correlation values and their rankings.
+
 # %%
 gene_pairs = convert_gene_pairs(data)
 display(len(gene_pairs))
