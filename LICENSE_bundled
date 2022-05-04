@@ -1,5 +1,6 @@
-The Clustermatch repository and source distributions bundle a number of libraries that
-are compatibly licensed.  We list these here.
+The Clustermatch Correlation Coefficient (CCC) repository and source
+distributions bundle a number of libraries that are compatibly
+licensed. We list these here.
 
 Name: scikit-learn
 Files: libs/clustermatch/sklearn/*
