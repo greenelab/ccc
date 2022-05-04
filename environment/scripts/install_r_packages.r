@@ -14,14 +14,14 @@ BiocManager::install(version = "3.13", update = FALSE, ask = FALSE)
 # styler
 BiocManager::install("styler", update = FALSE, ask = FALSE)
 
-# clusterProfiler
-BiocManager::install("clusterProfiler", update = FALSE, ask = FALSE)
-
 # org.Hs.eg.db
 BiocManager::install("org.Hs.eg.db", update = FALSE, ask = FALSE)
 
+# clusterProfiler
+# BiocManager::install("clusterProfiler", update = FALSE, ask = FALSE)
+
 # ReactomePA
-BiocManager::install("ReactomePA", update = FALSE, ask = FALSE)
+# BiocManager::install("ReactomePA", update = FALSE, ask = FALSE)
 
 # library(devtools)
 
