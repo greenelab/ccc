@@ -42,8 +42,8 @@ Keep in mind that although unit tests are automatically run on Linux, macOS and 
 1. Create a conda environment and install main packages:
 
     ```bash
-   conda env create --name clustermatch_gene_expr --file environment.yml
-   conda run -n clustermatch_gene_expr --no-capture-output bash scripts/install_other_packages.sh
+   conda env create --name ccc --file environment.yml
+   conda run -n ccc --no-capture-output bash scripts/install_other_packages.sh
     ```
 If the `conda env create` command fails or if you find package errors later, try
 to set the channel priority in your conda installation to "strict" with
@@ -52,7 +52,7 @@ to set the channel priority in your conda installation to "strict" with
 1. Download the data:
 
    ```bash
-   conda run -n clustermatch_gene_expr --no-capture-output python scripts/setup_data.py
+   conda run -n ccc --no-capture-output python scripts/setup_data.py
    ```
 
 This will download XXX GB of data needed to run the analyses.
@@ -66,15 +66,15 @@ These steps are only for developers.
 1. Run:
  
     ```bash
-    conda env create -n clustermatch_gene_expr -f scripts/environment_base.yml
-    conda activate clustermatch_gene_expr
+    conda env create -n ccc -f scripts/environment_base.yml
+    conda activate ccc
     bash scripts/install_other_packages.sh
     ```
 
 1. Export conda environment:
 
     ```
-    conda env export --name clustermatch_gene_expr --file environment.yml
+    conda env export --name ccc --file environment.yml
     ```
 
 1. Modify `environment.yml` and leave only manually installed packages (not their dependencies).

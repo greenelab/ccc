@@ -1,14 +1,14 @@
 # Clustermatch Correlation Coefficient (CCC)
 
-[![Code tests](https://github.com/greenelab/clustermatch-gene-expr/actions/workflows/pytest.yaml/badge.svg)](https://github.com/greenelab/clustermatch-gene-expr/actions/workflows/pytest.yaml)
-[![codecov](https://codecov.io/gh/greenelab/clustermatch-gene-expr/branch/main/graph/badge.svg?token=QNK6O3Y1VF)](https://codecov.io/gh/greenelab/clustermatch-gene-expr)
-[![HTML Manuscript](https://img.shields.io/badge/manuscript-HTML-blue.svg)](https://greenelab.github.io/clustermatch-gene-expr-manuscript/)
-[![PDF Manuscript](https://img.shields.io/badge/manuscript-PDF-blue.svg)](https://greenelab.github.io/clustermatch-gene-expr-manuscript/manuscript.pdf)
+[![Code tests](https://github.com/greenelab/ccc/actions/workflows/pytest.yaml/badge.svg)](https://github.com/greenelab/ccc/actions/workflows/pytest.yaml)
+[![codecov](https://codecov.io/gh/greenelab/ccc/branch/main/graph/badge.svg?token=QNK6O3Y1VF)](https://codecov.io/gh/greenelab/ccc)
+[![HTML Manuscript](https://img.shields.io/badge/manuscript-HTML-blue.svg)](https://greenelab.github.io/ccc-manuscript/)
+[![PDF Manuscript](https://img.shields.io/badge/manuscript-PDF-blue.svg)](https://greenelab.github.io/ccc-manuscript/manuscript.pdf)
 
 The Clustermatch Correlation Coefficient (CCC) is a highly-efficient, next-generation not-only-linear correlation coefficient that can work on numerical and categorical data types.
 CCC is available as a Python package (`ccc`).
 
-This repository contains the code of CCC, instructions to install and use it, and all the scripts/notebooks to run the experiments/analyses for the [CCC manuscript](https://greenelab.github.io/clustermatch-gene-expr-manuscript/) (built with [Manubot](https://manubot.org/); manuscript Github repository is [here](https://github.com/greenelab/ccc-manuscript)).
+This repository contains the code of CCC, instructions to install and use it, and all the scripts/notebooks to run the experiments/analyses for the [CCC manuscript](https://greenelab.github.io/ccc-manuscript/) (built with [Manubot](https://manubot.org/); manuscript Github repository is [here](https://github.com/greenelab/ccc-manuscript)).
 
 ## Installation
 
@@ -30,7 +30,7 @@ TODO: update description and links to manuscripts
 This repository contains the source code to reproduce the analyses of Clustermatch on gene expression data.
 If you want to use Clustermatch as a standalone tool to perform your own analyses, please go to the [official repository](https://github.com/sinc-lab/clustermatch) and follow the installation instructions.
 
-For more details, check out our manuscript in COMPLETE or our [Manubot web version](https://greenelab.github.io/clustermatch-gene-expr-manuscript/).
+For more details, check out our manuscript in COMPLETE or our [Manubot web version](https://greenelab.github.io/ccc-manuscript/).
 
 
 ## Setup
@@ -98,7 +98,7 @@ docker run --rm \
 ```
 
 The `-v` parameter allows specifying a local directory (`/tmp/clustermatch_gene_expr_data`) where the data will be downloaded.
-If you want to generate the figures and tables for the manuscript, you need to clone the [manuscript repo](https://github.com/greenelab/clustermatch-gene-expr-manuscript) and pass it with `-v [PATH_TO_MANUSCRIPT_REPO]:/opt/manuscript`.
+If you want to generate the figures and tables for the manuscript, you need to clone the [manuscript repo](https://github.com/greenelab/ccc-manuscript) and pass it with `-v [PATH_TO_MANUSCRIPT_REPO]:/opt/manuscript`.
 If you want to change any other setting, you can set environmental variables when running the container; for example, to change the number of cores used to 2: `-e CM_N_JOBS=2`.
 
 You can run notebooks from the command line, for example:
