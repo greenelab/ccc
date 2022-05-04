@@ -10,6 +10,7 @@ set -e
 GIT_ROOT_DIR=$(git rev-parse --show-toplevel)
 LOCAL_DIR="${GIT_ROOT_DIR}/base/"
 
+# TODO directory should be [...]/projects/ccc/ccc/base
 REMOTE_DIR="/home/miltondp/projects/labs/greenelab/clustermatch_repos/clustermatch-gene-expr/base/*"
 
 rsync \

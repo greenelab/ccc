@@ -4,7 +4,7 @@
 # enabling Conda.
 
 set +eu
-conda activate clustermatch_gene_expr
+conda activate ccc
 set -euo pipefail
 
 # load environment variables

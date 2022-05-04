@@ -1,4 +1,4 @@
-name: clustermatch_gene_expr
+name: ccc
 channels:
   - conda-forge
   - defaults

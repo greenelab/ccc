@@ -13,7 +13,7 @@
 
 # general settings
 DOCKER_IMAGE_NAMESPACE="miltondp"
-DOCKER_IMAGE_NAME="clustermatch_gene_expr"
+DOCKER_IMAGE_NAME="ccc"
 DOCKER_TAG="latest"
 DOCKER_PUBLISH_HOST="127.0.0.1"
 DOCKER_CONTAINER_PORT="8893"

@@ -7,11 +7,11 @@
 # Your settings here
 # BASE_DIR is the parent directory where the code and manuscript repos are
 # located.
-BASE_DIR=/home/miltondp/projects/labs/greenelab/clustermatch_repos
+BASE_DIR=/home/miltondp/projects/ccc
 export CM_N_JOBS=3
 
-export CM_ROOT_DIR=${BASE_DIR}/clustermatch-gene-expr/base
-export CM_MANUSCRIPT_DIR=${BASE_DIR}/clustermatch-gene-expr-manuscript/
+export CM_ROOT_DIR=${BASE_DIR}/ccc/base
+export CM_MANUSCRIPT_DIR=${BASE_DIR}/ccc-manuscript/
 
-export PYTHONPATH=${BASE_DIR}/clustermatch-gene-expr/libs/
+export PYTHONPATH=${BASE_DIR}/ccc/libs/
 

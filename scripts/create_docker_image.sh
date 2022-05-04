@@ -1,6 +1,6 @@
 #/bin/bash
 
-PROJECT_NAME="clustermatch_gene_expr"
+PROJECT_NAME="ccc"
 VERSION="1.0"
 
 CURRENT_IMAGE_ID=$(docker images --filter=reference=miltondp/${PROJECT_NAME}:latest --format "{{.ID}}")

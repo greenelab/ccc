@@ -3,7 +3,7 @@ FROM continuumio/miniconda3
 EXPOSE 8893/tcp
 
 ENV CODE_DIR=/opt/code
-ENV CM_CONDA_ENV_NAME="clustermatch_gene_expr"
+ENV CM_CONDA_ENV_NAME="ccc"
 ENV CM_N_JOBS=1
 ENV CM_ROOT_DIR=/opt/data
 ENV CM_USER_HOME=${CM_ROOT_DIR}/user_home
