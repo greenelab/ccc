@@ -630,6 +630,12 @@ AUTO_SELECTED_NETWORKS_DIR = (
 Figure(
     "30.50629cm",
     "24.44741cm",
+    # white background
+    Panel(
+        SVG(COEF_COMP_DIR / "white_background.svg"),
+    )
+    .scale(0.5)
+    .move(0, 0),
     Panel(
         Panel(
             SVG(BLOOD_NETWORKS_DIR / "GIANT-RASSF2_vs_CYTIP-blood.svg").move(10, 0),
@@ -676,6 +682,6 @@ Figure(
 ).save(OUTPUT_FIGURE_DIR / "top_gene_pairs-main.svg")
 
 # %% [markdown]
-# Now open the output svg file, reside to fit drawing to page, and add a white rectangle to the background.
+# Compile the manuscript with manubot and make sure the image has a white background and displays properly.
 
 # %%
