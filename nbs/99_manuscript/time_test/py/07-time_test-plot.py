@@ -44,7 +44,12 @@ assert (
 ), "Manuscript dir not set"
 
 # %% tags=[]
-OUTPUT_FIGURE_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / "time_test"
+COEF_COMP_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp"
+COEF_COMP_DIR.mkdir(parents=True, exist_ok=True)
+display(COEF_COMP_DIR)
+
+# %% tags=[]
+OUTPUT_FIGURE_DIR = COEF_COMP_DIR / "time_test"
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
@@ -251,6 +256,7 @@ with sns.plotting_context("paper", font_scale=1.5):
         legend=False,
     )
 
+    plt.legend(loc="best", fontsize="small", framealpha=0.5)
     plt.xlabel("Number of measured objects")
     plt.ylabel("Time (seconds) in log scale")
     g.ax.set_yscale("log")
@@ -265,17 +271,21 @@ with sns.plotting_context("paper", font_scale=1.5):
 # # Create final figure
 
 # %%
-from svgutils.compose import Figure, SVG
+from svgutils.compose import Figure, SVG, Panel
 
 # %%
 Figure(
-    "39.67513cm",
+    "19.79335cm",
     "17.09335cm",
-    SVG(OUTPUT_FIGURE_DIR / "time_test.svg").scale(0.05),
-    SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.05).move(20, 0),
+    # white background
+    # Panel(
+    SVG(COEF_COMP_DIR / "white_background.svg").scale(0.5).move(0, 0),
+    # Panel(
+    # SVG(OUTPUT_FIGURE_DIR / "time_test.svg").scale(0.05),
+    SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.05),
 ).save(OUTPUT_FIGURE_DIR / "time_test-main.svg")
 
 # %% [markdown]
-# **Now open the file**, reside to fit drawing to page, and add a white rectangle to the background.
+# Compile the manuscript with manubot and make sure the image has a white background and displays properly.
 
 # %%
