@@ -200,6 +200,39 @@ def test_corr_mic_manual():
     assert test_result.iloc[1, 1] == 1.0
 
 
+def test_corr_mic_parallel():
+    # run basic tests first
+    data, corr_mat = _run_basic_checks(lambda data: corr.mic(data, n_jobs=2))
+
+    corr_values = pd.Series(corr_mat.to_numpy().flatten())
+
+    # check ranges
+    assert corr_values.max() <= 1.0
+    assert corr_values.min() >= 0.0
+    assert np.sign(corr_values.max()) == np.sign(corr_values.min())
+
+
+def test_corr_mic_parallel_manual():
+    # add basic check with manual calculation of the correlation
+    x = np.array([0, 1, 2, 3])
+    y = np.array([0, -1, -3, 8])
+    test_data = pd.DataFrame(np.array([x, y]))
+
+    # compute original mic
+    from minepy.mine import MINE
+
+    mine = MINE(alpha=0.6, c=15, est="mic_approx")
+    mine.compute_score(x, y)
+    expected_corr = mine.mic()
+    assert round(expected_corr, 5) == 0.31128
+
+    test_result = corr.mic(test_data, n_jobs=2)
+    assert test_result.iloc[0, 0] == 1.0
+    assert test_result.iloc[0, 1].round(5) == round(expected_corr, 5)
+    assert test_result.iloc[1, 0].round(5) == round(expected_corr, 5)
+    assert test_result.iloc[1, 1] == 1.0
+
+
 def test_corr_clustermatch_basics():
     # run basic tests first
     data, corr_mat = _run_basic_checks(corr.clustermatch)
