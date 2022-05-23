@@ -271,16 +271,14 @@ with sns.plotting_context("paper", font_scale=1.5):
 # # Create final figure
 
 # %%
-from svgutils.compose import Figure, SVG, Panel
+from svgutils.compose import Figure, SVG
 
 # %%
 Figure(
     "19.79335cm",
     "17.09335cm",
     # white background
-    # Panel(
     SVG(COEF_COMP_DIR / "white_background.svg").scale(0.5).move(0, 0),
-    # Panel(
     # SVG(OUTPUT_FIGURE_DIR / "time_test.svg").scale(0.05),
     SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.05),
 ).save(OUTPUT_FIGURE_DIR / "time_test-main.svg")
