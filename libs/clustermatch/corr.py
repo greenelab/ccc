@@ -51,6 +51,28 @@ def spearman(data: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def mic(data: pd.DataFrame, estimator="mic_approx") -> pd.DataFrame:
+    """
+    Compute the Maximal Correlation Coefficient (MIC).
+    """
+    from scipy.spatial.distance import squareform
+    from minepy import pstats
+
+    corr_mat = pstats(
+        data.to_numpy(),
+        est=estimator,
+    )[0]
+
+    corr_mat = squareform(corr_mat)
+    np.fill_diagonal(corr_mat, 1.0)
+
+    return pd.DataFrame(
+        corr_mat,
+        index=data.index.copy(),
+        columns=data.index.copy(),
+    )
+
+
 def clustermatch(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
     """
     Compute the Clustermatch coefficient.
