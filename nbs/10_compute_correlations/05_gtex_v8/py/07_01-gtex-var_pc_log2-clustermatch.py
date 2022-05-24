@@ -26,8 +26,9 @@
 # # Modules
 
 # %% tags=[]
+from time import time
+
 import pandas as pd
-from tqdm import tqdm
 
 from clustermatch import conf
 from clustermatch.utils import simplify_string
@@ -40,13 +41,13 @@ from clustermatch.corr import clustermatch
 GENE_SELECTION_STRATEGY = "var_pc_log2"
 
 # %% tags=[]
-# for clustermatch, I select the top 5 tissues (according to sample size, see nbs/05_preprocessing/00-gtex_v8-split_by_tissue.ipynb)
+# select the top 5 tissues (according to sample size, see nbs/05_preprocessing/00-gtex_v8-split_by_tissue.ipynb)
 TISSUES = [
-    "Muscle - Skeletal",
+    # "Muscle - Skeletal",
     "Whole Blood",
-    "Skin - Sun Exposed (Lower leg)",
-    "Adipose - Subcutaneous",
-    "Artery - Tibial",
+    # "Skin - Sun Exposed (Lower leg)",
+    # "Adipose - Subcutaneous",
+    # "Artery - Tibial",
 ]
 
 # %% tags=[]
@@ -114,22 +115,26 @@ display(_tmp.shape)
 display(_tmp)
 
 # %% tags=[]
-# %timeit CORRELATION_METHOD(test_data)
+# %timeit -r1 CORRELATION_METHOD(test_data)
 
 # %% [markdown] tags=[]
 # ## Run
 
 # %% tags=[]
-pbar = tqdm(input_files, ncols=100)
-
-for tissue_data_file in pbar:
-    pbar.set_description(tissue_data_file.stem)
+for tissue_data_file in input_files:
+    display(tissue_data_file.stem)
 
     # read
     data = pd.read_pickle(tissue_data_file)
 
     # compute correlations
+    start_time = time()
+
     data_corrs = CORRELATION_METHOD(data)
+
+    end_time = time()
+    elapsed_time = end_time - start_time
+    display(elapsed_time)
 
     # save
     output_filename = f"{tissue_data_file.stem}-{method_name}.pkl"
