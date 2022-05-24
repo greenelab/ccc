@@ -113,7 +113,7 @@ display(_tmp.shape)
 display(_tmp)
 
 # %% tags=[]
-# %timeit CORRELATION_METHOD(test_data)
+# %timeit -r1 CORRELATION_METHOD(test_data)
 
 # %% [markdown] tags=[]
 # ## Run
