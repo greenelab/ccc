@@ -48,8 +48,13 @@ TISSUES = [
     # "Artery - Tibial",
 ]
 
+
 # %% tags=[]
-CORRELATION_METHOD = mic
+def mic_parallel(data):
+    return mic(data, estimator="mic_e", n_jobs=conf.GENERAL["N_JOBS"])
+
+
+CORRELATION_METHOD = mic_parallel
 
 method_name = CORRELATION_METHOD.__name__
 display(method_name)
