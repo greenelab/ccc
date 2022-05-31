@@ -252,6 +252,6 @@ Figure(
 ).save(OUTPUT_FIGURE_DIR / "dist-main.svg")
 
 # %% [markdown]
-# Now open `dist-main.svg`, reside to fit drawing to page, and add a white rectangle to the background.
+# Compile the manuscript with manubot and make sure the image has a white background and displays properly.
 
 # %%
