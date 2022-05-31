@@ -191,83 +191,56 @@ spearman_df.head()
 # ## MIC
 
 # %% tags=[]
-mic_all_df = (
-    pd.read_pickle(
-        INPUT_DIR
-        / f"gtex_v8_data_{GTEX_TISSUE}-{GENE_SEL_STRATEGY}-all-gene_pairs-sample_0-mic.pkl"
+mic_df = pd.read_pickle(
+    str(INPUT_CORR_FILE_TEMPLATE).format(
+        tissue=GTEX_TISSUE,
+        gene_sel_strategy=GENE_SEL_STRATEGY,
+        corr_method="mic_parallel",
     )
-    .rename("mic")
-    .to_frame()
 )
 
 # %% tags=[]
-mic_all_df["mic_subset"] = "all"
+mic_df.shape
 
 # %% tags=[]
-mic_all_df.shape
+mic_df.head()
 
 # %% tags=[]
-# mic_agree_df = (
-#     pd.read_pickle(
-#         INPUT_DIR
-#         / f"gene_pair_intersections-gtex_v8-{GTEX_TISSUE}-{GENE_SEL_STRATEGY}-agreements_sample_0-mic.pkl"
-#     )
-#     .rename("mic")
-#     .to_frame()
-# )
+mic_df = get_upper_triag(mic_df)
 
 # %% tags=[]
-# mic_agree_df["mic_subset"] = "agree"
-
-# %% tags=[]
-# mic_agree_df.shape
-
-# %% tags=[]
-# mic_disagree_df = (
-#     pd.read_pickle(
-#         INPUT_DIR
-#         / f"gene_pair_intersections-gtex_v8-{GTEX_TISSUE}-{GENE_SEL_STRATEGY}-disagreements_sample_0-mic.pkl"
-#     )
-#     .rename("mic")
-#     .to_frame()
-# )
-
-# %% tags=[]
-# mic_disagree_df["mic_subset"] = "disagree"
-
-# %% tags=[]
-# mic_disagree_df.shape
-
-# %% tags=[]
-# mic_df = pd.concat([mic_all_df, mic_agree_df, mic_disagree_df], axis=0).sort_index()
-mic_df = mic_all_df
-
-# %% tags=[]
-mic_df
-
-# %% tags=[]
-mic_df.index.is_unique
-
-# %% tags=[]
-# indexes could not be unique (because one of the sames is from the entire universe of gene pairs)
-mic_df = mic_df[~mic_df.index.duplicated(keep="first")]
+mic_df = mic_df.unstack().rename_axis((None, None)).dropna().sort_index().rename("mic")
 
 # %% tags=[]
 mic_df.shape
+
+# %% tags=[]
+mic_df.head()
 
 # %% [markdown] tags=[]
 # ## Checks
 
 # %% tags=[]
 assert (
-    clustermatch_df.index.intersection(mic_df.index).shape[0] == mic_df.index.shape[0]
+    len(set(clustermatch_df.index).intersection(set(mic_df.index)))
+    == clustermatch_df.index.shape[0]
 )
 
 # %% tags=[]
-assert pearson_df.index.intersection(mic_df.index).shape[0] == mic_df.index.shape[0]
+assert (
+    len(set(clustermatch_df.index).intersection(set(mic_df.index)))
+    == mic_df.index.shape[0]
+)
 
 # %% tags=[]
-assert spearman_df.index.intersection(mic_df.index).shape[0] == mic_df.index.shape[0]
+assert (
+    len(set(pearson_df.index).intersection(set(mic_df.index))) == mic_df.index.shape[0]
+)
+
+# %% tags=[]
+assert (
+    len(set(spearman_df.index).intersection(set(mic_df.index))) == mic_df.index.shape[0]
+)
 
 # %% [markdown] tags=[]
 # ## Merge
