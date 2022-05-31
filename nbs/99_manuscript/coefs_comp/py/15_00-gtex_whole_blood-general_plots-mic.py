@@ -59,9 +59,12 @@ assert (
 ), "Manuscript dir not set"
 
 # %% tags=[]
-OUTPUT_FIGURE_DIR = (
-    conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp" / f"gtex_{GTEX_TISSUE}" / "mic"
-)
+COEF_COMP_DIR = conf.MANUSCRIPT["FIGURES_DIR"] / "coefs_comp"
+COEF_COMP_DIR.mkdir(parents=True, exist_ok=True)
+display(COEF_COMP_DIR)
+
+# %% tags=[]
+OUTPUT_FIGURE_DIR = COEF_COMP_DIR / f"gtex_{GTEX_TISSUE}" / "mic"
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
@@ -102,7 +105,7 @@ corrs_df.describe().applymap(str)
 
 # %% tags=[]
 # skewness
-corrs_df.drop(columns=["mic_subset"]).apply(lambda x: stats.skew(x))
+corrs_df.apply(lambda x: stats.skew(x))
 
 # %% [markdown]
 # # MIC subset: all gene pairs
@@ -115,7 +118,7 @@ mic_subset = "all"
 # ## Select MIC subset
 
 # %%
-df = corrs_df[corrs_df["mic_subset"].isin((mic_subset,))].drop(columns=["mic_subset"])
+df = corrs_df
 
 # %%
 df.shape
@@ -220,26 +223,32 @@ from svgutils.compose import Figure, SVG, Panel, Text
 
 # %%
 Figure(
-    "643.71cm",
-    "427.66cm",
+    "64.371cm",
+    "42.766cm",
+    # white background
     Panel(
-        SVG(OUTPUT_FIGURE_DIR / "dist-histograms.svg").scale(0.5),
-        Text("a)", 2, 10, size=9, weight="bold"),
+        SVG(COEF_COMP_DIR / "white_background.svg"),
+    )
+    .scale(0.5)
+    .move(0, 0),
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "dist-histograms.svg").scale(0.05),
+        Text("a)", 0.2, 1, size=0.9, weight="bold"),
     ),
     Panel(
-        SVG(OUTPUT_FIGURE_DIR / "dist-cum_histograms.svg").scale(0.5),
-        Text("b)", 2, 10, size=9, weight="bold"),
-    ).move(320, 0),
+        SVG(OUTPUT_FIGURE_DIR / "dist-cum_histograms.svg").scale(0.05),
+        Text("b)", 0.2, 1, size=0.9, weight="bold"),
+    ).move(32, 0),
     Panel(
-        SVG(OUTPUT_FIGURE_DIR / "dist-pearson_vs_mic.svg").scale(0.595),
+        SVG(OUTPUT_FIGURE_DIR / "dist-pearson_vs_mic.svg").scale(0.0595),
         Panel(
             SVG(OUTPUT_FIGURE_DIR / "dist-spearman_vs_mic.svg")
-            .scale(0.595)
-            .move(215, 0)
+            .scale(0.0595)
+            .move(21.5, 0)
         ),
-        Panel(SVG(OUTPUT_FIGURE_DIR / "dist-ccc_vs_mic.svg").scale(0.595).move(460, 0)),
-        Text("c)", 2, 10, size=9, weight="bold"),
-    ).move(0, 220),
+        Panel(SVG(OUTPUT_FIGURE_DIR / "dist-ccc_vs_mic.svg").scale(0.0595).move(46, 0)),
+        Text("c)", 0.2, 1, size=0.9, weight="bold"),
+    ).move(0, 22),
 ).save(OUTPUT_FIGURE_DIR / "dist-main.svg")
 
 # %% [markdown]
