@@ -29,7 +29,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from upsetplot import plot, from_indicators
 
-from clustermatch.plots import MyUpSet
 from clustermatch import conf
 
 # %% [markdown] tags=[]
