@@ -49,7 +49,7 @@ import seaborn as sns
 from seaborn.distributions import _freedman_diaconis_bins
 from upsetplot import UpSet
 
-from clustermatch.coef import cm
+from clustermatch.coef import ccc
 from clustermatch.utils import human_format
 
 
@@ -246,7 +246,7 @@ def jointplot(
         # compute correlations
         r = stats.pearsonr(x_values, y_values)[0]
         rs = stats.spearmanr(x_values, y_values)[0]
-        c = cm(x_values, y_values)
+        c = ccc(x_values, y_values)
 
         ax = grid.ax_joint
         corr_vals = f"$r$ = {r:.2f}\n" f"$r_s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"

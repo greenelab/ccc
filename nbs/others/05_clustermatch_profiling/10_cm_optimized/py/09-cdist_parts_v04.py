@@ -40,7 +40,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch.coef import cm
+from clustermatch.coef import ccc
 
 # %% [markdown] tags=[]
 # # Settings
@@ -56,7 +56,7 @@ np.random.seed(0)
 
 # %% tags=[]
 # let numba compile all the code before profiling
-cm(np.random.rand(10), np.random.rand(10))
+ccc(np.random.rand(10), np.random.rand(10))
 
 # %% [markdown] tags=[]
 # # Run with `n_samples` small
@@ -75,7 +75,7 @@ y = np.random.rand(N_SAMPLES)
 # %% tags=[]
 def func():
     for i in range(N_REPS):
-        cm(x, y)
+        ccc(x, y)
 
 
 # %% tags=[]
@@ -100,7 +100,7 @@ y = np.random.rand(N_SAMPLES)
 # %% tags=[]
 def func():
     for i in range(N_REPS):
-        cm(x, y)
+        ccc(x, y)
 
 
 # %% tags=[]
@@ -125,7 +125,7 @@ y = np.random.rand(N_SAMPLES)
 # %% tags=[]
 def func():
     for i in range(N_REPS):
-        cm(x, y)
+        ccc(x, y)
 
 
 # %% tags=[]
@@ -150,7 +150,7 @@ y = np.random.rand(N_SAMPLES)
 # %% tags=[]
 def func():
     for i in range(N_REPS):
-        cm(x, y)
+        ccc(x, y)
 
 
 # %% tags=[]
@@ -178,7 +178,7 @@ y = np.random.rand(N_SAMPLES)
 # %% tags=[]
 def func():
     for i in range(N_REPS):
-        cm(x, y)
+        ccc(x, y)
 
 
 # %% tags=[]
@@ -203,7 +203,7 @@ y = np.random.rand(N_SAMPLES)
 # %% tags=[]
 def func():
     for i in range(N_REPS):
-        cm(x, y)
+        ccc(x, y)
 
 
 # %% tags=[]

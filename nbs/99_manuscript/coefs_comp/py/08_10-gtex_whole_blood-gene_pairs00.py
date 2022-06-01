@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from clustermatch import conf
-from clustermatch.coef import cm
+from clustermatch.coef import ccc
 
 # %% [markdown] tags=[]
 # # Settings
@@ -96,7 +96,7 @@ assert gene_map[gene1_id] == gene1_symbol
 res_all = pd.DataFrame(
     {
         f.stem.split("_data_")[1]: {
-            "cm": cm(data[gene0_id], data[gene1_id]),
+            "cm": ccc(data[gene0_id], data[gene1_id]),
             "pearson": pearsonr(data[gene0_id], data[gene1_id])[0],
             "spearman": spearmanr(data[gene0_id], data[gene1_id])[0],
         }
@@ -189,7 +189,7 @@ def plot_gene_pair(
     display((gene0_symbol, gene1_symbol))
 
     # compute correlations for this gene pair
-    _clustermatch = cm(tissue_data[gene0], tissue_data[gene1])
+    _clustermatch = ccc(tissue_data[gene0], tissue_data[gene1])
     _pearson = pearsonr(tissue_data[gene0], tissue_data[gene1])[0]
     _spearman = spearmanr(tissue_data[gene0], tissue_data[gene1])[0]
 

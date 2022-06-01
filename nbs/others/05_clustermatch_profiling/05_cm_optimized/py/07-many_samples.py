@@ -25,7 +25,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch.coef import cm
+from clustermatch.coef import ccc
 
 # %% [markdown] tags=[]
 # # Data
@@ -48,7 +48,7 @@ data.shape
 
 # %% tags=[]
 def func():
-    return cm(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=True)
+    return ccc(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=True)
 
 
 # %% tags=[]
@@ -65,7 +65,7 @@ func()
 
 # %% tags=[]
 def func():
-    return cm(data, internal_n_clusters=range(2, 5 + 1), precompute_parts=True)
+    return ccc(data, internal_n_clusters=range(2, 5 + 1), precompute_parts=True)
 
 
 # %% tags=[]

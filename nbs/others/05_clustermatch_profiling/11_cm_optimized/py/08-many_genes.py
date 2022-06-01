@@ -48,11 +48,11 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch.coef import cm
+from clustermatch.coef import ccc
 
 # %% tags=[]
 # let numba compile all the code before profiling
-cm(np.random.rand(10), np.random.rand(10))
+ccc(np.random.rand(10), np.random.rand(10))
 
 # %% [markdown] tags=[]
 # # Data
@@ -76,7 +76,7 @@ data.shape
 # %% tags=[]
 def func():
     n_clust = list(range(2, 10 + 1))
-    return cm(data, internal_n_clusters=n_clust)
+    return ccc(data, internal_n_clusters=n_clust)
 
 
 # %% tags=[]

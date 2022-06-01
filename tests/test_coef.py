@@ -8,7 +8,7 @@ from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
 
 from clustermatch.coef import (
-    cm,
+    ccc,
     _get_range_n_clusters,
     run_quantile_clustering,
     _get_perc_from_k,
@@ -287,7 +287,7 @@ def test_cm_basic():
     feature1 = np.random.rand(100)
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
     assert cm_value is not None
     assert isinstance(cm_value, float)
 
@@ -301,13 +301,13 @@ def test_cm_basic_internal_n_clusters_is_integer():
     feature1 = np.random.rand(100)
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
     assert cm_value is not None
     assert isinstance(cm_value, float)
     assert cm_value > 0.0
 
     # Run with internal_n_clusters equals to default value but as integer
-    cm_value2 = cm(feature0, feature1, internal_n_clusters=10)
+    cm_value2 = ccc(feature0, feature1, internal_n_clusters=10)
     assert cm_value == cm_value2
 
 
@@ -320,13 +320,13 @@ def test_cm_basic_internal_n_clusters_is_integer_more_checks():
     feature1 = np.random.rand(100)
 
     # Run
-    cm_value = cm(feature0, feature1, internal_n_clusters=[2, 3, 4])
+    cm_value = ccc(feature0, feature1, internal_n_clusters=[2, 3, 4])
     assert cm_value is not None
     assert isinstance(cm_value, float)
     assert cm_value > 0.0
 
     # Run with internal_n_clusters equals to default value but as integer
-    cm_value2 = cm(feature0, feature1, internal_n_clusters=4)
+    cm_value2 = ccc(feature0, feature1, internal_n_clusters=4)
     assert cm_value == cm_value2
 
 
@@ -339,7 +339,7 @@ def test_cm_ari_is_negative():
     feature1 = np.array([2, 4, 1, 3, 5])
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
 
     # Validate
     # ari for this example is -0.25, but cm should return 0.0
@@ -358,7 +358,7 @@ def test_cm_random_data():
         feature1 = np.random.rand(100)  # all positive values between 0 and 1
 
         # Run
-        cm_value = cm(feature0, feature1)
+        cm_value = ccc(feature0, feature1)
 
         # Validate
         assert 0.0 <= cm_value < 0.05
@@ -373,7 +373,7 @@ def test_cm_linear():
     feature1 = feature0 * 5.0
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
 
     # Validate
     assert cm_value == 1.0
@@ -388,7 +388,7 @@ def test_cm_quadratic():
     feature1 = np.power(feature0, 2.0)
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
 
     # Validate
     assert cm_value > 0.40
@@ -403,7 +403,7 @@ def test_cm_quadratic2():
     feature1 = np.power(feature0, 2.0) + (0.10 * np.random.rand(feature0.shape[0]))
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
 
     # Validate
     assert cm_value > 0.40
@@ -421,7 +421,7 @@ def test_cm_one_feature_with_all_same_values():
     feature1 = np.array([5] * feature0.shape[0])
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
 
     # Validate
     assert np.isnan(cm_value), cm_value
@@ -439,7 +439,7 @@ def test_cm_all_features_with_all_same_values():
     feature1 = np.array([5] * feature0.shape[0])
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
 
     # Validate
     assert np.isnan(cm_value)
@@ -456,7 +456,7 @@ def test_cm_single_argument_is_matrix():
     input_data = np.array([feature0, feature1, feature2])
 
     # Run
-    cm_value = cm(input_data)
+    cm_value = ccc(input_data)
 
     # Validate
     assert cm_value is not None
@@ -478,7 +478,7 @@ def test_cm_x_y_are_pandas_series():
     feature1 = pd.Series(np.random.rand(100))
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
 
     # Validate
     assert cm_value is not None
@@ -493,7 +493,7 @@ def test_cm_x_is_pandas_dataframe():
     data_matrix = pd.DataFrame(np.random.rand(10, 100))
 
     # Run
-    cm_value = cm(data_matrix)
+    cm_value = ccc(data_matrix)
 
     # Validate
     assert cm_value is not None
@@ -509,7 +509,7 @@ def test_cm_x_and_y_are_pandas_dataframe():
 
     # Run
     with pytest.raises(ValueError) as e:
-        cm(x, y)
+        ccc(x, y)
 
     assert "wrong combination" in str(e).lower()
 
@@ -523,7 +523,7 @@ def test_cm_integer_overflow_random():
     feature1 = np.random.rand(1000000)
 
     # Run
-    cm_value = cm(feature0, feature1)
+    cm_value = ccc(feature0, feature1)
     assert 0.0 <= cm_value <= 0.01
 
 
@@ -535,7 +535,7 @@ def test_cm_integer_overflow_perfect_match():
     feature0 = np.random.rand(1000000)
 
     # Run
-    cm_value = cm(feature0, feature0)
+    cm_value = ccc(feature0, feature0)
     assert cm_value == 1.0
 
 
@@ -804,7 +804,7 @@ def test_cm_values_equal_to_original_implementation():
     # run new clustermatch implementation.
     # Here, I fixed the internal number of clusters, since that slightly changed
     # in the new implementation compared with the original one.
-    corr_mat = cm(data, internal_n_clusters=list(range(2, 10 + 1)))
+    corr_mat = ccc(data, internal_n_clusters=list(range(2, 10 + 1)))
 
     expected_corr_matrix = pd.read_pickle(
         input_data_dir / "clustermatch-random_data-coef.pkl"
@@ -829,7 +829,7 @@ def test_cm_return_parts_quadratic():
     feature1 = np.array([10, 9, 8, 7, 6, 6, 7, 8, 9, 10])
 
     # Run
-    cm_value, max_parts, parts = cm(
+    cm_value, max_parts, parts = ccc(
         feature0, feature1, internal_n_clusters=[2, 3], return_parts=True
     )
 
@@ -863,7 +863,7 @@ def test_cm_return_parts_linear():
     feature1 = feature0 * 5.0
 
     # Run
-    cm_value, max_parts, parts = cm(feature0, feature1, return_parts=True)
+    cm_value, max_parts, parts = ccc(feature0, feature1, return_parts=True)
 
     # Validate
     assert cm_value == 1.0
@@ -892,7 +892,7 @@ def test_cm_return_parts_with_matrix_as_input():
     X = pd.DataFrame([feature0, feature1])
 
     # Run
-    cm_value, max_parts, parts = cm(X, return_parts=True)
+    cm_value, max_parts, parts = ccc(X, return_parts=True)
 
     # Validate
     assert cm_value == 1.0
@@ -1144,7 +1144,7 @@ def test_cm_data_is_binary_evenly_distributed():
     feature1 = np.random.rand(10)
 
     # Run
-    cm_value, max_parts, parts = cm(
+    cm_value, max_parts, parts = ccc(
         feature0, feature1, internal_n_clusters=[2], return_parts=True
     )
 
@@ -1168,7 +1168,7 @@ def test_cm_data_is_binary_not_evenly_distributed():
     feature1 = np.random.rand(10)
 
     # Run
-    cm_value, max_parts, parts = cm(
+    cm_value, max_parts, parts = ccc(
         feature0, feature1, internal_n_clusters=[2], return_parts=True
     )
 
