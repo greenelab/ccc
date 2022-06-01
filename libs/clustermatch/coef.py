@@ -1,6 +1,5 @@
 """
-Contains function that implement the Clustermatch coefficient
-(https://doi.org/10.1093/bioinformatics/bty899).
+Contains function that implement the Clustermatch Correlation Coefficient (CCC).
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable, Union
@@ -280,10 +279,10 @@ def ccc(
     n_chunks_threads_ratio: int = 3,
 ) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
-    This is the main function that computes the Clustermatch coefficient between
-    two arrays. This implementation only supports numerical data for
-    optimization purposes, but the original implementation can also work with
-    categorical data (https://github.com/sinc-lab/clustermatch).
+    This is the main function that computes the Clustermatch Correlation
+    Coefficient (CCC) between two arrays. This implementation only supports
+    numerical data for optimization purposes, but the original implementation
+    can also work with categorical data (https://github.com/sinc-lab/clustermatch).
 
     To control the number of threads used, set the NUMBA_NUM_THREADS variable
     to an integer. For example, NUMBA_NUM_THREADS=2 will use 2 cores.
@@ -303,7 +302,7 @@ def ccc(
           function get_chunks.
 
     Returns:
-        If return_parts is False, only Clustermatch coefficients are returned.
+        If return_parts is False, only CCC values are returned.
         In that case, if x is 2d, a np.ndarray of size n x n is
         returned with the coefficient values, where n is the number of rows in x.
         If only a single coefficient was computed (for example, x and y were
@@ -317,7 +316,7 @@ def ccc(
         cm_values: if x is 2d, then it is a 1d condensed array of pairwise
             coefficients. It has size (n * (n - 1)) / 2, where n is the number
             of rows in x. If x and y are given, and they are 1d, then this is a
-            scalar. The Clustermatch coefficient is always between 0 and 1
+            scalar. The CCC is always between 0 and 1
             (inclusive). If any of the two variables being compared has no
             variation (all values are the same), the coefficient is not defined
             (np.nan).
@@ -332,7 +331,7 @@ def ccc(
             whereas parts[i,j] has the partition j generated for object i. The
             third dimension is the number of columns in x (if 2d) or elements in
             x/y (if 1d). For example, if you want to access the pair of
-            partitions that maximized the Clustermatch coefficient given x and y
+            partitions that maximized the CCC given x and y
             (a pair of objects), then max_parts[0] and max_parts[1] have the
             partition indexes in parts, respectively: parts[0][max_parts[0]]
             points to the partition for x, and parts[1][max_parts[1]] points to
@@ -377,7 +376,7 @@ def ccc(
         (X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16
     )
 
-    # cm_values stores the clustermatch coefficients
+    # cm_values stores the CCC coefficients
     n = X.shape[0]
     n_comp = (n * (n - 1)) // 2
     cm_values = np.full(n_comp, np.nan)
@@ -420,7 +419,7 @@ def ccc(
         def compute_coef(idx_list):
             """
             Given a list of indexes representing each a pair of
-            objects/rows/genes, it computes the Clustermatch coefficient for
+            objects/rows/genes, it computes the CCC coefficient for
             each of them. This function is supposed to be used to parallelize
             processing.
 
