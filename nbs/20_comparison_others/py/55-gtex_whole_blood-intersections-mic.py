@@ -76,10 +76,6 @@ df.shape
 df.head()
 
 # %% tags=[]
-# FIXME: this will not be necessary in new runs of clustermatch on GTEx
-# df.loc[df["clustermatch"] < 0, "clustermatch"] = 0.0
-
-# %% tags=[]
 df.describe().applymap(str)
 
 # %% tags=[]
@@ -146,6 +142,27 @@ display(mic_higher.sum())
 
 mic_lower = df["mic"] <= mic_lq
 display(mic_lower.sum())
+
+# %% [markdown]
+# **Question:** Why the number of top/bottom gene pairs in CCC/Clustermatch does not match the rest? Maybe it's because there are repeated values. Let's see:
+
+# %%
+df.shape
+
+# %%
+df["pearson"].unique().shape
+
+# %%
+df["spearman"].unique().shape
+
+# %%
+df["clustermatch"].unique().shape
+
+# %%
+df["mic"].unique().shape
+
+# %% [markdown]
+# Yes, many CCC values are the same!
 
 # %% [markdown] tags=[]
 # # UpSet plot
