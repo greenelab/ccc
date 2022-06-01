@@ -83,9 +83,9 @@ def clustermatch(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
     Compute the Clustermatch coefficient.
     """
     from scipy.spatial.distance import squareform
-    from clustermatch.coef import cm
+    from clustermatch.coef import ccc
 
-    corr_mat = cm(
+    corr_mat = ccc(
         data.to_numpy(),
         internal_n_clusters=internal_n_clusters,
     )

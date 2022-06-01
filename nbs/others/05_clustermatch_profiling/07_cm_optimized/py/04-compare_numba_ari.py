@@ -49,7 +49,7 @@ data.shape
 # %% tags=[]
 def func():
     n_clust = list(range(2, 10 + 1))
-    return coef.cm(data, internal_n_clusters=n_clust)
+    return coef.ccc(data, internal_n_clusters=n_clust)
 
 
 # %% tags=[]

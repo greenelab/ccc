@@ -31,7 +31,7 @@ import seaborn as sns
 from sklearn.preprocessing import minmax_scale
 
 from clustermatch import conf
-from clustermatch.coef import cm
+from clustermatch.coef import ccc
 
 # %% [markdown] tags=[]
 # # Settings
@@ -284,8 +284,8 @@ with sns.plotting_context("paper", font_scale=1.8):
         rs = spearmanr(x, y)[0]
 
         # clustermatch
-        c, max_parts, parts = cm(x, y, return_parts=True)
-        c = cm(x, y)
+        c, max_parts, parts = ccc(x, y, return_parts=True)
+        c = ccc(x, y)
 
         x_line_points, y_line_points = get_cm_line_points(x, y, max_parts, parts)
         for yp in y_line_points:

@@ -43,7 +43,7 @@ import pandas as pd
 from scipy.stats import pearsonr, spearmanr
 
 from clustermatch import conf
-from clustermatch.coef import cm
+from clustermatch.coef import ccc
 from clustermatch.methods import mic
 
 # %% [markdown] tags=[]
@@ -108,7 +108,7 @@ def run_method(func, method_name, size):
 
 # %% tags=[]
 # initialize methods
-cm(np.random.rand(100), np.random.rand(100))
+ccc(np.random.rand(100), np.random.rand(100))
 
 # %% tags=[]
 for s in DATA_SIZES:
@@ -121,7 +121,7 @@ for s in DATA_SIZES:
     run_method(lambda x, y: spearmanr(x, y)[0], "s-1", s)
 
     print("  cm")
-    run_method(lambda x, y: cm(x, y), "cm-1", s)
+    run_method(lambda x, y: ccc(x, y), "cm-1", s)
 
     if s <= 50000:
         print("  mic_e")

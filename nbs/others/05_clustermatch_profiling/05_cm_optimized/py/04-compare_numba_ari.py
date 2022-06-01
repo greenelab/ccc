@@ -48,7 +48,7 @@ data.shape
 
 # %% tags=[]
 def func():
-    return coef.cm(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=True)
+    return coef.ccc(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=True)
 
 
 # %% tags=[]
@@ -71,7 +71,7 @@ coef.ari = adjusted_rand_score
 
 # %% tags=[]
 def func():
-    return coef.cm(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=True)
+    return coef.ccc(data, internal_n_clusters=range(2, 10 + 1), precompute_parts=True)
 
 
 # %% tags=[]

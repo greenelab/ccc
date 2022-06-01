@@ -272,7 +272,7 @@ def get_chunks(
     return res
 
 
-def cm(
+def ccc(
     x: NDArray,
     y: NDArray = None,
     internal_n_clusters: Union[int, Iterable[int]] = None,
