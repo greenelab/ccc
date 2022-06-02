@@ -37,7 +37,7 @@ COPY . ${CODE_DIR}
 WORKDIR ${CODE_DIR}
 
 RUN echo "Make sure modules can be loaded"
-RUN python -c "from clustermatch import conf"
+RUN python -c "from ccc import conf"
 
 # setup user home directory
 RUN mkdir ${CM_USER_HOME} && chmod -R 0777 ${CM_USER_HOME}

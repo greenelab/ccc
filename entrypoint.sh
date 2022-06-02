@@ -8,7 +8,7 @@ conda activate ccc
 set -euo pipefail
 
 # load environment variables
-eval `python libs/clustermatch/conf.py`
+eval `python libs/ccc/conf.py`
 
 exec "$@"
 
