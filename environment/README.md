@@ -28,7 +28,7 @@ Keep in mind that although unit tests are automatically run on Linux, macOS and 
     ```
 
 1. (optional) Adjust other settings (i.e. root directory, available computational
-   resources, etc.) by modifying the file `../libs/clustermatch/settings.py`
+   resources, etc.) by modifying the file `../libs/ccc/settings.py`
 
 1. Adjust your `PYTHONPATH` variable to include the `libs` directory:
 
