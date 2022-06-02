@@ -29,8 +29,8 @@
 import pandas as pd
 from tqdm import tqdm
 
-from clustermatch import conf
-from clustermatch.corr import pearson
+from ccc import conf
+from ccc.corr import pearson
 
 # %% [markdown] tags=[]
 # # Settings

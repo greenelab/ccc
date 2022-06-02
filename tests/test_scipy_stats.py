@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import stats
 
-from clustermatch.scipy.stats import rank
+from ccc.scipy.stats import rank
 
 
 def test_rank_no_duplicates():

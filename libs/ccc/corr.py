@@ -57,7 +57,7 @@ def mic(data: pd.DataFrame, estimator="mic_approx", n_jobs=None) -> pd.DataFrame
     """
     from scipy.spatial.distance import squareform
     from minepy import pstats
-    from clustermatch.methods import mic as mic_single
+    from ccc.methods import mic as mic_single
 
     if n_jobs is None:
         corr_mat = pstats(
@@ -83,7 +83,7 @@ def clustermatch(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
     Compute the Clustermatch coefficient.
     """
     from scipy.spatial.distance import squareform
-    from clustermatch.coef import ccc
+    from ccc.coef import ccc
 
     corr_mat = ccc(
         data.to_numpy(),

@@ -4,7 +4,7 @@ Tests the corr.py module.
 import numpy as np
 import pandas as pd
 
-from clustermatch import corr
+from ccc import corr
 
 
 def _get_random_data(n_genes: int, n_samples: int, random_state=0) -> pd.DataFrame:
@@ -246,24 +246,24 @@ def test_corr_clustermatch_basics():
 
 
 def test_corr_clustermatch_outputs_same_as_original_clustermatch():
-    # compare with results obtained from the original clustermatch
+    # compare with results obtained from the original ccc
     # implementation (https://github.com/sinc-lab/clustermatch) plus some
-    # patches (see README.md in tests/data about clustermatch data).
+    # patches (see README.md in tests/data about ccc data).
     from pathlib import Path
     from pandas.testing import assert_frame_equal
 
     input_data_dir = Path(__file__).parent / "data"
 
     # load data
-    data = pd.read_pickle(input_data_dir / "clustermatch-random_data-data.pkl")
+    data = pd.read_pickle(input_data_dir / "ccc-random_data-data.pkl")
 
-    # run new clustermatch implementation.
+    # run new ccc implementation.
     # Here, I fixed the internal number of clusters, since that slightly changed
     # in the new implementation compared with the original one.
     corr_mat = corr.clustermatch(data, internal_n_clusters=list(range(2, 10 + 1)))
 
     expected_corr_matrix = pd.read_pickle(
-        input_data_dir / "clustermatch-random_data-coef.pkl"
+        input_data_dir / "ccc-random_data-coef.pkl"
     )
     expected_corr_matrix = expected_corr_matrix.loc[data.index, data.index]
 

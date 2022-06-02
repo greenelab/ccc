@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from clustermatch.plots import (
+from ccc.plots import (
     plot_histogram,
     plot_cumulative_histogram,
     jointplot,
@@ -57,7 +57,7 @@ def test_plots_plot_histogram_save():
 
 def test_plots_plot_cumulative_histogram_simple():
     df = pd.DataFrame(
-        data=np.random.rand(100, 3), columns=["pearson", "spearman", "clustermatch"]
+        data=np.random.rand(100, 3), columns=["pearson", "spearman", "ccc"]
     )
 
     f, ax = plot_cumulative_histogram(df)
@@ -74,7 +74,7 @@ def test_plots_plot_cumulative_histogram_simple():
 def test_plots_plot_cumulative_histogram_with_mic():
     df = pd.DataFrame(
         data=np.random.rand(100, 4),
-        columns=["pearson", "spearman", "clustermatch", "mic"],
+        columns=["pearson", "spearman", "ccc", "mic"],
     )
 
     f, ax = plot_cumulative_histogram(df)
@@ -90,7 +90,7 @@ def test_plots_plot_cumulative_histogram_with_mic():
 
 def test_plots_plot_cumulative_histogram_with_gene_percent():
     df = pd.DataFrame(
-        data=np.random.rand(100, 3), columns=["pearson", "spearman", "clustermatch"]
+        data=np.random.rand(100, 3), columns=["pearson", "spearman", "ccc"]
     )
 
     f, ax = plot_cumulative_histogram(df, gene_pairs_percent=0.70)
@@ -107,7 +107,7 @@ def test_plots_plot_cumulative_histogram_with_gene_percent():
 def test_plots_plot_cumulative_histogram_with_gene_percent_with_mic():
     df = pd.DataFrame(
         data=np.random.rand(100, 4),
-        columns=["pearson", "spearman", "clustermatch", "mic"],
+        columns=["pearson", "spearman", "ccc", "mic"],
     )
 
     f, ax = plot_cumulative_histogram(df, gene_pairs_percent=0.70)
@@ -123,7 +123,7 @@ def test_plots_plot_cumulative_histogram_with_gene_percent_with_mic():
 
 def test_plots_plot_cumulative_histogram_save():
     df = pd.DataFrame(
-        data=np.random.rand(100, 3), columns=["pearson", "spearman", "clustermatch"]
+        data=np.random.rand(100, 3), columns=["pearson", "spearman", "ccc"]
     )
 
     with tempfile.TemporaryDirectory() as dirpath:
@@ -137,7 +137,7 @@ def test_plots_plot_cumulative_histogram_save():
 
 def test_plots_jointplot_simple():
     df = pd.DataFrame(
-        data=np.random.rand(100, 3), columns=["pearson", "spearman", "clustermatch"]
+        data=np.random.rand(100, 3), columns=["pearson", "spearman", "ccc"]
     )
 
     grid = jointplot(df, x="pearson", y="spearman")
@@ -152,7 +152,7 @@ def test_plots_jointplot_simple():
 
 def test_plots_jointplot_simple_add_corr_is_false():
     df = pd.DataFrame(
-        data=np.random.rand(100, 3), columns=["pearson", "spearman", "clustermatch"]
+        data=np.random.rand(100, 3), columns=["pearson", "spearman", "ccc"]
     )
 
     grid = jointplot(df, x="pearson", y="spearman", add_corr_coefs=False)
@@ -167,7 +167,7 @@ def test_plots_jointplot_simple_add_corr_is_false():
 
 def test_plots_jointplot_save():
     df = pd.DataFrame(
-        data=np.random.rand(100, 3), columns=["pearson", "spearman", "clustermatch"]
+        data=np.random.rand(100, 3), columns=["pearson", "spearman", "ccc"]
     )
 
     with tempfile.TemporaryDirectory() as dirpath:
@@ -184,7 +184,7 @@ def test_MyUpSet():
 
     n = 10000
     df = pd.DataFrame(
-        data=np.random.rand(n, 3), columns=["pearson", "spearman", "clustermatch"]
+        data=np.random.rand(n, 3), columns=["pearson", "spearman", "ccc"]
     )
 
     # only two intersection groups with more than 1k pairs, forcing to use

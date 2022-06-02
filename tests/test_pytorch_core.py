@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from clustermatch.pytorch.core import unravel_index_2d
+from ccc.pytorch.core import unravel_index_2d
 
 
 def test_unravel_index_2d_square_simple():

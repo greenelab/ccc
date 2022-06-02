@@ -49,8 +49,8 @@ import seaborn as sns
 from seaborn.distributions import _freedman_diaconis_bins
 from upsetplot import UpSet
 
-from clustermatch.coef import ccc
-from clustermatch.utils import human_format
+from ccc.coef import ccc
+from ccc.utils import human_format
 
 
 def plot_histogram(
@@ -197,7 +197,7 @@ def jointplot(
         y: name of a correlation method name (should be a column of data).
         bins: bins parameter passed to function seaborn.plot_joint
         add_corr_coefs: if True, the correlation coefficient of x and y is added
-          in a text box using pearson, spearman and clustermatch.
+          in a text box using pearson, spearman and ccc.
         output_dir: if given, the output directory where the figure will be
           saved. The file name is "dist-{x}_vs_{y}.svg".
 

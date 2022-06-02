@@ -3,9 +3,9 @@ It sets up the file/folder structure by downloading the necessary files.
 """
 from pathlib import Path
 
-from clustermatch import conf
-from clustermatch.utils import curl
-from clustermatch.log import get_logger
+from ccc import conf
+from ccc.utils import curl
+from ccc.log import get_logger
 
 logger = get_logger("setup")
 
@@ -37,7 +37,7 @@ def get_file_from_zip(
         output_file: output filepath where zip_internal_filename will be saved.
         output_file_md5: MD5 hash of the file inside the zip file.
     """
-    from clustermatch.utils import md5_matches
+    from ccc.utils import md5_matches
 
     logger.info(f"Checking output file: {output_file}")
 

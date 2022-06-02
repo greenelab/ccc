@@ -21,7 +21,7 @@
 #
 # Here we profile function `cdist_parts` again.
 #
-# This version is the final test with the completely optimized clustermatch's functions.
+# This version is the final test with the completely optimized ccc's functions.
 #
 # This notebook was run on my laptop.
 
@@ -46,7 +46,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch.coef import ccc
+from ccc.coef import ccc
 
 # %% [markdown] tags=[]
 # # Settings

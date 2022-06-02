@@ -28,7 +28,7 @@
 # %% tags=[]
 import pandas as pd
 
-from clustermatch import conf
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings

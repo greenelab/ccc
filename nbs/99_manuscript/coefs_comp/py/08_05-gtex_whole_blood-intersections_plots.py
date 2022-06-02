@@ -31,8 +31,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from clustermatch.plots import jointplot
-from clustermatch import conf
+from ccc.plots import jointplot
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings
@@ -125,7 +125,7 @@ df_plot.head()
 # ## Gene pairs percentiles
 
 # %%
-df_plot_percentiles = df_plot[["clustermatch", "pearson", "spearman"]].quantile(
+df_plot_percentiles = df_plot[["ccc", "pearson", "spearman"]].quantile(
     np.arange(0.1, 1.0, 0.01)
 )
 
@@ -141,11 +141,11 @@ with pd.option_context("display.max_rows", None):
 df_r_data = pd.concat(
     [
         df_plot,
-        df_plot[["clustermatch", "pearson", "spearman"]]
+        df_plot[["ccc", "pearson", "spearman"]]
         .rank()
         .rename(
             columns={
-                "clustermatch": "clustermatch_rank",
+                "ccc": "clustermatch_rank",
                 "pearson": "pearson_rank",
                 "spearman": "spearman_rank",
             }
@@ -177,7 +177,7 @@ def plot_gene_pair(top_pairs_df, idx, bins="log", plot_gene_ids=True):
 
     Args:
         top_pairs_df: a dataframe with a preselected group of genes pairs (for instance,
-            those where pearson is high and clustermatch is low. Each row is a gene pair.
+            those where pearson is high and ccc is low. Each row is a gene pair.
             It is the output of function get_gene_pairs.
         idx: an integer that indicates which row in top_pairs_df you want to plot.
         bins: the "bins" parameter of seaborn's jointplot.
@@ -193,7 +193,7 @@ def plot_gene_pair(top_pairs_df, idx, bins="log", plot_gene_ids=True):
     display((gene0_symbol, gene1_symbol))
 
     _pearson, _spearman, _clustermatch = top_pairs_df.loc[
-        (gene0, gene1), ["pearson", "spearman", "clustermatch"]
+        (gene0, gene1), ["pearson", "spearman", "ccc"]
     ].tolist()
 
     p = sns.jointplot(
@@ -228,19 +228,19 @@ def plot_gene_pair(top_pairs_df, idx, bins="log", plot_gene_ids=True):
 def get_gene_pairs(first_coef, query_set):
     """
     It queries a dataframe with the intersections of different groups (i.e.,
-    clustermatch high, pearson low, etc) given a query set. It returns a slice of
+    ccc high, pearson low, etc) given a query set. It returns a slice of
     the dataframe according to the query set provided.
 
     The function needs to access a variable named "df_r_data" that has the
     intersections between coefficients.
 
     Args:
-        first_coef: the main coefficient ("clustermatch", "pearson" or "spearman")
+        first_coef: the main coefficient ("ccc", "pearson" or "spearman")
             of interest. The final dataframe will be sorted according to this
             coefficient.
         query_set: a tuple with strings that specifies a query. For example
             ("Clustermatch (high)", "Pearson (low") would select all gene pairs
-            for which clustermatch is high and pearson is low.
+            for which ccc is high and pearson is low.
 
     Returns:
         A slice of variable "data_r_data" where the conditions specified in query_set
@@ -344,7 +344,7 @@ def save_gene_pairs(df, gene_set_name):
 
 # %%
 _tmp_df = get_gene_pairs(
-    "clustermatch",
+    "ccc",
     {
         "Clustermatch (high)",
         "Spearman (high)",
@@ -399,7 +399,7 @@ plot_and_save_gene_pair(
 
 # %%
 _tmp_df = get_gene_pairs(
-    "clustermatch",
+    "ccc",
     {
         "Clustermatch (high)",
         "Pearson (low)",
@@ -442,7 +442,7 @@ plot_and_save_gene_pair(
 
 # %%
 _tmp_df = get_gene_pairs(
-    "clustermatch",
+    "ccc",
     {
         "Clustermatch (high)",
         "Spearman (low)",
@@ -482,7 +482,7 @@ plot_and_save_gene_pair(
 
 # %%
 # get percentiles
-df_plot.loc[(gene0_id, gene1_id), ["clustermatch", "pearson", "spearman"]]
+df_plot.loc[(gene0_id, gene1_id), ["ccc", "pearson", "spearman"]]
 
 # %%
 gene_pair_subset = "c_vs_rs"
@@ -499,14 +499,14 @@ plot_and_save_gene_pair(
 
 # %%
 # get percentiles
-df_plot.loc[(gene0_id, gene1_id), ["clustermatch", "pearson", "spearman"]]
+df_plot.loc[(gene0_id, gene1_id), ["ccc", "pearson", "spearman"]]
 
 # %% [markdown] tags=[]
 # ## Clustermatch vs Spearman/Pearson
 
 # %%
 _tmp_df = get_gene_pairs(
-    "clustermatch",
+    "ccc",
     {
         "Clustermatch (high)",
         "Spearman (low)",

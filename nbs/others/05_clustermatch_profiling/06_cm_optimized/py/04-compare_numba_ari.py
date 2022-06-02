@@ -25,7 +25,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch import coef
+from ccc import coef
 
 # %% [markdown] tags=[]
 # # Data

@@ -39,9 +39,9 @@ import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr, spearmanr
 
-from clustermatch import conf
-from clustermatch.coef import ccc
-from clustermatch.methods import mic
+from ccc import conf
+from ccc.coef import ccc
+from ccc.methods import mic
 
 # %% [markdown] tags=[]
 # # Settings

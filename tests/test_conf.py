@@ -10,7 +10,7 @@ import pytest
 
 
 def test_conf_module_load():
-    from clustermatch import conf
+    from ccc import conf
 
     assert conf is not None
     assert conf.__file__ is not None
@@ -18,7 +18,7 @@ def test_conf_module_load():
 
 @mock.patch.dict(os.environ, {}, clear=True)
 def test_conf_entries():
-    from clustermatch import conf
+    from ccc import conf
     import importlib
 
     importlib.reload(conf)
@@ -44,7 +44,7 @@ def test_conf_entries():
 
 
 def test_conf_main():
-    t = runpy.run_module("clustermatch.conf", run_name="__main__")
+    t = runpy.run_module("ccc.conf", run_name="__main__")
     assert t is not None
     assert "print_vars" in t
     assert "CM_ROOT_DIR" in t["print_vars"]
@@ -59,7 +59,7 @@ def test_conf_main():
 def test_conf_export_variables():
     from pathlib import Path
     import subprocess
-    from clustermatch import conf
+    from ccc import conf
 
     conf_filepath = Path(conf.__file__).resolve()
     assert conf_filepath is not None
@@ -103,7 +103,7 @@ def test_conf_export_variables():
 
 @mock.patch.dict(os.environ, {"CM_MANUSCRIPT_DIR": "/tmp/some/dir"})
 def test_conf_with_manuscript_dir():
-    from clustermatch import conf
+    from ccc import conf
     import importlib
 
     importlib.reload(conf)
@@ -116,7 +116,7 @@ def test_conf_with_manuscript_dir():
 
 @mock.patch.dict(os.environ, {"CM_N_JOBS": ""})
 def test_conf_cm_n_jobs_is_empty_string():
-    from clustermatch import conf
+    from ccc import conf
     import importlib
 
     importlib.reload(conf)

@@ -31,8 +31,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from upsetplot import plot, from_indicators
 
-from clustermatch.plots import MyUpSet
-from clustermatch import conf
+from ccc.plots import MyUpSet
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings
@@ -98,10 +98,6 @@ df.shape
 df.head()
 
 # %% tags=[]
-# FIXME: this will not be necessary in new runs of clustermatch on GTEx
-df.loc[df["clustermatch"] < 0, "clustermatch"] = 0.0
-
-# %% tags=[]
 df.describe()
 
 # %% tags=[]
@@ -119,7 +115,7 @@ def get_lower_upper_quantile(method_name, q):
 
 # %% tags=[]
 # test
-_tmp = get_lower_upper_quantile("clustermatch", 0.20)
+_tmp = get_lower_upper_quantile("ccc", 0.20)
 display(_tmp)
 
 _tmp0, _tmp1 = _tmp
@@ -129,7 +125,7 @@ assert _tmp0 == _tmp.iloc[0]
 assert _tmp1 == _tmp.iloc[1]
 
 # %% tags=[]
-clustermatch_lq, clustermatch_hq = get_lower_upper_quantile("clustermatch", Q_DIFF)
+clustermatch_lq, clustermatch_hq = get_lower_upper_quantile("ccc", Q_DIFF)
 display((clustermatch_lq, clustermatch_hq))
 
 pearson_lq, pearson_hq = get_lower_upper_quantile("pearson", Q_DIFF)
@@ -153,10 +149,10 @@ spearman_lower = df["spearman"] <= spearman_lq
 display(spearman_lower.sum())
 
 # %% tags=[]
-clustermatch_higher = df["clustermatch"] >= clustermatch_hq
+clustermatch_higher = df["ccc"] >= clustermatch_hq
 display(clustermatch_higher.sum())
 
-clustermatch_lower = df["clustermatch"] <= clustermatch_lq
+clustermatch_lower = df["ccc"] <= clustermatch_lq
 display(clustermatch_lower.sum())
 
 # %% [markdown] tags=[]
@@ -308,7 +304,7 @@ gene_pairs_by_cats = gene_pairs_by_cats.loc[
         # full agreements on low:
         (True, True, True, False, False, False),
         # diagreements
-        #   clustermatch
+        #   ccc
         (False, True, False, True, False, True),
         (False, True, False, False, False, True),
         (True, False, False, False, False, True),

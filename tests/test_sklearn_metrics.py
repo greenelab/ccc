@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.metrics import adjusted_rand_score as sklearn_ari
 
-from clustermatch.sklearn.metrics import (
+from ccc.sklearn.metrics import (
     adjusted_rand_index,
     get_contingency_matrix,
     get_pair_confusion_matrix,

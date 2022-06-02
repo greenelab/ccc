@@ -27,7 +27,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from clustermatch import conf
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings

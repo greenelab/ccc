@@ -29,8 +29,8 @@ import pandas as pd
 from scipy import stats
 import seaborn as sns
 
-from clustermatch.plots import plot_histogram, plot_cumulative_histogram, jointplot
-from clustermatch import conf
+from ccc.plots import plot_histogram, plot_cumulative_histogram, jointplot
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings
@@ -84,7 +84,7 @@ assert INPUT_FILE.exists()
 # %% tags=[]
 corrs_df = pd.read_pickle(INPUT_FILE).rename(
     columns={
-        "clustermatch": CLUSTERMATCH_LABEL,
+        "ccc": CLUSTERMATCH_LABEL,
         "pearson": PEARSON_LABEL,
         "spearman": SPEARMAN_LABEL,
         "mic": MIC_LABEL,

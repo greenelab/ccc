@@ -26,8 +26,8 @@
 import pandas as pd
 from tqdm import tqdm
 
-from clustermatch.utils import simplify_string
-from clustermatch import conf
+from ccc.utils import simplify_string
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings

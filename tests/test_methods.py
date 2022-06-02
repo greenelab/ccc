@@ -1,6 +1,6 @@
 import numpy as np
 
-from clustermatch.methods import mic
+from ccc.methods import mic
 
 
 def test_mic_basic():

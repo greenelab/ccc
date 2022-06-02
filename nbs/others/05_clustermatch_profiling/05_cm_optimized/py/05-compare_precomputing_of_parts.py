@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown]
-# Compares two different clustermatch implementations: one using precomputation of internal clusterings, and the other one using the original implementation that does not perform such precomputation.
+# Compares two different ccc implementations: one using precomputation of internal clusterings, and the other one using the original implementation that does not perform such precomputation.
 
 # %% [markdown]
 # # Modules
@@ -25,7 +25,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch.coef import ccc
+from ccc.coef import ccc
 
 # %% [markdown]
 # # Data

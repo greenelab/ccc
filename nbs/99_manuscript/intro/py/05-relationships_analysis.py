@@ -30,8 +30,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import minmax_scale
 
-from clustermatch import conf
-from clustermatch.coef import ccc
+from ccc import conf
+from ccc.coef import ccc
 
 # %% [markdown] tags=[]
 # # Settings
@@ -222,7 +222,7 @@ def get_cm_line_points(x, y, max_parts, parts):
     returned from calling cm, this function returns two arrays with
     scalars to draw the lines that separates clusters in x and y.
     """
-    # get the clustermatch partitions that maximize the coefficient
+    # get the ccc partitions that maximize the coefficient
     x_max_part = parts[0][max_parts[0]]
     x_unique_k = {}
     for k in np.unique(x_max_part):
@@ -283,7 +283,7 @@ with sns.plotting_context("paper", font_scale=1.8):
         r = pearsonr(x, y)[0]
         rs = spearmanr(x, y)[0]
 
-        # clustermatch
+        # ccc
         c, max_parts, parts = ccc(x, y, return_parts=True)
         c = ccc(x, y)
 
