@@ -46,7 +46,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch.coef import ccc
+from ccc.coef import ccc
 
 # %% [markdown] tags=[]
 # # Settings

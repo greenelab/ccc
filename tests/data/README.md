@@ -45,13 +45,13 @@ from clustermatch.cluster import calculate_simmatrix
 np.random.seed(0)
 random_data = pd.DataFrame(np.random.rand(20, 100))
 
-OUTPUT_DIR = Path("/home/miltondp/projects/labs/greenelab/clustermatch_repos/clustermatch-gene-expr/tests/data/")
+OUTPUT_DIR = Path("/home/miltondp/projects/ccc/ccc/tests/data/")
 
-random_data.to_pickle(OUTPUT_DIR / "clustermatch-random_data-data.pkl")
+random_data.to_pickle(OUTPUT_DIR / "ccc-random_data-data.pkl")
 
 int_n_clusters = range(2, 10+1)
 cm_sim_matrix = calculate_simmatrix(random_data, internal_n_clusters=int_n_clusters, n_jobs=3)
-cm_sim_matrix.to_pickle(OUTPUT_DIR / "clustermatch-random_data-coef.pkl")
+cm_sim_matrix.to_pickle(OUTPUT_DIR / "ccc-random_data-coef.pkl")
 ```
 
 
@@ -68,13 +68,13 @@ from clustermatch.utils.data import merge_sources
 data_files = ['experiments/tomato/data/real_sample.xlsx']
 merged_sources, feature_names, sources_names = merge_sources(data_files)
 
-OUTPUT_DIR = Path("/home/miltondp/projects/labs/greenelab/clustermatch_repos/clustermatch-gene-expr/tests/data/")
+OUTPUT_DIR = Path("/home/miltondp/projects/ccc/ccc/tests/data/")
 
 merged_sources_final = merged_sources.apply(lambda x: pd.to_numeric(x, errors="coerce"), axis=1)
 merged_sources_final = merged_sources_final.dropna(how="all")
-merged_sources_final.to_pickle(OUTPUT_DIR / "clustermatch-example-data.pkl")
+merged_sources_final.to_pickle(OUTPUT_DIR / "ccc-example-data.pkl")
 
 int_n_clusters = range(2, 5)
 cm_sim_matrix = calculate_simmatrix(merged_sources_final, internal_n_clusters=int_n_clusters, n_jobs=3)
-cm_sim_matrix.to_pickle(OUTPUT_DIR / "clustermatch-example-coef.pkl")
+cm_sim_matrix.to_pickle(OUTPUT_DIR / "ccc-example-coef.pkl")
 ```

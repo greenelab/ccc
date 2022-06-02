@@ -7,7 +7,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from clustermatch import settings
+from ccc import settings
 
 #
 # General file structure

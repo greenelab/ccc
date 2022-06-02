@@ -26,7 +26,7 @@
 import pandas as pd
 import seaborn as sns
 
-from clustermatch import conf
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings
@@ -230,7 +230,7 @@ assert df["subset"].unique().shape[0] == 2
 # This allows us to assess whether gene pairs found by our correlation coefficients in GTEx (whole blood) replicate in GIANT by seeing if the predicted cell types is a blood cell lineage (leukocyte, etc) and the network connectivity is high.
 
 # %%
-# for each subset (clustermatch vs etc, pearson vs etc), sort by top gene pairs
+# for each subset (ccc vs etc, pearson vs etc), sort by top gene pairs
 # for that, for each subset, sort by "order", which indicates, for each subset
 # the gene pairs with the largest correlation value
 top_gene_pairs = df.groupby(["subset"], group_keys=False).apply(

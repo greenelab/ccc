@@ -8,18 +8,18 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from clustermatch.utils import simplify_string, chunker, human_format, get_upper_triag
+from ccc.utils import simplify_string, chunker, human_format, get_upper_triag
 
 
 def test_utils_module_load():
-    from clustermatch import utils
+    from ccc import utils
 
     assert utils is not None
     assert utils.__file__ is not None
 
 
 def test_curl_file_exists():
-    from clustermatch.utils import curl
+    from ccc.utils import curl
 
     download_func = MagicMock()
 
@@ -34,7 +34,7 @@ def test_curl_file_exists():
 
 
 def test_curl_file_exists_hash_matches():
-    from clustermatch.utils import curl
+    from ccc.utils import curl
 
     download_func = MagicMock()
 
@@ -51,7 +51,7 @@ def test_curl_file_exists_hash_matches():
 
 
 def test_curl_file_exists_hash_do_not_match():
-    from clustermatch.utils import curl
+    from ccc.utils import curl
 
     download_func = MagicMock()
 
@@ -74,7 +74,7 @@ def test_curl_file_exists_hash_do_not_match():
 
 
 def test_curl_file_is_downloaded_successfully():
-    from clustermatch.utils import curl
+    from ccc.utils import curl
 
     def copy_orig_file(url, output_file):
         """Mimics a download function that actually just copies the expected
@@ -105,7 +105,7 @@ def test_curl_file_is_downloaded_successfully():
 
 
 def test_curl_file_is_downloaded_with_error():
-    from clustermatch.utils import curl
+    from ccc.utils import curl
 
     # this tests that after an unsuccessful file download, the curl function
     # raises an AssertionException, because the given md5 hash does not match

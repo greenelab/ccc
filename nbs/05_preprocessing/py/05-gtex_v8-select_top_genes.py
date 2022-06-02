@@ -32,7 +32,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import scale
 from tqdm import tqdm
 
-from clustermatch import conf
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings

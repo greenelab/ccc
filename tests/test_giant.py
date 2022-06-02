@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from clustermatch.giant import gene_exists, predict_tissue, get_network
+from ccc.giant import gene_exists, predict_tissue, get_network
 
 
 # Gene mappings used in unit tests

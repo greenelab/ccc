@@ -30,9 +30,9 @@ from time import time
 
 import pandas as pd
 
-from clustermatch import conf
-from clustermatch.utils import simplify_string
-from clustermatch.corr import mic
+from ccc import conf
+from ccc.utils import simplify_string
+from ccc.corr import mic
 
 # %% [markdown] tags=[]
 # # Settings

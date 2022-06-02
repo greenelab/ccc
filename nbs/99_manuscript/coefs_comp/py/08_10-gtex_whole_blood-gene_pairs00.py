@@ -30,14 +30,14 @@ from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from clustermatch import conf
-from clustermatch.coef import ccc
+from ccc import conf
+from ccc.coef import ccc
 
 # %% [markdown] tags=[]
 # # Settings
 
 # %%
-# this gene pair was originally found with clustermatch on whole blood
+# this gene pair was originally found with ccc on whole blood
 # interesting: https://clincancerres.aacrjournals.org/content/26/21/5567.figures-only
 gene0_id, gene1_id = "ENSG00000147050.14", "ENSG00000183878.15"
 gene0_symbol, gene1_symbol = "KDM6A", "UTY"
@@ -257,7 +257,7 @@ _tissue_data = plot_gene_pair(
 )
 
 # %% [markdown] tags=[]
-# ## Lowest tissues in clustermatch
+# ## Lowest tissues in ccc
 
 # %%
 _tissue_data = plot_gene_pair(
@@ -323,7 +323,7 @@ _tissue_data = plot_gene_pair(
 )
 
 # %% [markdown] tags=[]
-# ## Highest tissues in clustermatch
+# ## Highest tissues in ccc
 
 # %%
 _tissue_data = plot_gene_pair(

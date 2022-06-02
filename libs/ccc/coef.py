@@ -9,10 +9,10 @@ from numpy.typing import NDArray
 from numba import njit, get_num_threads
 from numba.typed import List
 
-from clustermatch.pytorch.core import unravel_index_2d
-from clustermatch.sklearn.metrics import adjusted_rand_index as ari
-from clustermatch.scipy.stats import rank
-from clustermatch.utils import chunker
+from ccc.pytorch.core import unravel_index_2d
+from ccc.sklearn.metrics import adjusted_rand_index as ari
+from ccc.scipy.stats import rank
+from ccc.utils import chunker
 
 
 @njit(cache=True, nogil=True)

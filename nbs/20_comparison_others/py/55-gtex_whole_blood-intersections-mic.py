@@ -29,7 +29,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from upsetplot import plot, from_indicators
 
-from clustermatch import conf
+from ccc import conf
 
 # %% [markdown] tags=[]
 # # Settings
@@ -93,7 +93,7 @@ def get_lower_upper_quantile(method_name, q):
 
 # %% tags=[]
 # test
-_tmp = get_lower_upper_quantile("clustermatch", 0.20)
+_tmp = get_lower_upper_quantile("ccc", 0.20)
 display(_tmp)
 
 _tmp0, _tmp1 = _tmp
@@ -103,7 +103,7 @@ assert _tmp0 == _tmp.iloc[0]
 assert _tmp1 == _tmp.iloc[1]
 
 # %% tags=[]
-clustermatch_lq, clustermatch_hq = get_lower_upper_quantile("clustermatch", Q_DIFF)
+clustermatch_lq, clustermatch_hq = get_lower_upper_quantile("ccc", Q_DIFF)
 display((clustermatch_lq, clustermatch_hq))
 
 pearson_lq, pearson_hq = get_lower_upper_quantile("pearson", Q_DIFF)
@@ -130,10 +130,10 @@ spearman_lower = df["spearman"] <= spearman_lq
 display(spearman_lower.sum())
 
 # %% tags=[]
-clustermatch_higher = df["clustermatch"] >= clustermatch_hq
+clustermatch_higher = df["ccc"] >= clustermatch_hq
 display(clustermatch_higher.sum())
 
-clustermatch_lower = df["clustermatch"] <= clustermatch_lq
+clustermatch_lower = df["ccc"] <= clustermatch_lq
 display(clustermatch_lower.sum())
 
 # %% tags=[]
@@ -156,7 +156,7 @@ df["pearson"].unique().shape
 df["spearman"].unique().shape
 
 # %%
-df["clustermatch"].unique().shape
+df["ccc"].unique().shape
 
 # %%
 df["mic"].unique().shape

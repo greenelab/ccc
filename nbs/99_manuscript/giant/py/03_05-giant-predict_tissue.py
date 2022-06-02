@@ -26,8 +26,8 @@
 import pandas as pd
 from tqdm import tqdm
 
-from clustermatch import conf
-from clustermatch.giant import get_network
+from ccc import conf
+from ccc.giant import get_network
 
 # %% [markdown] tags=[]
 # # Settings
@@ -223,7 +223,7 @@ output_dir = OUTPUT_DIR / "clustermatch_vs_pearson"
 # %%
 # read gene pairs
 data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_pearson.pkl").sort_values(
-    "clustermatch", ascending=False
+    "ccc", ascending=False
 )
 
 # %%
@@ -254,7 +254,7 @@ output_dir = OUTPUT_DIR / "clustermatch_vs_pearson_spearman"
 
 # %%
 data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_pearson_spearman.pkl").sort_values(
-    "clustermatch", ascending=False
+    "ccc", ascending=False
 )
 
 # %%
@@ -281,7 +281,7 @@ output_dir = OUTPUT_DIR / "clustermatch_vs_spearman"
 
 # %%
 data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_spearman.pkl").sort_values(
-    "clustermatch", ascending=False
+    "ccc", ascending=False
 )
 
 # %%

@@ -29,8 +29,8 @@
 import pandas as pd
 from tqdm import tqdm
 
-from clustermatch import conf
-from clustermatch.corr import spearman
+from ccc import conf
+from ccc.corr import spearman
 
 # %% [markdown] tags=[]
 # # Settings

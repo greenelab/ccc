@@ -40,7 +40,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch.coef import ccc
+from ccc.coef import ccc
 
 # %% tags=[]
 # let numba compile all the code before profiling

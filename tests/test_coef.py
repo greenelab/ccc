@@ -7,7 +7,7 @@ import pytest
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
 
-from clustermatch.coef import (
+from ccc.coef import (
     ccc,
     _get_range_n_clusters,
     run_quantile_clustering,
@@ -411,7 +411,7 @@ def test_cm_quadratic2():
 
 def test_cm_one_feature_with_all_same_values():
     # if there is no variation in at least one of the two variables to be
-    #  compared, clustermatch returns nan
+    #  compared, ccc returns nan
 
     # Prepare
     np.random.seed(0)
@@ -428,7 +428,7 @@ def test_cm_one_feature_with_all_same_values():
 
 
 def test_cm_all_features_with_all_same_values():
-    # if there is no variation in both variables to be compared, clustermatch
+    # if there is no variation in both variables to be compared, ccc
     #  returns nan
 
     # Prepare
@@ -787,9 +787,9 @@ def test_get_coords_from_index_smaller():
 
 
 def test_cm_values_equal_to_original_implementation():
-    # compare with results obtained from the original clustermatch
+    # compare with results obtained from the original ccc
     # implementation (https://github.com/sinc-lab/clustermatch) plus some
-    # patches (see tests/data/README.md about clustermatch data).
+    # patches (see tests/data/README.md about ccc data).
     from pathlib import Path
     import pandas as pd
 
@@ -798,16 +798,16 @@ def test_cm_values_equal_to_original_implementation():
     input_data_dir = Path(__file__).parent / "data"
 
     # load data
-    data = pd.read_pickle(input_data_dir / "clustermatch-random_data-data.pkl")
+    data = pd.read_pickle(input_data_dir / "ccc-random_data-data.pkl")
     data = data.to_numpy()
 
-    # run new clustermatch implementation.
+    # run new ccc implementation.
     # Here, I fixed the internal number of clusters, since that slightly changed
     # in the new implementation compared with the original one.
     corr_mat = ccc(data, internal_n_clusters=list(range(2, 10 + 1)))
 
     expected_corr_matrix = pd.read_pickle(
-        input_data_dir / "clustermatch-random_data-coef.pkl"
+        input_data_dir / "ccc-random_data-coef.pkl"
     )
     expected_corr_matrix = expected_corr_matrix.to_numpy()
     expected_corr_matrix = expected_corr_matrix[

@@ -27,8 +27,8 @@
 # %% tags=[]
 import pandas as pd
 
-from clustermatch import conf
-from clustermatch.utils import get_upper_triag
+from ccc import conf
+from ccc.utils import get_upper_triag
 
 # %% [markdown] tags=[]
 # # Settings
@@ -83,7 +83,7 @@ clustermatch_df = pd.read_pickle(
     str(INPUT_CORR_FILE_TEMPLATE).format(
         tissue=GTEX_TISSUE,
         gene_sel_strategy=GENE_SEL_STRATEGY,
-        corr_method="clustermatch",
+        corr_method="ccc",
     )
 )
 
@@ -102,7 +102,7 @@ clustermatch_df = (
     .rename_axis((None, None))
     .dropna()
     .sort_index()
-    .rename("clustermatch")
+    .rename("ccc")
 )
 
 # %% tags=[]

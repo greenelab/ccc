@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown]
-# Compares two different clustermatch implementations: one using the new optimized adjusted Rand index (ARI) with numba, and the other one using the ARI from scikit-learn.
+# Compares two different ccc implementations: one using the new optimized adjusted Rand index (ARI) with numba, and the other one using the ARI from scikit-learn.
 
 # %% [markdown] tags=[]
 # # Modules
@@ -25,7 +25,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch import coef
+from ccc import coef
 
 # %% [markdown] tags=[]
 # # Data

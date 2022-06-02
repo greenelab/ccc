@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown]
-# Creates a point of reference/comparison with non-optimized version of clustermatch.
+# Creates a point of reference/comparison with non-optimized version of ccc.
 
 # %% [markdown] tags=[]
 # # Remove pycache dir
@@ -40,7 +40,7 @@
 # %% tags=[]
 import numpy as np
 
-from clustermatch.coef import _cm
+from ccc.coef import _cm
 
 # %% [markdown] tags=[]
 # # Settings

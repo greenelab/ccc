@@ -25,8 +25,8 @@
 # %% tags=[]
 import pandas as pd
 
-from clustermatch import conf
-from clustermatch.utils import get_upper_triag
+from ccc import conf
+from ccc.utils import get_upper_triag
 
 # %% [markdown] tags=[]
 # # Settings
@@ -106,7 +106,7 @@ clustermatch_df = pd.read_pickle(
     str(INPUT_CORR_FILE_TEMPLATE).format(
         tissue=GTEX_TISSUE,
         gene_sel_strategy=GENE_SEL_STRATEGY,
-        corr_method="clustermatch",
+        corr_method="ccc",
     )
 )
 
@@ -215,7 +215,7 @@ assert clustermatch_df.index.equals(spearman_df.index)
 # %% tags=[]
 df = pd.DataFrame(
     {
-        "clustermatch": clustermatch_df,
+        "ccc": clustermatch_df,
         "pearson": pearson_df,
         "spearman": spearman_df,
     }
