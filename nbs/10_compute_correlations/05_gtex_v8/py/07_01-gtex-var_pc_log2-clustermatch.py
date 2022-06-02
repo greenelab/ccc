@@ -32,7 +32,7 @@ import pandas as pd
 
 from ccc import conf
 from ccc.utils import simplify_string
-from ccc.corr import clustermatch
+from ccc.corr import ccc
 
 # %% [markdown] tags=[]
 # # Settings
@@ -51,7 +51,7 @@ TISSUES = [
 ]
 
 # %% tags=[]
-CORRELATION_METHOD = clustermatch
+CORRELATION_METHOD = ccc
 
 method_name = CORRELATION_METHOD.__name__
 display(method_name)

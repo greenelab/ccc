@@ -235,7 +235,7 @@ def test_corr_mic_parallel_manual():
 
 def test_corr_clustermatch_basics():
     # run basic tests first
-    data, corr_mat = _run_basic_checks(corr.clustermatch)
+    data, corr_mat = _run_basic_checks(corr.ccc)
 
     corr_values = pd.Series(corr_mat.to_numpy().flatten())
 
@@ -260,7 +260,7 @@ def test_corr_clustermatch_outputs_same_as_original_clustermatch():
     # run new ccc implementation.
     # Here, I fixed the internal number of clusters, since that slightly changed
     # in the new implementation compared with the original one.
-    corr_mat = corr.clustermatch(data, internal_n_clusters=list(range(2, 10 + 1)))
+    corr_mat = corr.ccc(data, internal_n_clusters=list(range(2, 10 + 1)))
 
     expected_corr_matrix = pd.read_pickle(
         input_data_dir / "ccc-random_data-coef.pkl"

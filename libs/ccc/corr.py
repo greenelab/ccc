@@ -78,9 +78,9 @@ def mic(data: pd.DataFrame, estimator="mic_approx", n_jobs=None) -> pd.DataFrame
     )
 
 
-def clustermatch(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
+def ccc(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
     """
-    Compute the Clustermatch coefficient.
+    Compute the Clustermatch Correlation Coefficient (CCC).
     """
     from scipy.spatial.distance import squareform
     from ccc.coef import ccc
