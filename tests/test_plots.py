@@ -183,9 +183,7 @@ def test_MyUpSet():
     np.random.seed(0)
 
     n = 10000
-    df = pd.DataFrame(
-        data=np.random.rand(n, 3), columns=["pearson", "spearman", "ccc"]
-    )
+    df = pd.DataFrame(data=np.random.rand(n, 3), columns=["pearson", "spearman", "ccc"])
 
     # only two intersection groups with more than 1k pairs, forcing to use
     # the human readable numbers in MyUpSet

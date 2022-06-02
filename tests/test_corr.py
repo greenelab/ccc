@@ -262,9 +262,7 @@ def test_corr_clustermatch_outputs_same_as_original_clustermatch():
     # in the new implementation compared with the original one.
     corr_mat = corr.ccc(data, internal_n_clusters=list(range(2, 10 + 1)))
 
-    expected_corr_matrix = pd.read_pickle(
-        input_data_dir / "ccc-random_data-coef.pkl"
-    )
+    expected_corr_matrix = pd.read_pickle(input_data_dir / "ccc-random_data-coef.pkl")
     expected_corr_matrix = expected_corr_matrix.loc[data.index, data.index]
 
     assert corr_mat.shape == expected_corr_matrix.shape

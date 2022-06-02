@@ -806,9 +806,7 @@ def test_cm_values_equal_to_original_implementation():
     # in the new implementation compared with the original one.
     corr_mat = ccc(data, internal_n_clusters=list(range(2, 10 + 1)))
 
-    expected_corr_matrix = pd.read_pickle(
-        input_data_dir / "ccc-random_data-coef.pkl"
-    )
+    expected_corr_matrix = pd.read_pickle(input_data_dir / "ccc-random_data-coef.pkl")
     expected_corr_matrix = expected_corr_matrix.to_numpy()
     expected_corr_matrix = expected_corr_matrix[
         np.triu_indices(expected_corr_matrix.shape[0], 1)
