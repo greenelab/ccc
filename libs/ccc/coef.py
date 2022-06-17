@@ -107,7 +107,9 @@ def _get_range_n_clusters(
 
 
 @njit(cache=True, nogil=True)
-def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]:
+def _get_parts(
+    data: NDArray, range_n_clusters: tuple[int], data_is_numerical=True
+) -> NDArray[np.int16]:
     """
     Given a 1d data array, it computes a partition for each k value in the given
     range of clusters. This function only supports numerical data, and it
@@ -118,20 +120,25 @@ def _get_parts(data: NDArray, range_n_clusters: tuple[int]) -> NDArray[np.int16]
     Args:
         data: a 1d data vector. It is assumed that there are no nans.
         range_n_clusters: a tuple with the number of clusters.
+        data_type: "numerical" or "categorical"
 
     Returns:
         A numpy array with shape (number of clusters, data rows) with
         partitions of data.
     """
-    parts = np.zeros((len(range_n_clusters), data.shape[0]), dtype=np.int16)
+    parts = np.zeros((len(range_n_clusters), data.shape[0]), dtype=np.int16) - 1
 
-    for idx in range(len(range_n_clusters)):
-        k = range_n_clusters[idx]
-        parts[idx] = run_quantile_clustering(data, k)
+    if data_is_numerical:
+        for idx in range(len(range_n_clusters)):
+            k = range_n_clusters[idx]
+            parts[idx] = run_quantile_clustering(data, k)
 
-    # remove singletons
-    partitions_ks = np.array([len(np.unique(p)) for p in parts])
-    parts[partitions_ks == 1, :] = -1
+        # remove singletons
+        partitions_ks = np.array([len(np.unique(p)) for p in parts])
+        parts[partitions_ks == 1, :] = -1
+    else:
+        # if the data is categorical, then the encoded feature is already the partition
+        parts[0] = data.astype(np.int16)
 
     return parts
 
@@ -159,7 +166,8 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
 
     for i in range(res.shape[0]):
         for j in range(res.shape[1]):
-            res[i, j] = ari(x[i], y[j])
+            if x[i, 0] >= 0 and y[j, 0] >= 0:
+                res[i, j] = ari(x[i], y[j])
 
     return res
 
@@ -271,6 +279,21 @@ def get_chunks(
     return res
 
 
+def get_feature_type_and_encode(feature_data):
+    """
+    Given the data of one feature as a 1d numpy array (it could also be a pandas.Series),
+    it returns the same data if it is numerical (float, signed or unsigned integer) or an
+    encoded version if it is categorical (each category value has a unique integer starting from
+    zero).
+    """
+    data_type_is_numerical = feature_data.dtype.kind in ("f", "i", "u")
+    if data_type_is_numerical:
+        return feature_data, data_type_is_numerical
+
+    # here np.unique with return_inverse encodes categorical values into numerical ones
+    return np.unique(feature_data, return_inverse=True)[1], data_type_is_numerical
+
+
 def ccc(
     x: NDArray,
     y: NDArray = None,
@@ -336,21 +359,62 @@ def ccc(
             partition indexes in parts, respectively: parts[0][max_parts[0]]
             points to the partition for x, and parts[1][max_parts[1]] points to
             the partition for y.
+            TODO: mention here that "invalid" or "missing" partitions have all -1 values
+              for example, for categorical values only the first one makes sense
     """
-    x = to_numpy(x)
-    y = to_numpy(y)
-
+    n_objects = None
+    n_features = None
+    # this is a boolean array with 1 if the feature is numerical and 0 otherwise
+    X_numerical_type = None
     if x.ndim == 1 and (y is not None and y.ndim == 1):
-        assert x.shape == y.shape
-        X = np.zeros((2, x.shape[0]))
-        X[0, :] = x
-        X[1, :] = y
+        # both x and y are 1d arrays
+        assert x.shape == y.shape, "x and y need to be of the same size"
+        n_objects = x.shape[0]
+        n_features = 2
+
+        X = np.zeros((n_features, n_objects))
+        X_numerical_type = np.full((n_features,), True, dtype=bool)
+        # for idx in range(n_features):
+        #     feature_data, feature_is_numerical = get_feature_type_and_encode()
+
+        X[0, :], X_numerical_type[0] = get_feature_type_and_encode(x)
+        X[1, :], X_numerical_type[1] = get_feature_type_and_encode(y)
     elif x.ndim == 2 and y is None:
-        X = x
+        # x is a 2d array; two things could happen: 1) this is an numpy array,
+        # in that case, features are in rows, objects are in columns; 2) or this is a
+        # pandas dataframe, which is the opposite (features in columns and objects in rows),
+        # plus we have the features data type (numerical, categorical, etc)
+
+        if isinstance(x, np.ndarray):
+            assert get_feature_type_and_encode(x[0, :])[1], (
+                "If data is a 2d numpy array, it has to be numerical. Use pandas.DataFrame if "
+                "you need to mix features with different data types"
+            )
+            n_objects = x.shape[1]
+            n_features = x.shape[0]
+
+            X = x
+            X_numerical_type = np.full((n_features,), True, dtype=bool)
+        elif hasattr(x, "to_numpy"):
+            # Here I assume that if x has the attribute "to_numpy" is of type pandas.DataFrame
+            # Using isinstance(x, pandas.DataFrame) would be more appropriate, but I dont want to
+            # have pandas as a dependency just for that
+            n_objects = x.shape[0]
+            n_features = x.shape[1]
+
+            X = np.zeros((n_features, n_objects))
+            X_numerical_type = np.full((n_features,), True, dtype=bool)
+
+            for idx in range(n_features):
+                X[idx, :], X_numerical_type[idx] = get_feature_type_and_encode(
+                    x.iloc[:, idx]
+                )
     else:
         raise ValueError("Wrong combination of parameters x and y")
 
     # get number of cores to use
+    # FIXME: this is not necessary, use parameter like n_jobs instead
+    #  and force numba to use the same number of n_jobs (paramter)
     default_n_threads = get_num_threads()
 
     if internal_n_clusters is not None:
@@ -365,32 +429,34 @@ def ccc(
         internal_n_clusters = _tmp_list
 
     # get matrix of partitions for each object pair
-    range_n_clusters = _get_range_n_clusters(X.shape[1], internal_n_clusters)
+    range_n_clusters = _get_range_n_clusters(n_objects, internal_n_clusters)
+
+    if range_n_clusters.shape[0] == 0:
+        raise ValueError(f"Data has too few objects: {n_objects}")
 
     # store a set of partitions per row (object) in X as a multidimensional
-    # array:
-    #  - 1st dim: number of objects/rows in X
-    #  - 2nd dim: number of partitions per object
-    #  - 3rd dim: number of features per object (columns in X)
-    parts = np.zeros(
-        (X.shape[0], range_n_clusters.shape[0], X.shape[1]), dtype=np.int16
+    # array, where the second dimension is the number of partitions per object.
+    parts = (
+        np.zeros((n_features, range_n_clusters.shape[0], n_objects), dtype=np.int16) - 1
     )
 
     # cm_values stores the CCC coefficients
-    n = X.shape[0]
-    n_comp = (n * (n - 1)) // 2
-    cm_values = np.full(n_comp, np.nan)
+    # n = features_list.shape[0]
+    n_features_comp = (n_features * (n_features - 1)) // 2
+    cm_values = np.full(n_features_comp, np.nan)
 
     # for each object pair being compared, max_parts has the indexes of the
     # partitions that maximimized the ARI
-    max_parts = np.zeros((n_comp, 2), dtype=np.uint64)
+    max_parts = np.zeros((n_features_comp, 2), dtype=np.uint64)
 
     with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
         # pre-compute the internal partitions for each object in parallel
-        inputs = get_chunks(n, default_n_threads, n_chunks_threads_ratio)
+        inputs = get_chunks(n_features, default_n_threads, n_chunks_threads_ratio)
 
         def compute_parts(idxs):
-            return np.array([_get_parts(X[i], range_n_clusters) for i in idxs])
+            return np.array(
+                [_get_parts(X[i], range_n_clusters, X_numerical_type[i]) for i in idxs]
+            )
 
         for idx, ps in zip(inputs, executor.map(compute_parts, inputs)):
             parts[idx] = ps
@@ -402,7 +468,7 @@ def ccc(
         # we have several object pairs to compare), because parallelization is
         # already performed at this level. Otherwise, more threads than
         # specified by the user are started.
-        cdist_parts_enable_threading = True if n_comp == 1 else False
+        cdist_parts_enable_threading = True if n_features_comp == 1 else False
 
         cdist_func = None
         map_func = executor.map
@@ -437,7 +503,7 @@ def ccc(
             max_part_idx_list = np.zeros((n_idxs, 2), dtype=np.uint64)
 
             for idx, data_idx in enumerate(idx_list):
-                i, j = get_coords_from_index(n, data_idx)
+                i, j = get_coords_from_index(n_features, data_idx)
 
                 # get partitions for the pair of objects
                 obji_parts, objj_parts = parts[i], parts[j]
@@ -462,7 +528,7 @@ def ccc(
             return max_ari_list, max_part_idx_list
 
         # iterate over all chunks of object pairs and compute the coefficient
-        inputs = get_chunks(n_comp, default_n_threads, n_chunks_threads_ratio)
+        inputs = get_chunks(n_features_comp, default_n_threads, n_chunks_threads_ratio)
 
         for idx, (max_ari_list, max_part_idx_list) in zip(
             inputs, map_func(compute_coef, inputs)

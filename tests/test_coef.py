@@ -290,6 +290,7 @@ def test_cm_basic():
     cm_value = ccc(feature0, feature1)
     assert cm_value is not None
     assert isinstance(cm_value, float)
+    assert 0.00 < cm_value < 0.02
 
 
 def test_cm_basic_internal_n_clusters_is_integer():
@@ -483,23 +484,6 @@ def test_cm_x_y_are_pandas_series():
     # Validate
     assert cm_value is not None
     assert isinstance(cm_value, float)
-
-
-def test_cm_x_is_pandas_dataframe():
-    # Prepare
-    np.random.seed(123)
-
-    # two features on 100 objects (random data)
-    data_matrix = pd.DataFrame(np.random.rand(10, 100))
-
-    # Run
-    cm_value = ccc(data_matrix)
-
-    # Validate
-    assert cm_value is not None
-    assert isinstance(cm_value, np.ndarray)
-    assert cm_value.shape == (45,)
-    assert np.issubdtype(cm_value.dtype, float)
 
 
 def test_cm_x_and_y_are_pandas_dataframe():
@@ -880,6 +864,54 @@ def test_cm_return_parts_linear():
     np.testing.assert_array_equal(max_parts, np.array([0, 0]))
 
 
+def test_cm_return_parts_categorical_variable():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects
+    numerical_feature0 = np.random.rand(100)
+    numerical_feature0_median = np.percentile(numerical_feature0, 50)
+
+    # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1[numerical_feature0 < numerical_feature0_median] = "l"
+    categorical_feature1[numerical_feature0 >= numerical_feature0_median] = "u"
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 2
+    assert set(_unique_values) == {"l", "u"}
+
+    # Run
+    cm_value, max_parts, parts = ccc(
+        numerical_feature0, categorical_feature1, return_parts=True
+    )
+
+    # Validate
+    assert cm_value == 1.0
+
+    assert parts is not None
+    assert len(parts) == 2
+
+    # for numerical_feature0 all partititions should be there
+    assert parts[0].shape == (9, 100)
+    assert set(range(2, 10 + 1)) == set(map(lambda x: np.unique(x).shape[0], parts[0]))
+
+    # for categorical_feature1 only the first partition is meaningful
+    assert parts[1].shape == (9, 100)
+    assert np.unique(parts[1][0, :]).shape[0] == 2
+    _unique_in_rest = np.unique(parts[1][1:, :])
+    assert _unique_in_rest.shape[0] == 1
+    assert _unique_in_rest[0] == -1
+
+    assert max_parts is not None
+    assert hasattr(max_parts, "shape")
+    assert max_parts.shape == (2,)
+    # even in this test we do not specify internal_n_clusters (so it goes from
+    # k=2 to k=10, nine partitions), k=2 for both features should already have
+    # the maximum value
+    np.testing.assert_array_equal(max_parts, np.array([0, 0]))
+
+
 def test_cm_return_parts_with_matrix_as_input():
     # Prepare
     np.random.seed(0)
@@ -887,7 +919,12 @@ def test_cm_return_parts_with_matrix_as_input():
     # two features on 100 objects with a linear relationship
     feature0 = np.random.rand(100)
     feature1 = feature0 * 5.0
-    X = pd.DataFrame([feature0, feature1])
+    X = pd.DataFrame(
+        {
+            "feature0": feature0,
+            "feature1": feature1,
+        }
+    )
 
     # Run
     cm_value, max_parts, parts = ccc(X, return_parts=True)
@@ -905,7 +942,7 @@ def test_cm_return_parts_with_matrix_as_input():
     assert max_parts.shape == (2,)
     # even in this test we do not specify internal_n_clusters (so it goes from
     # k=2 to k=10, nine partitions), k=2 for both features should already have
-    # the maximum value
+    # the maximum value (because the relationship is linear)
     np.testing.assert_array_equal(max_parts, np.array([0, 0]))
 
 
@@ -1179,3 +1216,179 @@ def test_cm_data_is_binary_not_evenly_distributed():
 
     # the partition should separate true from false values in data
     assert ari(parts[0][0], feature0) == 1.0
+
+
+def test_cm_numerical_and_categorical_features_perfect_relationship():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects
+    numerical_feature0 = np.random.rand(100)
+    numerical_feature0_median = np.percentile(numerical_feature0, 50)
+
+    # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1[numerical_feature0 < numerical_feature0_median] = "l"
+    categorical_feature1[numerical_feature0 >= numerical_feature0_median] = "u"
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 2
+    assert set(_unique_values) == {"l", "u"}
+
+    # Run
+    cm_value = ccc(numerical_feature0, categorical_feature1)
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert cm_value == 1.0
+
+
+def test_cm_numerical_and_categorical_features_strong_relationship():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects
+    numerical_feature0 = np.random.rand(100)
+    numerical_feature0_perc = np.percentile(numerical_feature0, 25)
+
+    # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1[numerical_feature0 < numerical_feature0_perc] = "l"
+    categorical_feature1[numerical_feature0 >= numerical_feature0_perc] = "u"
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 2
+    assert set(_unique_values) == {"l", "u"}
+
+    # Run
+    cm_value = ccc(numerical_feature0, categorical_feature1)
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert 0.30 < cm_value < 0.50
+
+
+def test_cm_numerical_and_categorical_features_no_relationship():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects
+    numerical_feature0 = np.random.rand(100)
+
+    # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1[numerical_feature0 < 0.50] = "l"
+    categorical_feature1[numerical_feature0 >= 0.50] = "u"
+    np.random.shuffle(categorical_feature1)
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 2
+    assert set(_unique_values) == {"l", "u"}
+
+    # Run
+    cm_value = ccc(numerical_feature0, categorical_feature1)
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert 0.00 < cm_value < 0.02
+
+
+def test_cm_numerical_and_categorical_features_too_many_categories():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects
+    numerical_feature0 = np.random.rand(100)
+
+    # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "cat100", dtype="S6")
+    for idx in range(categorical_feature1.shape[0]):
+        categorical_feature1[idx] = f"cat{idx:d}"
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 100
+
+    # Run
+    cm_value = ccc(numerical_feature0, categorical_feature1)
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert cm_value == 0.0
+
+
+def test_cm_numerical_and_categorical_features_a_single_categorical_value():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects
+    numerical_feature0 = np.random.rand(100)
+
+    # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "c", dtype="S1")
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 1
+
+    # Run
+    cm_value = ccc(numerical_feature0, categorical_feature1)
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert cm_value == 0.0
+
+
+def test_cm_numerical_and_categorical_features_with_pandas_dataframe_two_features():
+    # Prepare
+    np.random.seed(123)
+
+    # two features on 100 objects
+    numerical_feature0 = np.random.rand(100)
+    numerical_feature0_median = np.percentile(numerical_feature0, 50)
+
+    # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1[numerical_feature0 < numerical_feature0_median] = "l"
+    categorical_feature1[numerical_feature0 >= numerical_feature0_median] = "u"
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 2
+    assert set(_unique_values) == {"l", "u"}
+
+    data = pd.DataFrame(
+        {
+            "numerical_feature": numerical_feature0,
+            "categorical_feature": categorical_feature1,
+        }
+    )
+
+    # Run
+    cm_value = ccc(data)
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert cm_value == 1.0
+
+
+def test_cm_with_pandas_dataframe_several_features():
+    # Prepare
+    np.random.seed(123)
+
+    # here I force
+    data = pd.DataFrame(np.random.rand(20, 100))
+
+    # Run
+    cm_value = ccc(data, internal_n_clusters=3)
+
+    # Validate
+    assert cm_value is not None
+    assert isinstance(cm_value, np.ndarray)
+    assert cm_value.shape == (int(data.shape[1] * (data.shape[1] - 1) / 2),)
+    assert np.issubdtype(cm_value.dtype, float)
+
+
+def test_cm_with_too_few_objects():
+    # Prepare
+    np.random.seed(123)
+
+    # here I force
+    data = np.random.rand(10, 2)
+
+    # Run
+    with pytest.raises(ValueError) as e:
+        ccc(data, internal_n_clusters=3)
+
+    assert "too few objects" in str(e.value)
