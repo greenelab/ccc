@@ -158,6 +158,10 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
 
         cdist(x, y, metric=ari)
 
+    Only partitions with positive labels (> 0) are compared. This means that
+    partitions marked as "singleton" or "empty" (categorical data) are not
+    compared. This has the effect of leaving an ARI of 0.0 (zero).
+
     Args:
         x: a 2d array with m_x clustering partitions in rows and n objects in
           columns.
@@ -172,9 +176,14 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
     res = np.zeros((x.shape[0], y.shape[0]))
 
     for i in range(res.shape[0]):
+        if x[i, 0] < 0:
+            continue
+
         for j in range(res.shape[1]):
-            if x[i, 0] >= 0 and y[j, 0] >= 0:
-                res[i, j] = ari(x[i], y[j])
+            if y[j, 0] < 0:
+                continue
+
+            res[i, j] = ari(x[i], y[j])
 
     return res
 
