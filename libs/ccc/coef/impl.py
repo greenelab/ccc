@@ -108,7 +108,7 @@ def get_range_n_clusters(
 
 @njit(cache=True, nogil=True)
 def get_parts(
-    data: NDArray, range_n_clusters: tuple[int], data_is_numerical=True
+    data: NDArray, range_n_clusters: tuple[int], data_is_numerical: bool = True
 ) -> NDArray[np.int16]:
     """
     Given a 1d data array, it computes a partition for each k value in the given
@@ -120,11 +120,17 @@ def get_parts(
     Args:
         data: a 1d data vector. It is assumed that there are no nans.
         range_n_clusters: a tuple with the number of clusters.
-        data_type: "numerical" or "categorical"
+        data_is_numerical: indicates whether data is numerical (True) or categorical (False)
 
     Returns:
         A numpy array with shape (number of clusters, data rows) with
         partitions of data.
+
+        Partitions could have negative values in some scenarios, with different
+        meanings: -1 is used for categorical data, where only one partition is generated
+        and the rest (-1) are marked as "empty". -2 is used when singletons have been
+        detected (partitions with one cluster), usually because of problems with the
+        input data (it has all the same values, for example).
     """
     parts = np.zeros((len(range_n_clusters), data.shape[0]), dtype=np.int16) - 1
 
