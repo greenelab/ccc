@@ -1,5 +1,5 @@
 """
-Tests the utils.py module.
+Tests the utility_functions.py module.
 """
 from unittest.mock import MagicMock
 from pathlib import Path

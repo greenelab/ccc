@@ -7,9 +7,12 @@ from pathlib import Path
 from subprocess import run
 
 import numpy as np
-import pandas as pd
 
-from .log import get_logger
+# optional packages to avoid problems with the CCC PyPI package
+try:
+    from ccc.log import get_logger
+except ModuleNotFoundError:
+    pass
 
 PATTERN_SPACE = re.compile(r" +")
 PATTERN_NOT_ALPHANUMERIC = re.compile(r"[^0-9a-zA-Z_]")
@@ -124,7 +127,7 @@ def human_format(num):
     )
 
 
-def get_upper_triag(similarity_matrix: pd.DataFrame, k: int = 1):
+def get_upper_triag(similarity_matrix, k: int = 1):
     """
     It returns the upper triangular matrix of a dataframe representing a
     similarity matrix between n elements.
