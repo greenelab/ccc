@@ -295,12 +295,20 @@ def get_chunks(
     return res
 
 
-def get_feature_type_and_encode(feature_data):
+def get_feature_type_and_encode(feature_data: NDArray) -> tuple[NDArray, bool]:
     """
     Given the data of one feature as a 1d numpy array (it could also be a pandas.Series),
     it returns the same data if it is numerical (float, signed or unsigned integer) or an
     encoded version if it is categorical (each category value has a unique integer starting from
     zero).
+
+    Args:
+        feature_data: a 1d array with data.
+
+    Returns:
+        A tuple with two elements:
+          1. the feature data: same as input if numerical, encoded version if not numerical.
+          2. A boolean indicating whether the feature data is numerical or not.
     """
     data_type_is_numerical = feature_data.dtype.kind in ("f", "i", "u")
     if data_type_is_numerical:
