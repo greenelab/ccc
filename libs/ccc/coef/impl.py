@@ -133,11 +133,12 @@ def get_parts(
             k = range_n_clusters[idx]
             parts[idx] = run_quantile_clustering(data, k)
 
-        # remove singletons
+        # remove singletons by putting a -2 as values
         partitions_ks = np.array([len(np.unique(p)) for p in parts])
-        parts[partitions_ks == 1, :] = -1
+        parts[partitions_ks == 1, :] = -2
     else:
         # if the data is categorical, then the encoded feature is already the partition
+        # only the first partition is filled, the rest will be -1 (missing)
         parts[0] = data.astype(np.int16)
 
     return parts
@@ -509,8 +510,10 @@ def ccc(
                 obji_parts, objj_parts = parts[i], parts[j]
 
                 # compute ari only if partitions are not marked as "missing"
-                # (negative values)
-                if obji_parts[0, 0] < 0 or objj_parts[0, 0] < 0:
+                # (negative values), which is assigned when partitions have
+                # one cluster (usually when all data in the feature has the same
+                # value).
+                if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
                     continue
 
                 # compare all partitions of one object to the all the partitions
