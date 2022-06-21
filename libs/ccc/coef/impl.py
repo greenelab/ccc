@@ -1,12 +1,13 @@
 """
 Contains function that implement the Clustermatch Correlation Coefficient (CCC).
 """
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from numba import njit, get_num_threads
+from numba import njit
 from numba.typed import List
 
 from ccc.pytorch.core import unravel_index_2d
@@ -323,7 +324,8 @@ def ccc(
     y: NDArray = None,
     internal_n_clusters: Union[int, Iterable[int]] = None,
     return_parts: bool = False,
-    n_chunks_threads_ratio: int = 3,
+    n_chunks_threads_ratio: int = 1,
+    n_jobs: int = 1,
 ) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch Correlation
@@ -347,6 +349,9 @@ def ccc(
         n_chunks_threads_ratio: allows to modify how pairwise comparisons are
           split across different threads. It's given as the ratio parameter of
           function get_chunks.
+        n_jobs: number of CPU cores to use for parallelization. The value
+          None will use all available cores (`os.cpu_count()`), and negative
+          values will use `os.cpu_count() - n_jobs`. Default is 1.
 
     Returns:
         If return_parts is False, only CCC values are returned.
@@ -437,9 +442,8 @@ def ccc(
         raise ValueError("Wrong combination of parameters x and y")
 
     # get number of cores to use
-    # FIXME: this is not necessary, use parameter like n_jobs instead
-    #  and force numba to use the same number of n_jobs (paramter)
-    default_n_threads = get_num_threads()
+    n_jobs = os.cpu_count() if n_jobs is None else n_jobs
+    default_n_threads = (os.cpu_count() - n_jobs) if n_jobs < 0 else n_jobs
 
     if internal_n_clusters is not None:
         _tmp_list = List()
@@ -486,10 +490,10 @@ def ccc(
             parts[idx] = ps
 
         # Below, there are two layers of parallelism: 1) parallel execution
-        # across object pairs and 2) the cdist_parts_parallel function, which
+        # across feature pairs and 2) the cdist_parts_parallel function, which
         # also runs several threads to compare partitions using ari. In 2) we
         # need to disable parallelization in case len(cm_values) > 1 (that is,
-        # we have several object pairs to compare), because parallelization is
+        # we have several feature pairs to compare), because parallelization is
         # already performed at this level. Otherwise, more threads than
         # specified by the user are started.
         cdist_parts_enable_threading = True if n_features_comp == 1 else False
