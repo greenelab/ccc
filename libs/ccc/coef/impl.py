@@ -469,7 +469,6 @@ def ccc(
     )
 
     # cm_values stores the CCC coefficients
-    # n = features_list.shape[0]
     n_features_comp = (n_features * (n_features - 1)) // 2
     cm_values = np.full(n_features_comp, np.nan)
 
