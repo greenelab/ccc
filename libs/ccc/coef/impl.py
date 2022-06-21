@@ -16,7 +16,7 @@ from ccc.utils import chunker
 
 
 @njit(cache=True, nogil=True)
-def _get_perc_from_k(k: int) -> list[float]:
+def get_perc_from_k(k: int) -> list[float]:
     """
     It returns the percentiles (from 0.0 to 1.0) that separate the data into k
     clusters. For example, if k=2, it returns [0.5]; if k=4, it returns [0.25,
@@ -53,7 +53,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     data_rank = rank(data, data_sorted)
     data_perc = data_rank / len(data)
 
-    percentiles = [0.0] + _get_perc_from_k(k) + [1.0]
+    percentiles = [0.0] + get_perc_from_k(k) + [1.0]
 
     cut_points = np.searchsorted(data_perc[data_sorted], percentiles, side="right")
 
@@ -71,7 +71,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
 
 
 @njit(cache=True, nogil=True)
-def _get_range_n_clusters(
+def get_range_n_clusters(
     n_features: int, internal_n_clusters: Iterable[int] = None
 ) -> NDArray[np.uint8]:
     """
@@ -107,7 +107,7 @@ def _get_range_n_clusters(
 
 
 @njit(cache=True, nogil=True)
-def _get_parts(
+def get_parts(
     data: NDArray, range_n_clusters: tuple[int], data_is_numerical=True
 ) -> NDArray[np.int16]:
     """
@@ -429,7 +429,7 @@ def ccc(
         internal_n_clusters = _tmp_list
 
     # get matrix of partitions for each object pair
-    range_n_clusters = _get_range_n_clusters(n_objects, internal_n_clusters)
+    range_n_clusters = get_range_n_clusters(n_objects, internal_n_clusters)
 
     if range_n_clusters.shape[0] == 0:
         raise ValueError(f"Data has too few objects: {n_objects}")
@@ -455,7 +455,7 @@ def ccc(
 
         def compute_parts(idxs):
             return np.array(
-                [_get_parts(X[i], range_n_clusters, X_numerical_type[i]) for i in idxs]
+                [get_parts(X[i], range_n_clusters, X_numerical_type[i]) for i in idxs]
             )
 
         for idx, ps in zip(inputs, executor.map(compute_parts, inputs)):
