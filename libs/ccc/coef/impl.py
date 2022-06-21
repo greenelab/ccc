@@ -382,13 +382,13 @@ def ccc(
             (a pair of objects), then max_parts[0] and max_parts[1] have the
             partition indexes in parts, respectively: parts[0][max_parts[0]]
             points to the partition for x, and parts[1][max_parts[1]] points to
-            the partition for y.
-            TODO: mention here that "invalid" or "missing" partitions have all -1 values
-              for example, for categorical values only the first one makes sense
+            the partition for y. Values could be negative in case
+            singleton cases were found (-1; usually because input data has all the same
+            value) or for categorical features (-2).
     """
     n_objects = None
     n_features = None
-    # this is a boolean array with 1 if the feature is numerical and 0 otherwise
+    # this is a boolean array of size n_features with True if the feature is numerical and False otherwise
     X_numerical_type = None
     if x.ndim == 1 and (y is not None and y.ndim == 1):
         # both x and y are 1d arrays
