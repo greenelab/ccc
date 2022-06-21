@@ -1,5 +1,13 @@
+import sys
+
 import pandas as pd
 import pytest
+
+if not sys.platform.startswith("linux"):
+    # it's not necessary to test the REST API against GIANT in all platforms
+    pytest.skip(
+        "Skipping REST test on GIANT in non-Linux systems", allow_module_level=True
+    )
 
 from ccc.giant import gene_exists, predict_tissue, get_network
 
