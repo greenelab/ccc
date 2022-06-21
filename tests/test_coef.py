@@ -550,12 +550,32 @@ def test_get_parts_with_singletons():
     parts = get_parts(feature0, (2,))
     assert parts is not None
     assert len(parts) == 1
-    np.testing.assert_array_equal(np.unique(parts[0]), np.array([-1]))
+    np.testing.assert_array_equal(np.unique(parts[0]), np.array([-2]))
 
     parts = get_parts(feature0, (2, 3))
     assert parts is not None
     assert len(parts) == 2
-    np.testing.assert_array_equal(np.unique(parts[0]), np.array([-1]))
+    np.testing.assert_array_equal(np.unique(parts[0]), np.array([-2]))
+    np.testing.assert_array_equal(np.unique(parts[1]), np.array([-2]))
+
+
+def test_get_parts_with_categorical_feature():
+    np.random.seed(0)
+
+    feature0 = np.array([4] * 10)
+
+    # run
+    # only one partition is requested
+    parts = get_parts(feature0, (2,), data_is_numerical=False)
+    assert parts is not None
+    assert len(parts) == 1
+    np.testing.assert_array_equal(np.unique(parts[0]), np.array([4]))
+
+    # more partitions are requested; only the first one has valid information
+    parts = get_parts(feature0, (2, 3), data_is_numerical=False)
+    assert parts is not None
+    assert len(parts) == 2
+    np.testing.assert_array_equal(np.unique(parts[0]), np.array([4]))
     np.testing.assert_array_equal(np.unique(parts[1]), np.array([-1]))
 
 
