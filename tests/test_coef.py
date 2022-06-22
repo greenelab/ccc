@@ -297,7 +297,7 @@ def test_cm_basic():
     cm_value = ccc(feature0, feature1)
     assert cm_value is not None
     assert isinstance(cm_value, float)
-    assert 0.00 < cm_value < 0.02
+    assert cm_value == pytest.approx(0.01, abs=0.01)
 
 
 def test_cm_basic_internal_n_clusters_is_integer():
@@ -369,7 +369,7 @@ def test_cm_random_data():
         cm_value = ccc(feature0, feature1)
 
         # Validate
-        assert 0.0 <= cm_value < 0.05
+        assert cm_value == pytest.approx(0.025, abs=0.025)
 
 
 def test_cm_linear():
@@ -1293,7 +1293,7 @@ def test_cm_numerical_and_categorical_features_strong_relationship():
     cm_value = ccc(numerical_feature0, categorical_feature1)
     assert cm_value is not None
     assert isinstance(cm_value, float)
-    assert 0.30 < cm_value < 0.50
+    assert cm_value == pytest.approx(0.326, abs=0.001)
 
     # flip variables (symmetry)
     assert ccc(categorical_feature1, numerical_feature0) == cm_value
@@ -1320,7 +1320,7 @@ def test_cm_numerical_and_categorical_features_no_relationship():
     cm_value = ccc(numerical_feature0, categorical_feature1)
     assert cm_value is not None
     assert isinstance(cm_value, float)
-    assert 0.00 < cm_value < 0.02
+    assert cm_value == pytest.approx(0.01, abs=0.01)
 
     # flip variables (symmetry)
     assert ccc(categorical_feature1, numerical_feature0) == cm_value
