@@ -10,6 +10,11 @@ import numpy as np
 
 # optional packages to avoid problems with the CCC PyPI package
 try:
+    # the "ccc.log" module is only used by the code that performs the analyses
+    # for the manuscript, but it is not used in the ccc-coef package (PyPI)
+    # although ccc-coef uses some functions in this module (ccc.utils). Since
+    # "ccc.log" is not distributed as part of ccc-coef, I need to check if it is
+    # present and ignore any ModuleNotFoundError
     from ccc.log import get_logger
 except ModuleNotFoundError:
     pass
