@@ -1261,6 +1261,9 @@ def test_cm_numerical_and_categorical_features_perfect_relationship():
     assert isinstance(cm_value, float)
     assert cm_value == 1.0
 
+    # flip variables (symmetry)
+    assert ccc(categorical_feature1, numerical_feature0) == cm_value
+
 
 def test_cm_numerical_and_categorical_features_strong_relationship():
     # Prepare
@@ -1284,6 +1287,9 @@ def test_cm_numerical_and_categorical_features_strong_relationship():
     assert cm_value is not None
     assert isinstance(cm_value, float)
     assert 0.30 < cm_value < 0.50
+
+    # flip variables (symmetry)
+    assert ccc(categorical_feature1, numerical_feature0) == cm_value
 
 
 def test_cm_numerical_and_categorical_features_no_relationship():
@@ -1309,6 +1315,9 @@ def test_cm_numerical_and_categorical_features_no_relationship():
     assert isinstance(cm_value, float)
     assert 0.00 < cm_value < 0.02
 
+    # flip variables (symmetry)
+    assert ccc(categorical_feature1, numerical_feature0) == cm_value
+
 
 def test_cm_numerical_and_categorical_features_too_many_categories():
     # Prepare
@@ -1331,6 +1340,9 @@ def test_cm_numerical_and_categorical_features_too_many_categories():
     assert isinstance(cm_value, float)
     assert cm_value == 0.0
 
+    # flip variables (symmetry)
+    assert ccc(categorical_feature1, numerical_feature0) == cm_value
+
 
 def test_cm_numerical_and_categorical_features_a_single_categorical_value():
     # Prepare
@@ -1350,6 +1362,9 @@ def test_cm_numerical_and_categorical_features_a_single_categorical_value():
     assert cm_value is not None
     assert isinstance(cm_value, float)
     assert cm_value == 0.0
+
+    # flip variables (symmetry)
+    assert ccc(categorical_feature1, numerical_feature0) == cm_value
 
 
 def test_cm_numerical_and_categorical_features_with_pandas_dataframe_two_features():
@@ -1381,6 +1396,9 @@ def test_cm_numerical_and_categorical_features_with_pandas_dataframe_two_feature
     assert cm_value is not None
     assert isinstance(cm_value, float)
     assert cm_value == 1.0
+
+    # flip variables (symmetry)
+    assert ccc(data.iloc[:, [1, 0]]) == cm_value
 
 
 def test_cm_with_pandas_dataframe_several_features():
