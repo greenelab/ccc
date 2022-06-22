@@ -239,21 +239,6 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     return int(x), int(y)
 
 
-def to_numpy(x):
-    """
-    Converts x into a numpy array. It is used to convert pandas Series and
-    DataFrames into numpy objects.
-    """
-    if x is None:
-        return x
-
-    func = getattr(x, "to_numpy", None)
-    if not callable(func):
-        return x
-
-    return x.to_numpy()
-
-
 def get_chunks(
     iterable: Union[int, Iterable], n_threads: int, ratio: float = 1
 ) -> Iterable[Iterable[int]]:
@@ -403,8 +388,6 @@ def ccc(
 
         X = np.zeros((n_features, n_objects))
         X_numerical_type = np.full((n_features,), True, dtype=bool)
-        # for idx in range(n_features):
-        #     feature_data, feature_is_numerical = get_feature_type_and_encode()
 
         X[0, :], X_numerical_type[0] = get_feature_type_and_encode(x)
         X[1, :], X_numerical_type[1] = get_feature_type_and_encode(y)
