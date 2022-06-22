@@ -1,5 +1,11 @@
 import setuptools
 
+# Commands to publish new package:
+#
+# rm -rf dist/
+# python setup.py sdist
+# twine upload dist/*
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
