@@ -3,10 +3,9 @@ from random import shuffle
 
 import numpy as np
 import pandas as pd
-from numba.typed import List
+import pytest
 from sklearn.preprocessing import minmax_scale
 from sklearn.metrics import adjusted_rand_score as ari
-import pytest
 
 from ccc.coef import (
     ccc,
@@ -139,7 +138,7 @@ def test_get_range_n_clusters_with_internal_n_clusters_is_list():
     # 100 features
     range_n_clusters = get_range_n_clusters(
         100,
-        internal_n_clusters=List([2]),
+        internal_n_clusters=[2],
     )
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2]))
@@ -147,13 +146,13 @@ def test_get_range_n_clusters_with_internal_n_clusters_is_list():
     # 25 features
     range_n_clusters = get_range_n_clusters(
         25,
-        internal_n_clusters=List([2]),
+        internal_n_clusters=[2],
     )
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
     # 25 features
-    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=List([2, 3, 4]))
+    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=[2, 3, 4])
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4]))
 
@@ -174,27 +173,27 @@ def test_get_range_n_clusters_with_internal_n_clusters_none():
 
 def test_get_range_n_clusters_with_internal_n_clusters_has_single_int():
     # 100 features
-    range_n_clusters = get_range_n_clusters(100, internal_n_clusters=List([2]))
+    range_n_clusters = get_range_n_clusters(100, internal_n_clusters=[2])
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
     # 25 features
-    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=List([3]))
+    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=[3])
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([3]))
 
     # 5 features
-    range_n_clusters = get_range_n_clusters(5, internal_n_clusters=List([4]))
+    range_n_clusters = get_range_n_clusters(5, internal_n_clusters=[4])
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([4]))
 
     # 25 features but invalid number of clusters
-    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=List([1]))
+    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=[1])
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([]))
 
     # 25 features but invalid number of clusters
-    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=List([25]))
+    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=[25])
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([]))
 
