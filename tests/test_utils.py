@@ -1,6 +1,7 @@
 """
 Tests the utility_functions.py module.
 """
+import sys
 from unittest.mock import MagicMock
 from pathlib import Path
 
@@ -8,7 +9,36 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ccc.utils import simplify_string, chunker, human_format, get_upper_triag
+
+def reload_package(root_module):
+    """
+    Reloads all modules given a root module. It deletes loaded modules from sys.modules and reloads them again.
+    This is helpful in scenarios where you want to test what happens if a certain module does not have access
+    to other modules.
+
+    Taken and adapted from here: https://stackoverflow.com/a/2918951/3120414
+    """
+    from importlib import import_module
+    import types
+
+    package_name = root_module.__name__
+
+    # get a reference to each loaded module
+    loaded_package_modules = dict(
+        [
+            (key, value)
+            for key, value in sys.modules.items()
+            if key.startswith(package_name) and isinstance(value, types.ModuleType)
+        ]
+    )
+
+    # delete references to these loaded modules from sys.modules
+    for key in loaded_package_modules:
+        del sys.modules[key]
+
+    # load each of the modules again
+    for key in loaded_package_modules:
+        import_module(key)
 
 
 def test_utils_module_load():
@@ -16,6 +46,27 @@ def test_utils_module_load():
 
     assert utils is not None
     assert utils.__file__ is not None
+
+    del sys.modules["ccc.utils"]
+
+
+def test_utils_module_loads_without_log():
+    # make sure ccc.utils could be loaded even if ccc.log is not available.
+    # this happens when CCC is distributed as a PyPI package (ccc.log is not available).
+    sys.modules["ccc.log"] = None
+
+    try:
+        from ccc import utils
+
+        reload_package(utils)
+
+        assert utils is not None
+        assert utils.__file__ is not None
+    finally:
+        del sys.modules["ccc.log"]
+        from ccc import utils
+
+        reload_package(utils)
 
 
 def test_curl_file_exists():
@@ -140,6 +191,8 @@ def test_curl_file_is_downloaded_with_error():
 
 
 def test_simplify_string_simple():
+    from ccc.utils import simplify_string
+
     # lower
     orig_value = "Whole Blood"
     exp_value = "whole_blood"
@@ -158,6 +211,8 @@ def test_simplify_string_simple():
 
 
 def test_simplify_string_with_dash():
+    from ccc.utils import simplify_string
+
     orig_value = "Muscle - Skeletal"
     exp_value = "muscle_skeletal"
 
@@ -167,6 +222,8 @@ def test_simplify_string_with_dash():
 
 
 def test_simplify_string_with_number():
+    from ccc.utils import simplify_string
+
     orig_value = "Brain - Frontal Cortex (BA9)"
     exp_value = "brain_frontal_cortex_ba9"
 
@@ -176,6 +233,8 @@ def test_simplify_string_with_number():
 
 
 def test_simplify_string_other_special_chars():
+    from ccc.utils import simplify_string
+
     orig_value = "Skin - Sun Exposed (Lower leg)"
     exp_value = "skin_sun_exposed_lower_leg"
 
@@ -185,12 +244,16 @@ def test_simplify_string_other_special_chars():
 
 
 def test_chunker_simple():
+    from ccc.utils import chunker
+
     assert list(chunker([0, 1, 2, 3], 1)) == [[0], [1], [2], [3]]
     assert list(chunker([0, 1, 2, 3], 2)) == [[0, 1], [2, 3]]
     assert list(chunker([0, 1, 2, 3], 3)) == [[0, 1, 2], [3]]
 
 
 def test_chunker_larger():
+    from ccc.utils import chunker
+
     assert list(chunker(list(range(100)), 33)) == [
         list(range(0, 33)),
         list(range(33, 66)),
@@ -206,6 +269,8 @@ def test_chunker_larger():
 
 
 def test_human_format():
+    from ccc.utils import human_format
+
     assert human_format(1) == "1"
     assert human_format(10) == "10"
     assert human_format(100) == "100"
@@ -219,6 +284,8 @@ def test_human_format():
 
 
 def test_upper_triag_square_dataframe():
+    from ccc.utils import get_upper_triag
+
     sim_matrix_df = pd.DataFrame(
         [
             [0, 1, 2],
@@ -244,6 +311,8 @@ def test_upper_triag_square_dataframe():
 
 
 def test_upper_triag_square_dataframe_k0():
+    from ccc.utils import get_upper_triag
+
     sim_matrix_df = pd.DataFrame(
         [
             [0, 1, 2],

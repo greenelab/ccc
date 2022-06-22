@@ -135,28 +135,35 @@ def test_get_range_n_clusters_without_internal_n_clusters():
 
 
 def test_get_range_n_clusters_with_internal_n_clusters_is_list():
+    from numba.typed import List
+
     # 100 features
+    n_clusters_list = List()
+    n_clusters_list.append(2)
+
     range_n_clusters = get_range_n_clusters(
         100,
-        internal_n_clusters=[
-            2,
-        ],
+        internal_n_clusters=n_clusters_list,
     )
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
     # 25 features
+    n_clusters_list = List()
+    n_clusters_list.append(2)
+
     range_n_clusters = get_range_n_clusters(
         25,
-        internal_n_clusters=[
-            2,
-        ],
+        internal_n_clusters=n_clusters_list,
     )
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2]))
 
     # 25 features
-    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=[2, 3, 4])
+    n_clusters_list = List()
+    n_clusters_list.extend([2, 3, 4])
+
+    range_n_clusters = get_range_n_clusters(25, internal_n_clusters=n_clusters_list)
     assert range_n_clusters is not None
     np.testing.assert_array_equal(range_n_clusters, np.array([2, 3, 4]))
 
