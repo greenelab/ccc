@@ -318,7 +318,7 @@ with sns.plotting_context("paper", font_scale=1.8):
 # %% [markdown] tags=[]
 # **Takeaways**:
 #
-# A more detailed explanation of this figure is present in this PR: https://github.com/greenelab/clustermatch-gene-expr-manuscript/pull/3
+# A more detailed explanation of this figure is present in this PR: https://github.com/greenelab/ccc-manuscript/pull/3
 #
 # Some points:
 #
