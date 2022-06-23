@@ -175,7 +175,7 @@ display(log2_test_data_desc)
 
 # %% [markdown] tags=[]
 # Here I try another approach to log-transform the data by using pseudocounts. See:
-#  - https://github.com/greenelab/clustermatch-gene-expr/pull/4#discussion_r698793383
+#  - https://github.com/greenelab/ccc/pull/4#discussion_r698793383
 
 # %% tags=[]
 log2_pc_test_data = np.log2(test_data + 1)
