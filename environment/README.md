@@ -1,80 +1,132 @@
-# Manual conda environment installation and data download
+# Python environment and data download
 
-If you want to run the scripts/notebooks, you need to follow these steps to create a conda environment and download the necessary data.
+If you want to run the scripts/notebooks, you need to follow these steps to create a Python environment and download the necessary data.
+Although you can create your own Python environment, using our Docker image is much easier.
 
 Keep in mind that although unit tests are automatically run on Linux, macOS and MS Windows, the software is manually tested only on Linux/Ubuntu.
 
-1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or Anaconda.
+There are four steps:
+1. Getting the source code (cloning this repository).
+1. Adjusting settings (paths, etc). 
+1. Creating a Python environment.
+1. Downloading the data to run the analyses.
 
-1. Open a terminal, clone this repository, and `cd` into the repository root folder.
+## Getting the source code
 
-1. Run `cd environment`.
+```bash
+git clone https://github.com/greenelab/ccc.git
+cd ccc/
+```
 
-1. (optional) Adjust your environment variables:
+## Adjusting settings
 
-    ```bash
-    # (optional, will default to subfolder 'cm_gene_expr' under the system's temporary directory)
-    # Root directory where all data will be downloaded to
-    export CM_ROOT_DIR=/tmp/cm_gene_expr
+Adjust the paths where the data will be downloaded, the number of CPU cores available to run the code, etc.
+You can specify these options using environment variables:
 
-    # (optional, will default to 1 CPU core)
-    # Adjust the number of cores available for general tasks
-    export CM_N_JOBS=2
+ ```bash
+ # (optional) Root directory where all data will be downloaded to.
+ # Defaults to subfolder 'ccc_gene_expr' under the system's temporary directory.
+ export CM_ROOT_DIR=/tmp/ccc_gene_expr
 
-    # (optional)
-    # Export this variable if you downloaded the manuscript sources and want to
-    # generate the figures for it
-    export CM_MANUSCRIPT_DIR=/tmp/manuscript
-    ```
+ # (optional) Adjust the number of cores available for general tasks.
+ # Defaults to 1 CPU core.
+ export CM_N_JOBS=2
 
-1. (optional) Adjust other settings (i.e. root directory, available computational
-   resources, etc.) by modifying the file `../libs/ccc/settings.py`
+ # (optional) Export this variable if you downloaded the manuscript sources
+ # and want to generate the figures for it.
+ export CM_MANUSCRIPT_DIR=/tmp/manuscript
+ ```
+
+Or you can change these options in `../libs/ccc/settings.py`
+
+## Creating a Python environment
+
+Now you need a Python environment.
+You have two choices: 1) using Docker (the easiest) or 2) creating your own conda environment.
+
+### Using Docker
+
+This is the easiest approach. [Install Docker](https://docs.docker.com/get-docker/) for your system and just download the image:
+
+```bash
+docker pull miltondp/ccc
+```
+
+### Creating your own conda environment
+
+Follow these steps if you are creating your own conda environment.
+Here you'll also export some environment variables like `PYTHONPATH` or the CCC configuration.
+Remember that these environment variables need to be present in the terminal where you'll run the analyses/notebooks.
+
+1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
+
+1. `cd` into `environment` inside the CCC root folder:
+
+```bash
+cd environment/
+```
 
 1. Adjust your `PYTHONPATH` variable to include the `libs` directory:
 
-    ```bash
-    export PYTHONPATH=`readlink -f ../libs/`:$PYTHONPATH
-    ```
+ ```bash
+ export PYTHONPATH=`readlink -f ../libs/`:$PYTHONPATH
+ ```
 
-    `readlink` might not work on macOS. In that case, simply replace it with
-    the absolute path to the `../libs/` folder.
+ `readlink` might not work on macOS. In that case, simply replace it with
+ the absolute path to the `../libs/` folder.
 
 1. Create a conda environment and install main packages:
 
-    ```bash
-   conda env create --name ccc --file environment.yml
-   conda run -n ccc --no-capture-output bash scripts/install_other_packages.sh
-    ```
-If the `conda env create` command fails or if you find package errors later, try
-to set the channel priority in your conda installation to "strict" with
-`conda config --set channel_priority strict`.
+ ```bash
+conda env create --name ccc --file environment.yml
+conda run -n ccc --no-capture-output bash scripts/install_other_packages.sh
+ ```
 
-1. Download the data:
+1. Export the entire configuration into environment variables (this is useful for bash scripts and R notebooks so they can also read the configuration):
 
-   ```bash
-   conda run -n ccc --no-capture-output python scripts/setup_data.py
-   ```
+```bash
+eval `python .../libs/ccc/conf.py`
+```
 
-This will download XXX GB of data needed to run the analyses.
+## Downloading the data
+
+Move to the root folder of the repository:
+
+```bash
+cd ..
+```
+
+The command to download all the necessary data is `python environment/scripts/setup_data.py`.
+If you are using your own conda environment, then just run that command on the same terminal (so you keep the environment variables you set).
+If you are using Docker, then you can run:
+
+```bash
+bash scripts/run_docker.sh \
+  python environment/scripts/setup_data.py
+```
+
+This will download 1.6G GB of data.
+
+The script `scripts/run_docker.sh` automatically reads your settings, mounts the repo and root directories into the Docker container and runs the command you specified.
 
 
-# Developer usage
+## (Internal) Steps to update the conda environment
 
-These steps are only for developers.
+These steps are for internal use only, you don't need to run them if you are user.
 
 1. Modify `scripts/environment_base.yml` accordingly (if needed).
 1. Run:
  
-    ```bash
-    conda env create -n ccc -f scripts/environment_base.yml
-    conda activate ccc
-    bash scripts/install_other_packages.sh
-    ```
+```bash
+conda env create -n ccc -f scripts/environment_base.yml
+conda activate ccc
+bash scripts/install_other_packages.sh
+```
 
 1. Export conda environment:
 
-    ```
-    conda env export --name ccc --file environment.yml
-    ```
+```bash
+conda env export --name ccc --file environment.yml
+```
 
 1. Modify `environment.yml` and leave only manually installed packages (not their dependencies).
