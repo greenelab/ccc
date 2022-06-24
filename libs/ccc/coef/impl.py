@@ -314,16 +314,13 @@ def ccc(
 ) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch Correlation
-    Coefficient (CCC) between two arrays. This implementation only supports
-    numerical data for optimization purposes, but the original implementation
-    can also work with categorical data (https://github.com/sinc-lab/clustermatch).
-
-    To control the number of threads used, set the NUMBA_NUM_THREADS variable
-    to an integer. For example, NUMBA_NUM_THREADS=2 will use 2 cores.
+    Coefficient (CCC) between two arrays. The implementation supports numerical
+    and categorical data.
 
     Args:
         x: an 1d or 2d numerical array with the data. NaN are not supported.
-          If it is 2d, then the coefficient is computed for each pair of rows.
+          If it is 2d, then the coefficient is computed for each pair of rows
+          (in case x is a numpy.array) or each pair of columns (pandas.DataFrame).
         y: an optional 1d numerical array. If x is 1d and y is given, it computes
           the coefficient between x and y.
         internal_n_clusters: this parameter can be an integer (the maximum number
