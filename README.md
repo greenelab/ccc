@@ -190,7 +190,7 @@ In [42]: %timeit ccc(data, n_jobs=2)
 
 Below we provide the steps to reproduce all the analyses in the CCC manuscript.
 
-### Setup
+### Setup environment and download data 
 
 To prepare the environment to run the analyses in the manuscript, follow the steps in [environment](environment/).
 After completing those steps, you'll have the source code in this repository, a Python environment (either using a Docker image or creating your own conda environment) and the necessary data to run the analyses.
@@ -199,32 +199,44 @@ After completing those steps, you'll have the source code in this repository, a 
 
 All the analyses are written as Jupyter notebooks and stored in the folder `nbs/`.
 All notebooks are organized by directories, such as `01_preprocessing`, with file names that indicate the order in which they should be run (if they share the prefix, then it means they can be run in parallel).
-You can run the analyses either using the JupyterLab server and your browser, or from the command line using [papermill](https://papermill.readthedocs.io/en/latest/).
 
-**Using the browser.** For example, let's say you want to run the preprocessing notebooks.
-If you want to use your browser, you first need to start the JupyterLab server:
+You have two options to run the analyses:
+1. **Using the browser**:
+   1. Start the JupyterLab server. 
+   1. Use your browser to open and run the notebooks.
+1. **Using the command-line**:
+   1. Open a terminal.
+   1. Run the notebooks from using [papermill](https://papermill.readthedocs.io/en/latest/).
+
+**Using the browser.**
+This option is the standard one and it is likely the one you want to use.
+You can run each cell in the notebook, see the output, and change the code if you want.
+For example, let's say you want to run the data preprocessing notebooks.
+First, you need to start the JupyterLab server.
+For this, you can run one of the commands below depending on whether you are using your own conda environment or Docker:
 
 ```bash
+# if you're using your own conda environment
 bash scripts/run_nbs_server.sh
+
+# if you're using Docker
+# this will internally run 'bash scripts/run_nbs_server.sh'
+bash scripts/run_docker.sh
 ```
 
 and then go to http://127.0.0.1:8893/ and browse to `nbs/05_preprocessing`.
 Then you need to run each notebook in order.
 
-If you use the Docker image, the steps are very similar for any command, but you need to prepend the `scripts/run_docker.sh` script.
+**Using the command-line.**
+This is an alternative approach to run notebooks in a more systematic way.
+You'll likely not use this option unless you want to run your own analyses in a cluster, for instance.
+Here we use the terminal and a tool called `papermill` to run each notebook and write back the results (like figures, etc).
+You can see some output in the terminal when it's running, and once finished, you can start the JupyterLab server and open the notebook to see the results.
+
+Using as example the same preprocessing notebooks, you can run all the preprocessing notebooks in order:
 
 ```bash
-bash scripts/run_docker.sh \
-  bash scripts/run_nbs_server.sh --container-mode
-```
-
-Note that the port is different: http://127.0.0.1:8888/
-
-**Using the command-line.** You can also run the notebooks using the command-line with papermill instead of going to the browser.
-Using as example the same preprocessing notebooks, you can pick one of these commands to run all the preprocessing notebooks in order:
-
-```bash
-# using your own conda environment:
+# if you're using your own conda environment
 #   requires GNU Parallel: https://www.gnu.org/software/parallel/
 #   To install in Ubuntu: apt install parallel
 parallel \
@@ -234,7 +246,9 @@ parallel \
   -j1 \
   'bash nbs/run_nbs.sh {}' ::: nbs/05_preprocessing/*.ipynb
 
-# using the Docker image:
+# if you're using Docker
+#   GNU Parallel is already included in the Docker image,
+#   so no need to install
 bash scripts/run_docker.sh \
   parallel \
     -k \
@@ -243,3 +257,5 @@ bash scripts/run_docker.sh \
     -j1 \
     'bash nbs/run_nbs.sh {}' ::: nbs/05_preprocessing/*.ipynb
 ```
+
+Any command that you add after `scripts/run_docker.sh` will be run inside the Docker container.
