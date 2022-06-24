@@ -17,7 +17,7 @@ if ROOT_DIR is None and hasattr(settings, "ROOT_DIR"):
     ROOT_DIR = settings.ROOT_DIR
 
 if ROOT_DIR is None:
-    ROOT_DIR = str(Path(tempfile.gettempdir(), "cm_gene_expr").resolve())
+    ROOT_DIR = str(Path(tempfile.gettempdir(), "ccc_gene_expr").resolve())
 
 # DATA_DIR stores input data
 DATA_DIR = Path(ROOT_DIR, "data").resolve()
