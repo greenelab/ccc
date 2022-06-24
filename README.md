@@ -36,7 +36,8 @@ In [1]:
 ```
 
 When computing the correlation coefficient on a pair of features, CCC supports `numpy.array` or `pandas.Series`.
-This is an example with numerical data (you can copy/paste the entire lines below including `In [...]`):
+Missing values (`NaN`) are not currently supported, so you have to either remove or impute them.
+Below there is an example with numerical data (you can copy/paste the entire lines below including `In [...]`):
 
 ```python
 In [1]: import numpy as np
