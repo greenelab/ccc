@@ -60,7 +60,6 @@ if [ -z "${COMMAND}" ]; then
   FULL_COMMAND=()
 else
   FULL_COMMAND=(/bin/bash -c "${COMMAND}")
-  PORT_ARG=""
 fi
 
 echo "${FULL_COMMAND}"
