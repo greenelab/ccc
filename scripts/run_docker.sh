@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# This script is intended to be used by the developer not the end user.
-#
 # It runs the Docker container of this project by mounting the code and
 # manuscript directories inside the container. This makes that any file created
 # during the execution is locally available and ready to be pushed to the repo.
 # Plus, the code is always run inside the same environment (including the full
 # operating system).
-
+#
 # We assume the repo code is in the current directory, so the user has to make
 # sure this is right.
 
@@ -25,13 +23,11 @@ MANUSCRIPT_DIR="${CM_MANUSCRIPT_DIR}"
 N_JOBS_VARNAME="CM_N_JOBS"
 N_JOBS=${!N_JOBS_VARNAME}
 
-echo "Configuration:"
-
+# We assume the current dir is the repo dir
 CODE_DIR=`pwd`
-echo "  Code dir: ${CODE_DIR}"
 
 # root dir
-if [ -z "${MANUSCRIPT_DIR}" ]; then
+if [ -z "${ROOT_DIR}" ]; then
   ROOT_DIR="${CODE_DIR}/base"
 fi
 
@@ -45,6 +41,8 @@ if [ -z "${N_JOBS}" ]; then
   N_JOBS=1
 fi
 
+echo "Configuration:"
+echo "  Code dir: ${CODE_DIR}"
 echo "  Root dir: ${ROOT_DIR}"
 echo "  Manuscript dir: ${MANUSCRIPT_DIR}"
 echo "  CPU cores: ${N_JOBS}"
