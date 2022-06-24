@@ -55,7 +55,7 @@ Out[9]: 0.0018815884476534295
 ```
 
 CCC always returns a value between zero (no relationship) and one (perfect relationship).
-As we show in the manuscript, the distribution of CCC values is much more skewed than other coefficients like Pearson's or Spearman's.
+[As we show in the manuscript](https://greenelab.github.io/ccc-manuscript/#the-ccc-reveals-linear-and-nonlinear-patterns-in-human-transcriptomic-data), the distribution of CCC values is much more skewed than other coefficients like Pearson's or Spearman's.
 A comparison between these coefficients should account for that.
 
 You can also mix numerical and categorical data:
