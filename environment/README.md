@@ -21,7 +21,7 @@ cd ccc/
 ## Adjusting settings
 
 Adjust the paths where the data will be downloaded, the number of CPU cores available to run the code, etc.
-You can specify these options using environment variables:
+You can specify these options using environment variables in your terminal:
 
  ```bash
  # (optional) Root directory where all data will be downloaded to.
@@ -37,7 +37,7 @@ You can specify these options using environment variables:
  export CM_MANUSCRIPT_DIR=/tmp/manuscript
  ```
 
-Or you can change these options in `../libs/ccc/settings.py`
+or you can change these options in `../libs/ccc/settings.py`
 
 ## Creating a Python environment
 
