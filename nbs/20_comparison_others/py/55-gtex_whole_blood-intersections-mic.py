@@ -144,7 +144,7 @@ mic_lower = df["mic"] <= mic_lq
 display(mic_lower.sum())
 
 # %% [markdown]
-# **Question:** Why the number of top/bottom gene pairs in CCC/Clustermatch does not match the rest? Maybe it's because there are repeated values. Let's see:
+# **Question:** Why the number of top/bottom gene pairs in CCC does not match the rest? Maybe it's because there are repeated values. Let's see:
 
 # %%
 df.shape

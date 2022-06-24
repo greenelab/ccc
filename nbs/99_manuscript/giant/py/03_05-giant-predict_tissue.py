@@ -215,7 +215,7 @@ process_tissue_networks(
 )
 
 # %% [markdown]
-# ## Clustermatch vs Pearson
+# ## CCC vs Pearson
 
 # %%
 output_dir = OUTPUT_DIR / "clustermatch_vs_pearson"
@@ -247,7 +247,7 @@ gene_pairs[:10]
 process_tissue_networks(gene_pairs, output_dir)
 
 # %% [markdown]
-# ## Clustermatch vs Pearson/Spearman
+# ## CCC vs Pearson/Spearman
 
 # %%
 output_dir = OUTPUT_DIR / "clustermatch_vs_pearson_spearman"
@@ -274,7 +274,7 @@ gene_pairs[:10]
 process_tissue_networks(gene_pairs, output_dir)
 
 # %% [markdown]
-# ## Clustermatch vs Spearman
+# ## CCC vs Spearman
 
 # %%
 output_dir = OUTPUT_DIR / "clustermatch_vs_spearman"
@@ -301,7 +301,7 @@ gene_pairs[:10]
 process_tissue_networks(gene_pairs, output_dir)
 
 # %% [markdown]
-# ## Pearson vs Clustermatch
+# ## Pearson vs CCC
 
 # %%
 output_dir = OUTPUT_DIR / "pearson_vs_clustermatch"
@@ -328,7 +328,7 @@ gene_pairs[:10]
 process_tissue_networks(gene_pairs, output_dir)
 
 # %% [markdown]
-# ## Pearson vs Clustermatch/Spearman
+# ## Pearson vs CCC/Spearman
 
 # %%
 output_dir = OUTPUT_DIR / "pearson_vs_clustermatch_spearman"

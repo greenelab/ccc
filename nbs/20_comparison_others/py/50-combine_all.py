@@ -76,7 +76,7 @@ display(OUTPUT_FILE)
 # # Load data
 
 # %% [markdown] tags=[]
-# ## Clustermatch
+# ## CCC
 
 # %% tags=[]
 clustermatch_df = pd.read_pickle(

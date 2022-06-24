@@ -195,8 +195,8 @@ def test_MyUpSet():
         "Spearman (low)": intersection_group1,
         "Pearson (high)": intersection_group0,
         "Pearson (low)": intersection_group1,
-        "Clustermatch (high)": intersection_group0,
-        "Clustermatch (low)": intersection_group1,
+        "CCC (high)": intersection_group0,
+        "CCC (low)": intersection_group1,
     }
 
     df = df.assign(**new_cols)

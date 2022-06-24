@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# It generates different general plots to compare coefficient values from Pearson, Spearman, Clustermatch and Maximal Information Coefficient (MIC), such as their distribution. This notebook focuses on MIC.
+# It generates different general plots to compare coefficient values from Pearson, Spearman, CCC and Maximal Information Coefficient (MIC), such as their distribution. This notebook focuses on MIC.
 #
 # In `Settings` below, the data set and other options (such as tissue for GTEx) are specified.
 

@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# It generates different general plots to compare coefficient values from Pearson, Spearman and Clustermatch, such as their distribution.
+# It generates different general plots to compare coefficient values from Pearson, Spearman and CCC, such as their distribution.
 #
 # In `Settings` below, the data set and other options (such as tissue for GTEx) are specified.
 
@@ -119,7 +119,7 @@ with sns.plotting_context("talk", font_scale=1.0):
     plot_histogram(df, output_dir=OUTPUT_FIGURE_DIR, fill=False)
 
 # %% [markdown] tags=[]
-# Coefficients' values distribute very differently. Clustermatch is skewed to the left, whereas Pearson and specially Spearman seem more uniform.
+# Coefficients' values distribute very differently. CCC is skewed to the left, whereas Pearson and specially Spearman seem more uniform.
 
 # %% [markdown] tags=[]
 # # Cumulative histogram plot

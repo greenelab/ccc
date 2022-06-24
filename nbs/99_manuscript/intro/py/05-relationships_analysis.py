@@ -322,7 +322,7 @@ with sns.plotting_context("paper", font_scale=1.8):
 #
 # Some points:
 #
-# 1. When the number of internal clusters (separated by red lines) is higher, Clustermatch is able to capture more complex relationships.
-# 1. With two internal clusters (Anscombe I, II and III) for each variable pair, Clustermatch seems to capture linear relationships. However, two clusters also capture non-coexistence relationships.
+# 1. When the number of internal clusters (separated by red lines) is higher, CCC is able to capture more complex relationships.
+# 1. With two internal clusters (Anscombe I, II and III) for each variable pair, CCC seems to capture linear relationships. However, two clusters also capture non-coexistence relationships.
 
 # %% tags=[]

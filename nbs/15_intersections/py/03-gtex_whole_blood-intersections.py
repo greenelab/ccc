@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# It analyzes how correlation coefficients intersect on different gene pairs. Basically, I take the top gene pairs with the maximum correlation coefficient according to Pearson, Spearman and Clustermatch, and also the equivalent set with the minimum coefficient values, and then compare how these sets intersect each other.
+# It analyzes how correlation coefficients intersect on different gene pairs. Basically, I take the top gene pairs with the maximum correlation coefficient according to Pearson, Spearman and CCC, and also the equivalent set with the minimum coefficient values, and then compare how these sets intersect each other.
 #
 # After identifying different intersection sets, I plot some gene pairs to see what's being captured or not by each coefficient.
 
