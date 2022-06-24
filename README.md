@@ -35,7 +35,8 @@ IPython 8.3.0 -- An enhanced Interactive Python. Type '?' for help.
 In [1]: 
 ```
 
-CCC can work on numerical data represented as a `numpy.array` or `pandas.Series`:
+When computing the correlation coefficient on a pair of features, CCC supports `numpy.array` or `pandas.Series`.
+This is an example with numerical data (you can copy/paste the entire lines below including `In [...]`):
 
 ```python
 In [1]: import numpy as np
@@ -54,6 +55,8 @@ Out[9]: 0.0018815884476534295
 ```
 
 CCC always returns a value between zero (no relationship) and one (perfect relationship).
+As we show in the manuscript, the distribution of CCC values is much more skewed than other coefficients like Pearson's or Spearman's.
+A comparison between these coefficients should account for that.
 
 You can also mix numerical and categorical data:
 
@@ -61,41 +64,39 @@ You can also mix numerical and categorical data:
 In [10]: categories = np.array(["blue", "red", "green", "yellow"])
 In [11]: categorical_random_feature1 = np.random.choice(categories, size=1000)
 In [12]: categorical_random_feature2 = np.random.choice(categories, size=1000)
-In [14]: categorical_random_feature2[:10]
-Out[14]: 
+In [13]: categorical_random_feature2[:10]
+Out[13]: 
 array(['yellow', 'red', 'red', 'yellow', 'blue', 'blue', 'red', 'yellow',
        'green', 'blue'], dtype='<U6')
 
-In [15]: ccc(categorical_random_feature1, categorical_random_feature2)
-Out[15]: 0.0009263483455638076
+In [14]: ccc(categorical_random_feature1, categorical_random_feature2)
+Out[14]: 0.0009263483455638076
 
-In [17]: ccc(random_feature1, categorical_random_feature2)
-Out[17]: 0.0015123522641692117
+In [15]: ccc(random_feature1, categorical_random_feature2)
+Out[15]: 0.0015123522641692117
 ```
 
 The first argument of `ccc` could also be a matrix, either as a `numpy.array` (features are in rows and objects in columns) or as a `pandas.DataFrame` (objects are in rows and features in columns).
 In this case, `ccc` will compute the pairwise correlation across all features:
 
 ```python
-In [18]: data = np.random.rand(10, 1000)
-
-In [21]: # with a numpy.array
-In [22]: c = ccc(data)
-In [23]: c.shape
-Out[23]: (45,)
-In [24]: c[:10]
-Out[24]: 
+In [16]: # with a numpy.array
+In [17]: data = np.random.rand(10, 1000)
+In [18]: c = ccc(data)
+In [19]: c.shape
+Out[19]: (45,)
+In [20]: c[:10]
+Out[20]: 
 array([0.00404461, 0.00185342, 0.00248847, 0.00232761, 0.00260786,
        0.00121495, 0.00227679, 0.00099051, 0.00313611, 0.00323936])
 
-In [25]: # with a pandas.DataFrame
-In [26]: data_df = pd.DataFrame(data.T)
-
-In [29]: c = ccc(data_df)
-In [30]: c.shape
-Out[30]: (45,)
-In [31]: c[:10]
-Out[31]: 
+In [21]: # with a pandas.DataFrame
+In [22]: data_df = pd.DataFrame(data.T)
+In [23]: c = ccc(data_df)
+In [24]: c.shape
+Out[24]: (45,)
+In [25]: c[:10]
+Out[25]: 
 array([0.00404461, 0.00185342, 0.00248847, 0.00232761, 0.00260786,
        0.00121495, 0.00227679, 0.00099051, 0.00313611, 0.00323936])
 ```
@@ -104,12 +105,12 @@ If your data has a mix of numerical and categorical features, it's better to wor
 As an example, we load the [Titanic dataset](https://www.kaggle.com/c/titanic/data) (from [seaborn](https://github.com/mwaskom/seaborn-data/)'s repository):
 
 ```python
-In [35]: titanic_url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/raw/titanic.csv"
-In [36]: titanic_df = pd.read_csv(titanic_url)
-In [33]: titanic_df.shape
-Out[33]: (891, 11)
-In [34]: titanic_df.head()
-Out[34]: 
+In [26]: titanic_url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/raw/titanic.csv"
+In [27]: titanic_df = pd.read_csv(titanic_url)
+In [28]: titanic_df.shape
+Out[28]: (891, 11)
+In [29]: titanic_df.head()
+Out[29]: 
    survived  pclass                                               name     sex   age  sibsp  parch            ticket     fare cabin embarked
 0         0       3                            Braund, Mr. Owen Harris    male  22.0      1      0         A/5 21171   7.2500   NaN        S
 1         1       1  Cumings, Mrs. John Bradley (Florence Briggs Th...  female  38.0      1      0          PC 17599  71.2833   C85        C
@@ -121,8 +122,8 @@ Out[34]:
 The Titanic dataset has missing values:
 
 ```python
-Out[35]: titanic_df.isna().sum()
-Out[35]: 
+In [30]: titanic_df.isna().sum()
+Out[30]: 
 survived      0
 pclass        0
 name          0
@@ -140,23 +141,23 @@ dtype: int64
 So we need some kind of preprocessing before moving on:
 
 ```python
-In [62]: titanic_df = titanic_df.dropna(subset=["embarked"]).dropna(axis=1)
-In [63]: titanic_df.shape
-Out[63]: (889, 9)
+In [31]: titanic_df = titanic_df.dropna(subset=["embarked"]).dropna(axis=1)
+In [32]: titanic_df.shape
+Out[32]: (889, 9)
 ```
 
 Now we can run CCC on the dataset and get a correlation matrix across features:
 
 ```python
-In [18]: ccc_corrs = ccc(titanic_df)
+In [33]: ccc_corrs = ccc(titanic_df)
 
-In [27]: from scipy.spatial.distance import squareform
-In [22]: ccc_corrs = squareform(ccc_corrs)
-In [23]: np.fill_diagonal(ccc_corrs, 1.0)
-In [29]: ccc_corrs = pd.DataFrame(ccc_corrs, index=titanic_df.columns.tolist(), columns=titanic_df.columns.tolist())
-In [25]: ccc_corrs.shape
-Out[25]: (11, 11)
-In [264]: with pd.option_context('display.float_format', '{:,.2f}'.format):
+In [34]: from scipy.spatial.distance import squareform
+In [35]: ccc_corrs = squareform(ccc_corrs)
+In [36]: np.fill_diagonal(ccc_corrs, 1.0)
+In [37]: ccc_corrs = pd.DataFrame(ccc_corrs, index=titanic_df.columns.tolist(), columns=titanic_df.columns.tolist())
+In [38]: ccc_corrs.shape
+Out[38]: (9, 9)
+In [39]: with pd.option_context('display.float_format', '{:,.2f}'.format):
      ...:     display(ccc_corrs)
           survived  pclass  name  sex  sibsp  parch  ticket  fare  embarked
 survived      1.00    0.12  0.00 0.32   0.04   0.05    0.00  0.07      0.05
@@ -170,19 +171,16 @@ fare          0.07    0.33  0.00 0.04   0.23   0.14    0.02  1.00      0.03
 embarked      0.05    0.01  0.00 0.04   0.00   0.00    0.00  0.03      1.00
 ```
 
-As we show in the manuscript, the distribution of CCC values is much more skewed than other coefficients like Pearson's or Spearman's.
-A comparison between these coefficients should account for that.
-
 The `ccc` function also has a `n_jobs` parameter that allows to control the number of CPU cores used.
 Below we compute the pairwise correlation between 20 features across 1000 objects:
 
 ```python
-In [268]: data = np.random.rand(20, 1000)
+In [40]: data = np.random.rand(20, 1000)
 
-In [269]: %timeit ccc(data, n_jobs=1)
+In [41]: %timeit ccc(data, n_jobs=1)
 1.32 s ± 45.8 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
-In [270]: %timeit ccc(data, n_jobs=2)
+In [42]: %timeit ccc(data, n_jobs=2)
 771 ms ± 11 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
 
@@ -194,89 +192,53 @@ Below we provide the steps to reproduce all the analyses in the CCC manuscript.
 ### Setup
 
 To prepare the environment to run the analyses in the manuscript, follow the steps in [environment](environment/).
-This will create a conda environment and download the necessary data.
-Alternatively, you can use our Docker image (see below).
+After completing those steps, you'll have the source code in this repository, a Python environment (either using a Docker image or creating your own conda environment) and the necessary data to run the analyses.
 
 ### Running code
 
-**From command-line.**
-First, activate your conda environment and export your settings to environmental variables so non-Python scripts can access them:
-```bash
-conda activate ccc
-eval `python libs/conf.py`
-```
-
-The code to preprocess data and generate results is in the `nbs/` folder.
+All the analyses are written as Jupyter notebooks and stored in the folder `nbs/`.
 All notebooks are organized by directories, such as `01_preprocessing`, with file names that indicate the order in which they should be run (if they share the prefix, then it means they can be run in parallel).
-For example, to run all notebooks for the preprocessing step, you can use this command (requires [GNU Parallel](https://www.gnu.org/software/parallel/)):
+You can run the analyses either using the JupyterLab server and your browser, or from the command line using [papermill](https://papermill.readthedocs.io/en/latest/).
 
-```bash
-cd nbs/
-parallel -k --lb --halt 2 -j1 'bash run_nbs.sh {}' ::: 01_preprocessing/*.ipynb
-```
-
-<!--
-Or if you want to run all the analyses at once, you can use:
-
-```bash
-shopt -s globstar
-parallel -k --lb --halt 2 -j1 'bash run_nbs.sh {}' ::: nbs/{,**/}*.ipynb
-```
--->
-
-**From your browser.**
-Alternatively, you can start your JupyterLab server by running:
+**Using the browser.** For example, let's say you want to run the preprocessing notebooks.
+If you want to use your browser, you first need to start the JupyterLab server:
 
 ```bash
 bash scripts/run_nbs_server.sh
 ```
 
-Then, go to `http://localhost:8892`, browse the `nbs` folder, and run the notebooks in the specified order.
+and then go to http://127.0.0.1:8893/ and browse to `nbs/05_preprocessing`.
+Then you need to run each notebook in order.
 
-## Using Docker
-
-You can also run all the steps below using a Docker image instead of a local installation.
-
-```bash
-docker pull miltondp/ccc
-```
-
-The image only contains the conda environment with the code in this repository so, after pulling the image, you need to download the data as well:
+If you use the Docker image, the steps are very similar for any command, but you need to prepend the `scripts/run_docker.sh` script.
 
 ```bash
-mkdir -p /tmp/ccc_data
-
-docker run --rm \
-  -v "/tmp/ccc_data:/opt/data" \
-  --user "$(id -u):$(id -g)" \
-  miltondp/ccc \
-  /bin/bash -c "python environment/scripts/setup_data.py"
+bash scripts/run_docker.sh \
+  bash scripts/run_nbs_server.sh --container-mode
 ```
 
-The `-v` parameter allows specifying a local directory (`/tmp/ccc_data`) where the data will be downloaded.
-If you want to generate the figures and tables for the manuscript, you need to clone the [manuscript repo](https://github.com/greenelab/ccc-manuscript) and pass it with `-v [PATH_TO_MANUSCRIPT_REPO]:/opt/manuscript`.
-If you want to change any other setting, you can set environmental variables when running the container; for example, to change the number of cores used to 2: `-e CM_N_JOBS=2`.
+Note that the port is different: http://127.0.0.1:8888/
 
-You can run notebooks from the command line, for example:
+**Using the command-line.** You can also run the notebooks using the command-line with papermill instead of going to the browser.
+Using as example the same preprocessing notebooks, you can pick one of these commands to run all the preprocessing notebooks in order:
 
 ```bash
-docker run --rm \
-  -v "/tmp/ccc_data:/opt/data" \
-  --user "$(id -u):$(id -g)" \
-  miltondp/ccc \
-  /bin/bash -c "parallel -k --lb --halt 2 -j1 'bash nbs/run_nbs.sh {}' ::: nbs/05_preprocessing/*.ipynb"
+# using your own conda environment:
+#   requires GNU Parallel: https://www.gnu.org/software/parallel/
+#   To install in Ubuntu: apt install parallel
+parallel \
+  -k \
+  --lb \
+  --halt 2 \
+  -j1 \
+  'bash nbs/run_nbs.sh {}' ::: nbs/05_preprocessing/*.ipynb
+
+# using the Docker image:
+bash scripts/run_docker.sh \
+  parallel \
+    -k \
+    --lb \
+    --halt 2 \
+    -j1 \
+    'bash nbs/run_nbs.sh {}' ::: nbs/05_preprocessing/*.ipynb
 ```
-
-or start a Jupyter Notebook server with:
-
-```bash
-docker run --rm \
-  -p 8888:8893 \
-  -v "/tmp/ccc_data:/opt/data" \
-  --user "$(id -u):$(id -g)" \
-  miltondp/ccc
-```
-
-FIXME: why do I have a different port here than before?
-
-and access the interface by going to `http://localhost:8888`.
