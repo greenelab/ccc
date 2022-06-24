@@ -46,11 +46,16 @@ You have two choices: 1) using Docker (the easiest) or 2) creating your own cond
 
 ### Using Docker
 
-This is the easiest approach. [Install Docker](https://docs.docker.com/get-docker/) for your system and just download the image:
+This is the easiest approach.
+First, you need to [install Docker](https://docs.docker.com/get-docker/) for your system.
+Then, you have to download our the Docker image for CCC with this command (you might need to add `sudo` at the beginning if your user is not part of the `docker` group):
 
 ```bash
 docker pull miltondp/ccc
 ```
+
+The `miltondp/ccc` image only contains the Python environment and all the needed packages and tools to run the code.
+You still need to download the data (see below).
 
 ### Creating your own conda environment
 
@@ -107,7 +112,7 @@ bash scripts/run_docker.sh \
 
 This will download 1.6G GB of data.
 
-The script `scripts/run_docker.sh` automatically reads your settings, mounts the repo and root directories into the Docker container and runs the command you specified.
+The script `scripts/run_docker.sh` automatically reads your settings, mounts the repo and root directories into the Docker container and runs the command you specified within it.
 
 
 ## (Internal) Steps to update the conda environment
