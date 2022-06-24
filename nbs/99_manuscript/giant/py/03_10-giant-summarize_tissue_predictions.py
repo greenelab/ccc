@@ -79,7 +79,7 @@ def read_hdf(filepath, subset):
 
 
 # %% [markdown]
-# ## Clustermatch vs Pearson
+# ## CCC vs Pearson
 
 # %%
 subset = "clustermatch_vs_pearson"
@@ -97,7 +97,7 @@ all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
 # %% [markdown]
-# ## Clustermatch vs Pearson/Spearman
+# ## CCC vs Pearson/Spearman
 
 # %%
 subset = "clustermatch_vs_pearson_spearman"
@@ -115,7 +115,7 @@ all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
 # %% [markdown]
-# ## Clustermatch vs Spearman
+# ## CCC vs Spearman
 
 # %%
 subset = "clustermatch_vs_spearman"
@@ -133,7 +133,7 @@ all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
 # %% [markdown]
-# ## Pearson vs Clustermatch
+# ## Pearson vs CCC
 
 # %%
 subset = "pearson_vs_clustermatch"
@@ -151,7 +151,7 @@ all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
 # %% [markdown]
-# ## Pearson vs Clustermatch/Spearman
+# ## Pearson vs CCC/Spearman
 
 # %%
 subset = "pearson_vs_clustermatch_spearman"

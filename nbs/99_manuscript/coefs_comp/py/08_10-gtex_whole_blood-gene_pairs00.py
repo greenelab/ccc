@@ -344,7 +344,7 @@ _tissue_data = plot_gene_pair(
 )
 
 # %% [markdown]
-# ## Pearson low, Clustermatch high
+# ## Pearson low, CCC high
 
 # %%
 _tissue_data = plot_gene_pair(
@@ -392,7 +392,7 @@ _tissue_data = plot_gene_pair(
 )
 
 # %% [markdown]
-# ## Spearman low, Clustermatch high
+# ## Spearman low, CCC high
 
 # %%
 _tissue_data = plot_gene_pair(

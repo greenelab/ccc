@@ -340,7 +340,7 @@ def save_gene_pairs(df, gene_set_name):
 
 
 # %% [markdown] tags=[]
-# ## Clustermatch/Spearman vs Pearson
+# ## CCC/Spearman vs Pearson
 
 # %%
 _tmp_df = get_gene_pairs(
@@ -395,7 +395,7 @@ plot_and_save_gene_pair(
 )
 
 # %% [markdown] tags=[]
-# ## Clustermatch vs Pearson
+# ## CCC vs Pearson
 
 # %%
 _tmp_df = get_gene_pairs(
@@ -438,7 +438,7 @@ plot_and_save_gene_pair(
 )
 
 # %% [markdown] tags=[]
-# ## Clustermatch vs Spearman
+# ## CCC vs Spearman
 
 # %%
 _tmp_df = get_gene_pairs(
@@ -502,7 +502,7 @@ plot_and_save_gene_pair(
 df_plot.loc[(gene0_id, gene1_id), ["ccc", "pearson", "spearman"]]
 
 # %% [markdown] tags=[]
-# ## Clustermatch vs Spearman/Pearson
+# ## CCC vs Spearman/Pearson
 
 # %%
 _tmp_df = get_gene_pairs(
@@ -546,7 +546,7 @@ plot_and_save_gene_pair(
 )
 
 # %% [markdown] tags=[]
-# ## Pearson vs Clustermatch
+# ## Pearson vs CCC
 
 # %%
 _tmp_df = get_gene_pairs(
@@ -617,7 +617,7 @@ for i in range(min(_tmp_df.shape[0], 5)):
 # ### Selection
 
 # %% [markdown] tags=[]
-# ## Pearson vs Spearman/Clustermatch
+# ## Pearson vs Spearman/CCC
 
 # %%
 _tmp_df = get_gene_pairs(

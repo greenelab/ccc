@@ -99,7 +99,7 @@ data.shape
 data.head()
 
 # %% [markdown] tags=[]
-# ## Clustermatch
+# ## CCC
 
 # %% tags=[]
 clustermatch_df = pd.read_pickle(
