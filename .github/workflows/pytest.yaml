@@ -7,11 +7,35 @@ on:
 env:
   # Increase this value to reset cache if environment.yml has not changed.
   PY_CACHE_NUMBER: 2
-  PY_ENV: cm_gene_expr
+  PY_ENV: ccc_gene_expr
 
 jobs:
+  ccc_pytest:
+    name: Python tests for CCC
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 4
+      fail-fast: false
+      matrix:
+        python-version: [3.9, 3.10]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest numpy scipy numba
+      - name: Test CCC with pytest
+        run: |
+          pytest tests/test_coef.py tests/test_pytorch_core.py tests/test_scipy_stats.py tests/test_sklearn_metrics.py tests/test_utils.py
+
   pytest:
-    name: Python tests
+    name: Python tests on code for analyses
     runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 4
@@ -21,9 +45,7 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v2
-        with:
-          lfs: false
+        uses: actions/checkout@v3
       - name: Cache conda
         id: cache
         uses: actions/cache@v3
