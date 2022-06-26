@@ -34,7 +34,7 @@ jobs:
         env:
           PYTHONPATH: libs/
         run: |
-          pytest tests/test_coef.py tests/test_pytorch_core.py tests/test_scipy_stats.py tests/test_sklearn_metrics.py tests/test_utils.py
+          pytest tests/test_coef.py tests/test_pytorch_core.py tests/test_scipy_stats.py tests/test_sklearn_metrics.py
 
   pytest:
     name: Python tests on code for analyses
