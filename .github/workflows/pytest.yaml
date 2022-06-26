@@ -37,7 +37,7 @@ jobs:
           pytest tests/test_coef.py tests/test_pytorch_core.py tests/test_scipy_stats.py tests/test_sklearn_metrics.py
 
   pytest:
-    name: Python tests on code for analyses
+    name: Python tests for analyses
     runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 4
