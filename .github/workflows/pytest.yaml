@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest numpy scipy numba pandas==1.4* sklearn==1.1.
+          pip install pytest numpy scipy numba pandas==1.4.* sklearn==1.1.*
       - name: Test CCC with pytest
         env:
           PYTHONPATH: libs/
