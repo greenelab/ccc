@@ -158,8 +158,7 @@ In [36]: np.fill_diagonal(ccc_corrs, 1.0)
 In [37]: ccc_corrs = pd.DataFrame(ccc_corrs, index=titanic_df.columns.tolist(), columns=titanic_df.columns.tolist())
 In [38]: ccc_corrs.shape
 Out[38]: (9, 9)
-In [39]: with pd.option_context('display.float_format', '{:,.2f}'.format):
-     ...:     display(ccc_corrs)
+In [39]: with pd.option_context('display.float_format', '{:,.2f}'.format): display(ccc_corrs)
           survived  pclass  name  sex  sibsp  parch  ticket  fare  embarked
 survived      1.00    0.12  0.00 0.32   0.04   0.05    0.00  0.07      0.05
 pclass        0.12    1.00  0.00 0.04   0.02   0.01    0.00  0.33      0.01
