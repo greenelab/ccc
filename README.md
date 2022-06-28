@@ -188,18 +188,52 @@ In [42]: %timeit ccc(data, n_jobs=2)
 ## Reproducible research
 
 Below we provide the steps to reproduce all the analyses in the CCC manuscript.
+All the analyses are written as Jupyter notebooks and stored in the folder `nbs/`.
+All notebooks are organized by directories, such as `01_preprocessing`, with file names that indicate the order in which they should be run.
 
-### Setup environment and download data 
+Here you have the option to create
+1) a **minimal environment** to run analyses within your browser, or
+2) a **full environment** ready to run all the analyses in your browser or from the command-line (this might be helpful if you plan to launch long-running jobs).
 
-To prepare the environment to run the analyses in the manuscript, follow the steps in [environment](environment/).
+### Setup of a minimal environment
+
+To set up a minimal environment, you first need to [install Docker](https://docs.docker.com/get-docker/) for your system.
+Then, run this code in your terminal:
+
+```bash
+# pulls/downloads the Docker image with the environment and source code
+sudo docker pull miltondp/ccc
+
+# specify a directory in your computer where data and results will be stored
+export DATA_FOLDER="/tmp/phenoplier_data"
+mkdir -p ${DATA_FOLDER}
+
+# download the necessary data (GTEx, etc)
+docker run --rm \
+  -v "${DATA_FOLDER}:/opt/data" \
+  --user "$(id -u):$(id -g)" \
+  miltondp/ccc \
+  /bin/bash -c "python environment/scripts/setup_data.py"
+
+# run JupyterLab server
+docker run --rm \
+  -p 8893:8893 \
+  -v "${DATA_FOLDER}:/opt/data" \
+  --user "$(id -u):$(id -g)" \
+  miltondp/ccc 
+```
+
+Then open your browser and navigate to http://127.0.0.1:8893/.
+With the Jupyter interface, you should open the folder `nbs/`, and then open and run the notebooks in order.
+For example, you must start with all notebooks in `05_preprocessing` first (run them in order too), then `10_compute_correlations`, etc.
+And that's it, you should be able to run all the analyses within your browser.
+
+### Setup of a full environment
+
+To set up a full environment, please follow the steps in [environment](environment/).
 After completing those steps, you'll have the source code in this repository, a Python environment (either using a Docker image or creating your own conda environment) and the necessary data to run the analyses.
 
-### Running code
-
-All the analyses are written as Jupyter notebooks and stored in the folder `nbs/`.
-All notebooks are organized by directories, such as `01_preprocessing`, with file names that indicate the order in which they should be run (if they share the prefix, then it means they can be run in parallel).
-
-You have two options to run the analyses:
+Once the full environment is set up, then you have two options to run the analyses/notebooks:
 1. **Using the browser**:
    1. Start the JupyterLab server. 
    1. Use your browser to open and run the notebooks.
