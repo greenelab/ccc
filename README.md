@@ -198,19 +198,28 @@ Here you have the option to create
 ### Setup of a minimal environment
 
 To set up a minimal environment, you first need to [install Docker](https://docs.docker.com/get-docker/) for your system.
-Then, run this code in your terminal:
+Then, open a terminal and run this code:
 
 ```bash
 # pulls/downloads the Docker image with the environment and source code
 sudo docker pull miltondp/ccc
 
+# specify a base directory to store data and code
+export BASE_FOLDER="/tmp/ccc"
+mkdir -p ${BASE_FOLDER}
+
 # specify a directory in your computer where data and results will be stored
-export DATA_FOLDER="/tmp/phenoplier_data"
+export DATA_FOLDER="${BASE_FOLDER}/data"
 mkdir -p ${DATA_FOLDER}
+
+# specify a directory where the source code is
+export CODE_FOLDER="${BASE_FOLDER}/code"
+git clone https://github.com/greenelab/ccc.git ${CODE_FOLDER}
 
 # download the necessary data (GTEx, etc)
 docker run --rm \
   -v "${DATA_FOLDER}:/opt/data" \
+  -v "${CODE_FOLDER}:/opt/code" \
   --user "$(id -u):$(id -g)" \
   miltondp/ccc \
   /bin/bash -c "python environment/scripts/setup_data.py"
@@ -219,6 +228,7 @@ docker run --rm \
 docker run --rm \
   -p 8893:8893 \
   -v "${DATA_FOLDER}:/opt/data" \
+  -v "${CODE_FOLDER}:/opt/code" \
   --user "$(id -u):$(id -g)" \
   miltondp/ccc 
 ```
@@ -226,6 +236,7 @@ docker run --rm \
 Then open your browser and navigate to http://127.0.0.1:8893/.
 With the Jupyter interface, you should open the folder `nbs/`, and then open and run the notebooks in order.
 For example, you must start with all notebooks in `05_preprocessing` first (run them in order too), then `10_compute_correlations`, etc.
+All data and results will be saved in folder `DATA_FOLDER`, and the code that you change will be saved in your computer under folder `CODE_FOLDER`.
 And that's it, you should be able to run all the analyses within your browser.
 
 ### Setup of a full environment
