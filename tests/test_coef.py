@@ -17,6 +17,7 @@ from ccc.coef import (
     cdist_parts_basic,
     cdist_parts_parallel,
     get_chunks,
+    get_feature_type_and_encode,
 )
 
 
@@ -1426,3 +1427,131 @@ def test_cm_with_too_few_objects():
         ccc(data, internal_n_clusters=3)
 
     assert "too few objects" in str(e.value)
+
+
+def test_get_feature_type_and_encode_feature_is_float():
+    # Prepare
+    np.random.seed(123)
+
+    feature_data = np.random.rand(100)
+    assert feature_data.dtype.kind == "f"
+
+    encoded_feature_data, feature_is_numerical = get_feature_type_and_encode(
+        feature_data
+    )
+    assert encoded_feature_data is not None
+    assert feature_is_numerical is not None
+
+    # each nan should be treated as a separated category/cluster
+    np.testing.assert_array_equal(encoded_feature_data, feature_data)
+    assert feature_is_numerical
+
+
+def test_get_feature_type_and_encode_feature_is_float_with_nans():
+    # Prepare
+    np.random.seed(123)
+
+    feature_data = np.random.rand(100)
+    assert feature_data.dtype.kind == "f"
+    feature_data[17] = np.nan
+
+    encoded_feature_data, feature_is_numerical = get_feature_type_and_encode(
+        feature_data
+    )
+    assert encoded_feature_data is not None
+    assert feature_is_numerical is not None
+
+    # each nan should be treated as a separated category/cluster
+    np.testing.assert_array_equal(encoded_feature_data, feature_data)
+    assert feature_is_numerical
+
+
+def test_get_feature_type_and_encode_feature_is_uint():
+    # Prepare
+    np.random.seed(123)
+
+    feature_data = np.random.randint(1, 10, size=100).astype(np.uint32)
+    assert feature_data.dtype.kind == "u"
+
+    encoded_feature_data, feature_is_numerical = get_feature_type_and_encode(
+        feature_data
+    )
+    assert encoded_feature_data is not None
+    assert feature_is_numerical is not None
+
+    # each nan should be treated as a separated category/cluster
+    np.testing.assert_array_equal(encoded_feature_data, feature_data)
+    assert feature_is_numerical
+
+
+def test_get_feature_type_and_encode_feature_is_int():
+    # Prepare
+    np.random.seed(123)
+
+    feature_data = np.random.randint(1, 10, size=100)
+    assert feature_data.dtype.kind == "i"
+
+    encoded_feature_data, feature_is_numerical = get_feature_type_and_encode(
+        feature_data
+    )
+    assert encoded_feature_data is not None
+    assert feature_is_numerical is not None
+
+    # each nan should be treated as a separated category/cluster
+    np.testing.assert_array_equal(encoded_feature_data, feature_data)
+    assert feature_is_numerical
+
+
+def test_get_feature_type_and_encode_feature_is_object():
+    # Prepare
+    np.random.seed(123)
+
+    feature_data = np.array(["male", "female", "male", "male", "female"], dtype=object)
+    assert feature_data.dtype.kind == "O"
+
+    encoded_feature_data, feature_is_numerical = get_feature_type_and_encode(
+        feature_data
+    )
+    assert encoded_feature_data is not None
+    assert feature_is_numerical is not None
+
+    np.testing.assert_array_equal(encoded_feature_data, np.array([1, 0, 1, 1, 0]))
+    assert not feature_is_numerical
+
+
+def test_get_feature_type_and_encode_feature_is_bool():
+    # Prepare
+    np.random.seed(123)
+
+    feature_data = np.array([True, True, False, False, True], dtype=bool)
+    assert feature_data.dtype.kind == "b"
+
+    encoded_feature_data, feature_is_numerical = get_feature_type_and_encode(
+        feature_data
+    )
+    assert encoded_feature_data is not None
+    assert feature_is_numerical is not None
+
+    np.testing.assert_array_equal(encoded_feature_data, np.array([1, 1, 0, 0, 1]))
+    assert not feature_is_numerical
+
+
+@pytest.mark.skip("this test fails, missing values are not yet supported")
+def test_get_feature_type_and_encode_feature_is_object_with_nans():
+    # Prepare
+    np.random.seed(123)
+
+    feature_data = np.array(
+        ["male", "female", np.nan, "male", "female", np.nan], dtype=object
+    )
+    assert feature_data.dtype.kind == "O"
+
+    encoded_feature_data, feature_is_numerical = get_feature_type_and_encode(
+        feature_data
+    )
+    assert encoded_feature_data is not None
+    assert feature_is_numerical is not None
+
+    # each nan should be treated as a separated category/cluster
+    np.testing.assert_array_equal(encoded_feature_data, np.array([0, 1, 2, 0, 1, 3]))
+    assert not feature_is_numerical
