@@ -61,6 +61,8 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     current_cluster = 0
     part = np.zeros(data.shape, dtype=np.int16) - 1
 
+    # FIXME: go through unique cut_points only; for some cases with integer data
+    #  that is repeated, a higher k value generates the same cut_points
     for i in range(len(cut_points) - 1):
         lim1 = cut_points[i]
         lim2 = cut_points[i + 1]
@@ -138,6 +140,12 @@ def get_parts(
     if data_is_numerical:
         for idx in range(len(range_n_clusters)):
             k = range_n_clusters[idx]
+            # FIXME: if the previous partition (with k) has the same number of
+            #  clusters when k+1 is used, then it is generating the same
+            #  partition as before (see comment/fixme in run_quantile_clustering)
+            #  leave it as -1; maybe run_quantile_clustering could return
+            #  len(cut_points) as k (so I avoid counting the number of clusters
+            #  again here).
             parts[idx] = run_quantile_clustering(data, k)
 
         # remove singletons by putting a -2 as values
@@ -300,7 +308,8 @@ def get_feature_type_and_encode(feature_data: NDArray) -> tuple[NDArray, bool]:
     if data_type_is_numerical:
         return feature_data, data_type_is_numerical
 
-    # here np.unique with return_inverse encodes categorical values into numerical ones
+    # here np.unique with return_inverse encodes categorical values into
+    # numerical ones
     return np.unique(feature_data, return_inverse=True)[1], data_type_is_numerical
 
 
