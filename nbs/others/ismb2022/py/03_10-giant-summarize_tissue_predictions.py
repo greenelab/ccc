@@ -546,8 +546,8 @@ with sns.plotting_context("poster", font_scale=1.0):
         row="subset",
         sharex=True,
         sharey=True,
-        height=2.0,
-        aspect=2.1,
+        height=4.0,
+        aspect=1.8,
     )
     g.map(
         sns.barplot,
@@ -557,18 +557,19 @@ with sns.plotting_context("poster", font_scale=1.0):
         palette=tissue_colors,
     )
     g.set_xticklabels(rotation=30, ha="right")
-    g.set_axis_labels(PREDICTED_TISSUE_LABEL, "")
+    # g.set_axis_labels(PREDICTED_TISSUE_LABEL, "")
+    g.set_axis_labels("", "")
 
     g.set_titles(row_template="")
 
-    g.fig.text(0.03, 0.30, N_GENE_PAIRS_LABEL, rotation=90)
+    g.fig.text(0.02, 0.30, N_GENE_PAIRS_LABEL, rotation=90)
 
     g.savefig(
-        OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_count.pdf",
+        OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_count.svg",
         bbox_inches="tight",
         dpi=300,
-        facecolor="white",
-        # transparent=True,
+        # facecolor="white",
+        transparent=True,
     )
 
 # %% [markdown]
@@ -581,12 +582,13 @@ with sns.plotting_context("poster", font_scale=1.0):
         row="subset",
         sharex=True,
         sharey=True,
-        height=2.0,
-        aspect=2.1,
+        height=4.0,
+        aspect=1.8,
     )
     g.map(sns.boxplot, "tissue", "weight", order=tissues_order, palette=tissue_colors)
     g.set_xticklabels(rotation=30, ha="right")
-    g.set_axis_labels(PREDICTED_TISSUE_LABEL, "")
+    # g.set_axis_labels(PREDICTED_TISSUE_LABEL, "")
+    g.set_axis_labels("", "")
 
     g.set_titles(row_template="")
 
@@ -596,15 +598,14 @@ with sns.plotting_context("poster", font_scale=1.0):
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
 
-    g.fig.text(1.10, 0.25, AVG_PROB_INTERACTION_LABEL, rotation=90, ha="center")
-    # g.axes[2][0].set_ylabel(AVG_PROB_INTERACTION_LABEL)
+    g.fig.text(1.10, 0.20, AVG_PROB_INTERACTION_LABEL, rotation=90, ha="center")
 
     g.savefig(
-        OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.pdf",
+        OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.svg",
         bbox_inches="tight",
         dpi=300,
-        facecolor="white",
-        # transparent=True,
+        # facecolor="white",
+        transparent=True,
     )
 
 # %% [markdown] tags=[]
@@ -630,58 +631,37 @@ AUTO_SELECTED_NETWORKS_DIR = (
 
 # %%
 Figure(
-    "30.50629cm",
-    "24.44741cm",
+    "52.522cm",
+    "30.827cm",
     # white background
-    Panel(
-        SVG(COEF_COMP_DIR / "white_background.svg"),
-    )
-    .scale(0.5)
-    .move(0, 0),
-    Panel(
-        Panel(
-            SVG(BLOOD_NETWORKS_DIR / "GIANT-RASSF2_vs_CYTIP-blood.svg").move(10, 0),
-            SVG(
-                AUTO_SELECTED_NETWORKS_DIR / "GIANT-RASSF2_vs_CYTIP-leukocyte.svg"
-            ).move(420, 0),
-            SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(7.00).move(20, 350),
-            Text("a)", 0, 30, size=28, weight="bold"),
-            SVG(BLOOD_NETWORKS_DIR / "color_bar.svg").scale(3.50).move(270, 410),
-        )
-        .scale(0.0175)
-        .move(0, 0),
-        Panel(
-            SVG(BLOOD_NETWORKS_DIR / "GIANT-MYOZ1_vs_TNNI2-blood.svg").move(10, 0),
-            SVG(
-                AUTO_SELECTED_NETWORKS_DIR / "GIANT-MYOZ1_vs_TNNI2-skeletal_muscle.svg"
-            ).move(420, 0),
-            Text("b)", 0, 30, size=28, weight="bold"),
-            SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(7.00).move(20, 350),
-        )
-        .scale(0.0175)
-        .move(16, 0),
-    ),
+    # Panel(
+    #     SVG(COEF_COMP_DIR / "white_background.svg"),
+    # )
+    # .scale(0.5)
+    # .move(0, 0),
     Panel(
         SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_count.svg").scale(0.5),
         # cm vs rest
-        SVG(COEF_COMP_DIR / "triangles-c_vs_p.svg").scale(1.50).move(30, 4),
-        Text("+", 52, 10, size=6),
-        SVG(COEF_COMP_DIR / "triangles-c_vs_ps.svg").scale(1.50).move(60, 4),
-        Text("+", 83, 10, size=6),
-        SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(1.50).move(90, 4),
+        SVG(COEF_COMP_DIR / "triangles-c_vs_p.svg").scale(3.50).move(70, 4),
+        Text("+", 70 + 45, 17, size=15),
+        SVG(COEF_COMP_DIR / "triangles-c_vs_ps.svg").scale(3.50).move(70 + 45 + 15, 4),
+        Text("+", 70 + 45 + 15 + 52, 17, size=15),
+        SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg")
+        .scale(3.50)
+        .move(70 + 45 + 15 + 55 + 15, 4),
         # p vs rest
-        SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(1.50).move(30, 65),
-        Text("+", 52, 71, size=6),
-        SVG(COEF_COMP_DIR / "triangles-p_vs_cs.svg").scale(1.50).move(60, 65),
+        SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(3.50).move(70, 128),
+        Text("+", 70 + 45, 142, size=15),
+        SVG(COEF_COMP_DIR / "triangles-p_vs_cs.svg")
+        .scale(3.50)
+        .move(70 + 45 + 15, 128),
         # another
         SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.svg")
         .scale(0.5)
-        .move(130, 0),
-        Text("c)", 0, 9, size=6, weight="bold"),
-    )
-    .scale(0.10)
-    .move(0, 8),
-).save(OUTPUT_FIGURE_DIR / "top_gene_pairs-main.svg")
+        .move(220, 0),
+        # Text("c)", 0, 9, size=6, weight="bold"),
+    ).scale(0.10),
+).save(OUTPUT_FIGURE_DIR / "giant.svg")
 
 # %% [markdown]
 # Compile the manuscript with manubot and make sure the image has a white background and displays properly.
