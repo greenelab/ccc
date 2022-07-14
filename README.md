@@ -172,7 +172,9 @@ embarked      0.05    0.01  0.00 0.04   0.00   0.00    0.00  0.03      1.00
 ```
 
 The `ccc` function also has a `n_jobs` parameter that allows to control the number of CPU cores used.
-Below we compute the pairwise correlation between 20 features across 1000 objects:
+Parallelization works _across_ variable pairs (if a matrix/dataframe is provided) or by internally distributing computation of a single variable pair.
+
+In the first example below, we compute the pairwise correlation between 20 features across 1000 objects:
 
 ```python
 In [40]: data = np.random.rand(20, 1000)
@@ -182,6 +184,20 @@ In [41]: %timeit ccc(data, n_jobs=1)
 
 In [42]: %timeit ccc(data, n_jobs=2)
 771 ms ± 11 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+```
+
+And here we parallelize the computation of a single variable pair with thousands of objects:
+
+```python
+In [43]: x = np.random.normal(size=100000)
+
+In [44]: y = np.random.normal(size=100000)
+
+In [45]: %timeit ccc(x, y, n_jobs=1)
+956 ms ± 3.47 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+In [46]: %timeit ccc(x, y, n_jobs=2)
+559 ms ± 5.82 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 ```
 
 
