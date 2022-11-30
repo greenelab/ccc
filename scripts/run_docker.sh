@@ -23,7 +23,28 @@ MANUSCRIPT_DIR="${CM_MANUSCRIPT_DIR}"
 N_JOBS_VARNAME="CM_N_JOBS"
 N_JOBS=${!N_JOBS_VARNAME}
 
-# We assume the current dir is the repo dir
+# parameters parsing
+# read arguments
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --docker-args)
+      DOCKER_ARGS="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+echo "Configuration:"
+
 CODE_DIR=`pwd`
 
 # root dir
@@ -46,9 +67,11 @@ echo "  Code dir: ${CODE_DIR}"
 echo "  Root dir: ${ROOT_DIR}"
 echo "  Manuscript dir: ${MANUSCRIPT_DIR}"
 echo "  CPU cores: ${N_JOBS}"
+echo "  Docker image tag: ${DOCKER_TAG}"
 
-echo ""
+echo
 echo "Waiting 2 seconds before starting"
+echo
 sleep 2
 
 # always create data directory before running Docker
@@ -60,15 +83,17 @@ if [ -z "${COMMAND}" ]; then
   FULL_COMMAND=()
 else
   FULL_COMMAND=(/bin/bash -c "${COMMAND}")
+  PORT_ARG=""
 fi
 
-echo "${FULL_COMMAND}"
+echo "Full command: ${FULL_COMMAND}"
 
 # show commands being executed
+echo
 set -x
 
 # run
-docker run --rm ${PORT_ARG} \
+docker run --rm ${PORT_ARG} ${DOCKER_ARGS} \
   -e ${N_JOBS_VARNAME}=${N_JOBS} \
   -e NUMBA_NUM_THREADS=${N_JOBS} \
   -e MKL_NUM_THREADS=${N_JOBS} \
