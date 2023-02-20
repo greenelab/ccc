@@ -76,7 +76,7 @@ def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     return cont_mat
 
 
-@njit(cache=True, nogil=True)
+# @njit(cache=True, nogil=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Returns the pair confusion matrix from two clustering partitions. It is an
@@ -96,6 +96,11 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
         count of true negatives is in position 00, false negatives in 10, true
         positives in 11, and false positives in 01.
     """
+    # do not consider the samples whose cluster is -3 (missing data)
+    non_missing = (part0 != -3) & (part1 != -3)
+    part0 = part0[non_missing]
+    part1 = part1[non_missing]
+
     n_samples = np.int64(part0.shape[0])
 
     # Computation using the contingency data

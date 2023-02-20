@@ -17,7 +17,7 @@ from ccc.utils import chunker
 
 
 @njit(cache=True, nogil=True)
-def get_perc_from_k(k: int) -> list[float]:
+def get_perc_from_k(k: int, top_perc: float = 1.0) -> list[float]:
     """
     It returns the percentiles (from 0.0 to 1.0) that separate the data into k
     clusters. For example, if k=2, it returns [0.5]; if k=4, it returns [0.25,
@@ -30,7 +30,7 @@ def get_perc_from_k(k: int) -> list[float]:
     Returns:
         A list of percentiles (from 0.0 to 1.0).
     """
-    return [(1.0 / k) * i for i in range(1, k)]
+    return [(top_perc / k) * i for i in range(1, k)]
 
 
 @njit(cache=True, nogil=True)
@@ -50,11 +50,16 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     Returns:
         A 1d array with the data partition.
     """
+    data_nan = np.isnan(data)
+    n = data.shape[0]
+    n_nan = data_nan.sum()
+
     data_sorted = np.argsort(data, kind="quicksort")
     data_rank = rank(data, data_sorted)
     data_perc = data_rank / len(data)
 
-    percentiles = [0.0] + get_perc_from_k(k) + [1.0]
+    top_perc = 1.0 - (n_nan / n)
+    percentiles = [0.0] + get_perc_from_k(k, top_perc) + [top_perc]
 
     cut_points = np.searchsorted(data_perc[data_sorted], percentiles, side="right")
 
@@ -69,6 +74,9 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
 
         part[data_sorted[lim1:lim2]] = current_cluster
         current_cluster += 1
+
+    # encode missing data as cluster -3
+    part[data_nan] = -3
 
     return part
 
@@ -185,11 +193,11 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
     res = np.zeros((x.shape[0], y.shape[0]))
 
     for i in range(res.shape[0]):
-        if x[i, 0] < 0:
+        if x[i, 0] in (-1, -2):
             continue
 
         for j in range(res.shape[1]):
-            if y[j, 0] < 0:
+            if y[j, 0] in (-1, -2):
                 continue
 
             res[i, j] = ari(x[i], y[j])
@@ -310,6 +318,15 @@ def get_feature_type_and_encode(feature_data: NDArray) -> tuple[NDArray, bool]:
 
     # here np.unique with return_inverse encodes categorical values into
     # numerical ones
+    # FIXME: see unit test test_get_feature_type_and_encode_feature_is_object_with_nans
+    #  for a case where this is not working (categorical values as string with missing values)
+    #  one solution would be to use scikit learn's _unique_python method here (and implement
+    #  it in numba):
+    #   https://github.com/scikit-learn/scikit-learn/blob/8c9c1f27b7e21201cfffb118934999025fd50cca/sklearn/utils/_encode.py#L167
+    #  which is used by the LabelEncoder; this is the inverse order of use:
+    #   https://github.com/scikit-learn/scikit-learn/blob/8c9c1f27b7e21201cfffb118934999025fd50cca/sklearn/utils/_encode.py#L9
+    #   https://github.com/scikit-learn/scikit-learn/blob/8c9c1f27b/sklearn/preprocessing/_label.py#L36
+    #  and as part of this, categorical values should be encoded as integers (as in LabelEncoder)
     return np.unique(feature_data, return_inverse=True)[1], data_type_is_numerical
 
 

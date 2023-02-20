@@ -121,6 +121,66 @@ def test_run_quantile_clustering_with_four_clusters():
     assert ari(data_ref, part) == 1.0
 
 
+def test_run_quantile_clustering_with_four_clusters_and_missing_data():
+    """
+    This is a special case, because the missing data is concentrated in one
+    cluster (normally distributed). However, CCC splits the data into even cluster
+    sizes, but the cluster with missing data in the reference partition is smaller.
+    """
+    # Prepare
+    np.random.seed(0)
+
+    data = np.concatenate(
+        (
+            np.random.normal(-3, 0.5, 5),
+            np.random.normal(0, 1, 5),
+            np.random.normal(5, 1, 5),
+            np.random.normal(10, 1, 5),
+        )
+    )
+    data[-2:] = np.nan
+    data_ref = np.concatenate(([0] * 5, [1] * 5, [2] * 5, [3] * 3, [-3] * 2))
+
+    idx_shuffled = list(range(len(data)))
+    shuffle(idx_shuffled)
+
+    data = data[idx_shuffled]
+    data_ref = data_ref[idx_shuffled]
+
+    # Run
+    part = run_quantile_clustering(data, 4)
+
+    # Validate
+    assert part is not None
+    assert len(part) == 20
+    assert len(np.unique(part)) == 5  # 4 clusters + 1 missing data cluster
+    assert ari(data_ref, part) == pytest.approx(0.51, abs=0.01)
+
+
+def test_run_quantile_clustering_with_uniform_data_and_missing_data():
+    # Prepare
+    np.random.seed(0)
+
+    data = np.arange(100, dtype=float)
+    data[-10:] = np.nan
+    data_ref = np.concatenate(([0] * 30, [1] * 30, [2] * 30, [-3] * 10))
+
+    idx_shuffled = list(range(len(data)))
+    shuffle(idx_shuffled)
+
+    data = data[idx_shuffled]
+    data_ref = data_ref[idx_shuffled]
+
+    # Run
+    part = run_quantile_clustering(data, 3)
+
+    # Validate
+    assert part is not None
+    assert len(part) == 100
+    assert len(np.unique(part)) == 4  # 3 clusters + 1 missing data cluster
+    assert ari(data_ref, part) == 1.0
+
+
 def test_get_range_n_clusters_without_internal_n_clusters():
     # 100 features
     range_n_clusters = get_range_n_clusters(100)
@@ -1536,7 +1596,13 @@ def test_get_feature_type_and_encode_feature_is_bool():
     assert not feature_is_numerical
 
 
-@pytest.mark.skip("this test fails, missing values are not yet supported")
+@pytest.mark.skip(
+    """
+this test fails, missing values are not yet supported in dtypes==object;
+however, for categorical values, this can be solved by using pandas.Categorical,
+so no high priority for now
+"""
+)
 def test_get_feature_type_and_encode_feature_is_object_with_nans():
     # Prepare
     np.random.seed(123)
@@ -1555,3 +1621,155 @@ def test_get_feature_type_and_encode_feature_is_object_with_nans():
     # each nan should be treated as a separated category/cluster
     np.testing.assert_array_equal(encoded_feature_data, np.array([0, 1, 2, 0, 1, 3]))
     assert not feature_is_numerical
+
+
+def test_cm_numerical_with_few_nans_in_same_locations():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+
+    # add nans in the same locations
+    feature0[25:55] = np.nan
+    feature1[25:55] = np.nan
+
+    # Run
+    cm_value = ccc(feature0, feature1)
+
+    # Validate
+    assert cm_value == 1.0
+
+
+def test_cm_numerical_with_many_nans_in_same_locations():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+
+    # add nans in the same locations
+    feature0[15:85] = np.nan
+    feature1[15:85] = np.nan
+
+    # Run
+    cm_value = ccc(feature0, feature1)
+
+    # Validate
+    assert cm_value == 1.0
+
+
+def test_cm_numerical_with_few_nans_in_different_locations():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+
+    # add nans in the same locations
+    feature0[5:10] = np.nan
+    feature1[70:75] = np.nan
+
+    # Run
+    cm_value = ccc(feature0, feature1)
+
+    # Validate
+    assert cm_value == 1.0
+
+
+def test_cm_numerical_with_many_nans_in_different_locations():
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+
+    # add nans in the same locations
+    feature0[5:15] = np.nan
+    feature1[85:95] = np.nan
+
+    # Run
+    cm_value = ccc(feature0, feature1)
+
+    # Validate
+    assert cm_value == pytest.approx(0.90, abs=0.01)
+
+
+def test_cm_numerical_with_few_nans_in_same_location_in_the_distribution():
+    """
+    Here I add missing in the same place of the distribution of both variables.
+    So CCC should not be affected (equals to 1.0).
+    """
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+
+    # add nans in the same locations
+    feature0[feature0 < np.percentile(feature0, 10)] = np.nan
+    feature1[feature1 < np.percentile(feature1, 10)] = np.nan
+
+    # Run
+    cm_value = ccc(feature0, feature1)
+
+    # Validate
+    assert cm_value == 1.00
+
+
+def test_cm_numerical_with_many_nans_in_same_location_in_the_distribution():
+    """
+    Here I add missing in the same place of the distribution of both variables.
+    So CCC should not be affected (equals to 1.0).
+    """
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.random.rand(100)
+    feature1 = feature0 * 5.0
+
+    # add nans in the same locations
+    feature0[feature0 < np.percentile(feature0, 75)] = np.nan
+    feature1[feature1 < np.percentile(feature1, 75)] = np.nan
+
+    # Run
+    cm_value = ccc(feature0, feature1)
+
+    # Validate
+    assert cm_value == 1.00
+
+
+def test_cm_numerical_with_many_nans_in_different_location_in_the_distribution():
+    """
+    This test compares the same variable with itself, but with missing values.
+    The missing values are the smallest (feature0) and the largest (feature1) values of the distribution.
+    I think this shifts the distribution of the variable, so CCC is affected.
+    Removing the smallest 7% of values in feature0 and the largest 93% of values in feature1
+    produces the smallest CCC value between them.
+    """
+    # Prepare
+    np.random.seed(0)
+
+    # two features on 100 objects with a linear relationship
+    feature0 = np.arange(100, dtype=float)  # .random.rand(100)
+    feature1 = feature0.copy()  # * 5.0
+
+    # add nans in the same locations
+    feature0[feature0 < np.percentile(feature0, 7)] = np.nan
+    feature1[feature1 > np.percentile(feature1, 93)] = np.nan
+
+    # Run
+    cm_value, max_parts, parts = ccc(feature0, feature1, return_parts=True)
+
+    # Validate
+    assert cm_value == pytest.approx(0.68, abs=0.01)
+
+
+# def test_cm_numerical_and_categorical_with_nans_in_same_locations():
+# def test_cm_numerical_and_categorical_with_nans_in_different_locations():
