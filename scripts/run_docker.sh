@@ -105,10 +105,10 @@ docker run --rm ${PORT_ARG} ${DOCKER_ARGS} \
   -e OPEN_BLAS_NUM_THREADS=${N_JOBS} \
   -e NUMEXPR_NUM_THREADS=${N_JOBS} \
   -e OMP_NUM_THREADS=${N_JOBS} \
+  -e "${CM_RUN_NBS_OVERRIDE}":${CM_RUN_NBS_OVERRIDE:-0} \
   -v "${CODE_DIR}:/opt/code" \
   -v "${ROOT_DIR}:/opt/data" \
   -v "${MANUSCRIPT_DIR}:/opt/manuscript" \
-  -v "${CM_RUN_NBS_OVERRIDE}":${CM_RUN_NBS_OVERRIDE:-0} \
   --user "$(id -u):$(id -g)" \
   ${DOCKER_IMAGE_NAMESPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_TAG} "${FULL_COMMAND[@]}"
 
