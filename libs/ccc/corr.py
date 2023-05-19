@@ -78,7 +78,7 @@ def mic(data: pd.DataFrame, estimator="mic_approx", n_jobs=None) -> pd.DataFrame
     )
 
 
-def ccc(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
+def ccc(data: pd.DataFrame, internal_n_clusters=None, n_jobs=1) -> pd.DataFrame:
     """
     Compute the Clustermatch Correlation Coefficient (CCC).
     """
@@ -88,6 +88,7 @@ def ccc(data: pd.DataFrame, internal_n_clusters=None) -> pd.DataFrame:
     corr_mat = ccc(
         data.to_numpy(),
         internal_n_clusters=internal_n_clusters,
+        n_jobs=n_jobs,
     )
 
     corr_mat = squareform(corr_mat)
