@@ -25,6 +25,12 @@ DATA_DIR = Path(ROOT_DIR, "data").resolve()
 # RESULTS_DIR stores newly generated data
 RESULTS_DIR = Path(ROOT_DIR, "results").resolve()
 
+# SOFTWARE_DIR stores third-party applications
+# CONDA_ENVS_DIR stores conda environments specific to other projects/tools
+SOFTWARE_DIR = Path(ROOT_DIR, "software").resolve()
+CONDA_ENVS_DIR = Path(SOFTWARE_DIR, "conda_envs").resolve()
+
+
 #
 # General
 #
