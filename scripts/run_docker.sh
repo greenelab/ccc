@@ -12,7 +12,7 @@
 # general settings
 DOCKER_IMAGE_NAMESPACE="miltondp"
 DOCKER_IMAGE_NAME="ccc"
-DOCKER_TAG="latest"
+DOCKER_TAG="${CM_DOCKER_IMAGE_TAG:-latest}"
 DOCKER_PUBLISH_HOST="127.0.0.1"
 DOCKER_CONTAINER_PORT="8893"
 DOCKER_HOST_PORT="8893"
@@ -87,6 +87,11 @@ else
 fi
 
 echo "Full command: ${FULL_COMMAND}"
+
+if [ -z "${DOCKER_ARGS}" ]; then
+  # by default, use interactive mode (enables cancelling run with Ctrl C from console)
+  DOCKER_ARGS="-ti"
+fi
 
 # show commands being executed
 echo
