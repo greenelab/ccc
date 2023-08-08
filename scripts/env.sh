@@ -8,7 +8,7 @@
 # BASE_DIR is the parent directory where the code and manuscript repos are
 # located.
 BASE_DIR=/home/miltondp/projects/ccc
-export CM_N_JOBS=3
+export CM_N_JOBS=20
 
 export CM_ROOT_DIR=${BASE_DIR}/ccc/base
 export CM_MANUSCRIPT_DIR=${BASE_DIR}/ccc-manuscript/
