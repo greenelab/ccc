@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ccc-coef",
-    version="0.1.6",  # remember to change libs/ccc/__init__.py file also
+    version="0.2.0",  # remember to change libs/ccc/__init__.py file also
     author="Milton Pividori",
     author_email="miltondp@gmail.com",
     description="The Clustermatch Correlation Coefficient (CCC) is a highly-efficient, next-generation not-only-linear correlation coefficient that can work on numerical and categorical data types.",
