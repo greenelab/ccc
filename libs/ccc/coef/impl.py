@@ -218,7 +218,7 @@ def cdist_parts_parallel(
 @njit(cache=True, nogil=True)
 def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     """
-    Given the number of objects and and index, it returns the row/column
+    Given the number of objects and an index, it returns the row/column
     position of the pairwise matrix. For example, if there are n_obj objects
     (such as genes), a condensed 1d array can be created with pairwise
     comparisons between genes, as well as a squared symmetric matrix. This
@@ -310,8 +310,10 @@ def ccc(
     internal_n_clusters: Union[int, Iterable[int]] = None,
     return_parts: bool = False,
     n_chunks_threads_ratio: int = 1,
+    pvalue_n_permutations: int = None,
+    random_state: int = None,
     n_jobs: int = 1,
-) -> tuple[NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
+) -> tuple[NDArray[float], NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch Correlation
     Coefficient (CCC) between two arrays. The implementation supports numerical
@@ -331,29 +333,29 @@ def ccc(
         n_chunks_threads_ratio: allows to modify how pairwise comparisons are
           split across different threads. It's given as the ratio parameter of
           function get_chunks.
+        pvalue_n_permutations: if given, it computes the p-value of the
+            coefficient using the given number of permutations.
+        random_state: seed for the random number generator. This is used to compute
+            the p-value of the coefficient using permutations.
         n_jobs: number of CPU cores to use for parallelization. The value
           None will use all available cores (`os.cpu_count()`), and negative
           values will use `os.cpu_count() - n_jobs`. Default is 1.
 
     Returns:
-        If return_parts is False, only CCC values are returned.
-        In that case, if x is 2d, a np.ndarray of size n x n is
-        returned with the coefficient values, where n is the number of rows in x.
-        If only a single coefficient was computed (for example, x and y were
-        given as 1d arrays each), then a single scalar is returned.
-
         If returns_parts is True, then it returns a tuple with three values:
-        1) the
-        coefficients, 2) the partitions indexes that maximized the coefficient
+        1) the coefficients, 2) the partitions indexes that maximized the coefficient
         for each object pair, and 3) the partitions for all objects.
+        If return_parts is False, only CCC values are returned.
 
-        cm_values: if x is 2d, then it is a 1d condensed array of pairwise
-            coefficients. It has size (n * (n - 1)) / 2, where n is the number
-            of rows in x. If x and y are given, and they are 1d, then this is a
-            scalar. The CCC is always between 0 and 1
-            (inclusive). If any of the two variables being compared has no
-            variation (all values are the same), the coefficient is not defined
-            (np.nan).
+        cm_values: if x is 2d np.array with x.shape[0] > 2, then cm_values is a 1d
+            condensed array of pairwise coefficients. It has size (n * (n - 1)) / 2,
+            where n is the number of rows in x. If x and y are given, and they are 1d,
+            then cm_values is a scalar. The CCC is always between 0 and 1 (inclusive). If
+            any of the two variables being compared has no variation (all values are the
+            same), the coefficient is not defined (np.nan). If pvalue_n_permutations is
+            an integer greater than 0, then cm_vlaues is a tuple with two elements:
+            the first element are the CCC values, and the second element are the p-values
+            using pvalue_n_permutations permutations.
 
         max_parts: an array with n * (n - 1)) / 2 rows (one for each object
             pair) and two columns. It has the indexes pointing to each object's
@@ -373,6 +375,8 @@ def ccc(
             singleton cases were found (-1; usually because input data has all the same
             value) or for categorical features (-2).
     """
+    np.random.seed(random_state)
+
     n_objects = None
     n_features = None
     # this is a boolean array of size n_features with True if the feature is numerical and False otherwise
@@ -451,6 +455,7 @@ def ccc(
     # cm_values stores the CCC coefficients
     n_features_comp = (n_features * (n_features - 1)) // 2
     cm_values = np.full(n_features_comp, np.nan)
+    cm_pvalues = np.full(n_features_comp, np.nan)
 
     # for each object pair being compared, max_parts has the indexes of the
     # partitions that maximimized the ARI
@@ -508,6 +513,7 @@ def ccc(
             n_idxs = len(idx_list)
             max_ari_list = np.full(n_idxs, np.nan, dtype=float)
             max_part_idx_list = np.zeros((n_idxs, 2), dtype=np.uint64)
+            pvalues = np.full(n_idxs, np.nan, dtype=float)
 
             for idx, data_idx in enumerate(idx_list):
                 i, j = get_coords_from_index(n_features, data_idx)
@@ -534,25 +540,69 @@ def ccc(
                 max_part_idx_list[idx] = max_idx
                 max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
 
-            return max_ari_list, max_part_idx_list
+                # compute p-value if requested
+                if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+                    # compute CCC on permuted data
+                    p_ccc_values = np.full(pvalue_n_permutations, np.nan, dtype=float)
+                    for idx_perm in range(pvalue_n_permutations):
+                        # generate a random permutation of the partitions of one
+                        # variable/feature
+                        perm_idx = np.random.permutation(n_objects)
+                        objj_parts_permuted = np.array(
+                            [
+                                objj_parts[i, perm_idx]
+                                for i in range(objj_parts.shape[0])
+                            ]
+                        )
+
+                        # compute the CCC using the permuted partitions
+                        p_comp_values = cdist_func(
+                            obji_parts,
+                            objj_parts_permuted,
+                        )
+                        p_max_flat_idx = p_comp_values.argmax()
+                        p_max_idx = unravel_index_2d(
+                            p_max_flat_idx, p_comp_values.shape
+                        )
+                        p_ccc_values[idx_perm] = np.max((p_comp_values[p_max_idx], 0.0))
+
+                    # compute p-value
+                    pvalues[idx] = (np.sum(p_ccc_values >= max_ari_list[idx]) + 1) / (
+                        pvalue_n_permutations + 1
+                    )
+
+            return max_ari_list, max_part_idx_list, pvalues
 
         # iterate over all chunks of object pairs and compute the coefficient
         inputs = get_chunks(n_features_comp, default_n_threads, n_chunks_threads_ratio)
 
-        for idx, (max_ari_list, max_part_idx_list) in zip(
+        for idx, (max_ari_list, max_part_idx_list, pvalues) in zip(
             inputs, map_func(compute_coef, inputs)
         ):
             cm_values[idx] = max_ari_list
             max_parts[idx, :] = max_part_idx_list
+            cm_pvalues[idx] = pvalues
 
     # return an array of values or a single scalar, depending on the input data
     if cm_values.shape[0] == 1:
         if return_parts:
-            return cm_values[0], max_parts[0], parts
+            if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+                return (cm_values[0], cm_pvalues[0]), max_parts[0], parts
+            else:
+                return cm_values[0], max_parts[0], parts
         else:
-            return cm_values[0]
+            if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+                return cm_values[0], cm_pvalues[0]
+            else:
+                return cm_values[0]
 
     if return_parts:
-        return cm_values, max_parts, parts
+        if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+            return (cm_values, cm_pvalues), max_parts, parts
+        else:
+            return cm_values, max_parts, parts
     else:
-        return cm_values
+        if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+            return cm_values, cm_pvalues
+        else:
+            return cm_values
