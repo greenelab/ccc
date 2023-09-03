@@ -350,190 +350,125 @@ def test_cm_numerical_and_categorical_features_perfect_relationship_pvalue():
     )
 
 
-# def test_cm_numerical_and_categorical_features_weakly_relationship_pvalue():
-#     # Prepare
-#     rs = np.random.RandomState(0)
-#
-#     # two features on 100 objects
-#     numerical_feature0 = rs.rand(100)
-#     numerical_feature0_perc = np.percentile(numerical_feature0, 2)
-#
-#     # create a categorical variable strongly correlated with the numerical one
-#     categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
-#     categorical_feature1[numerical_feature0 < numerical_feature0_perc] = "l"
-#     categorical_feature1[numerical_feature0 >= numerical_feature0_perc] = "u"
-#     _unique_values = np.unique(categorical_feature1)
-#     # some internal checks
-#     assert _unique_values.shape[0] == 2
-#     assert set(_unique_values) == {"l", "u"}
-#
-#     # Run
-#     res = ccc(
-#         numerical_feature0,
-#         categorical_feature1,
-#         pvalue_n_permutations=100,
-#         random_state=1,
-#     )
-#
-#     # Validate
-#     assert len(res) == 2
-#     cm_value, pvalue = res
-#
-#     assert cm_value is not None
-#     assert isinstance(cm_value, float)
-#     assert cm_value == pytest.approx(0.001, abs=0.001)
-#
-#     assert pvalue is not None
-#     assert isinstance(pvalue, float)
-#     assert pvalue == pytest.approx(0.049, abs=0.01)
-#
-#     # Run with flipped variables (symmetry)
-#     assert (
-#         ccc(
-#             categorical_feature1,
-#             numerical_feature0,
-#             pvalue_n_permutations=100,
-#             random_state=1,
-#         )
-#         == res
-#     )
+def test_cm_numerical_and_categorical_features_weakly_relationship_pvalue():
+    # if a numerical and categorical vector are flipped and a pvalue is calculated,
+    # they do not match the pvalue calculated with the original vector order, because
+    # CCC used to flip the second variable; this test makes sure that a more robust
+    # strategy is used: the variable that generates more partitions is flipped always
+
+    # Prepare
+    rs = np.random.RandomState(0)
+
+    # two features on 100 objects
+    numerical_feature0 = rs.rand(100)
+    numerical_feature0_perc = np.percentile(numerical_feature0, 2)
+
+    # create a categorical variable strongly correlated with the numerical one
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1[numerical_feature0 < numerical_feature0_perc] = "l"
+    categorical_feature1[numerical_feature0 >= numerical_feature0_perc] = "u"
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 2
+    assert set(_unique_values) == {"l", "u"}
+
+    # Run
+    res = ccc(
+        categorical_feature1,
+        numerical_feature0,
+        pvalue_n_permutations=100,
+        random_state=1,
+    )
+
+    # Validate
+    assert len(res) == 2
+    cm_value, pvalue = res
+
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert cm_value == pytest.approx(0.001, abs=0.001)
+
+    assert pvalue is not None
+    assert isinstance(pvalue, float)
+    assert pvalue == pytest.approx(0.099, abs=0.01)
+
+    # Run with flipped variables (symmetry)
+    assert (
+        ccc(
+            numerical_feature0,
+            categorical_feature1,
+            pvalue_n_permutations=100,
+            random_state=1,
+        )
+        == res
+    )
 
 
-# def test_cm_numerical_and_categorical_features_no_relationship():
-#     # Prepare
-#     np.random.seed(123)
-#
-#     # two features on 100 objects
-#     numerical_feature0 = np.random.rand(100)
-#
-#     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-#     categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
-#     categorical_feature1[numerical_feature0 < 0.50] = "l"
-#     categorical_feature1[numerical_feature0 >= 0.50] = "u"
-#     np.random.shuffle(categorical_feature1)
-#     _unique_values = np.unique(categorical_feature1)
-#     # some internal checks
-#     assert _unique_values.shape[0] == 2
-#     assert set(_unique_values) == {"l", "u"}
-#
-#     # Run
-#     cm_value = ccc(numerical_feature0, categorical_feature1)
-#     assert cm_value is not None
-#     assert isinstance(cm_value, float)
-#     assert cm_value == pytest.approx(0.01, abs=0.01)
-#
-#     # flip variables (symmetry)
-#     assert ccc(categorical_feature1, numerical_feature0) == cm_value
-#
-#
-# def test_cm_numerical_and_categorical_features_too_many_categories():
-#     # Prepare
-#     np.random.seed(123)
-#
-#     # two features on 100 objects
-#     numerical_feature0 = np.random.rand(100)
-#
-#     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-#     categorical_feature1 = np.full(numerical_feature0.shape[0], "cat100", dtype="S6")
-#     for idx in range(categorical_feature1.shape[0]):
-#         categorical_feature1[idx] = f"cat{idx:d}"
-#     _unique_values = np.unique(categorical_feature1)
-#     # some internal checks
-#     assert _unique_values.shape[0] == 100
-#
-#     # Run
-#     cm_value = ccc(numerical_feature0, categorical_feature1)
-#     assert cm_value is not None
-#     assert isinstance(cm_value, float)
-#     assert cm_value == 0.0
-#
-#     # flip variables (symmetry)
-#     assert ccc(categorical_feature1, numerical_feature0) == cm_value
-#
-#
-# def test_cm_numerical_and_categorical_features_a_single_categorical_value():
-#     # Prepare
-#     np.random.seed(123)
-#
-#     # two features on 100 objects
-#     numerical_feature0 = np.random.rand(100)
-#
-#     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-#     categorical_feature1 = np.full(numerical_feature0.shape[0], "c", dtype="S1")
-#     _unique_values = np.unique(categorical_feature1)
-#     # some internal checks
-#     assert _unique_values.shape[0] == 1
-#
-#     # Run
-#     cm_value = ccc(numerical_feature0, categorical_feature1)
-#     assert cm_value is not None
-#     assert isinstance(cm_value, float)
-#     assert cm_value == 0.0
-#
-#     # flip variables (symmetry)
-#     assert ccc(categorical_feature1, numerical_feature0) == cm_value
-#
-#
-# def test_cm_numerical_and_categorical_features_with_pandas_dataframe_two_features():
-#     # Prepare
-#     np.random.seed(123)
-#
-#     # two features on 100 objects
-#     numerical_feature0 = np.random.rand(100)
-#     numerical_feature0_median = np.percentile(numerical_feature0, 50)
-#
-#     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-#     categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
-#     categorical_feature1[numerical_feature0 < numerical_feature0_median] = "l"
-#     categorical_feature1[numerical_feature0 >= numerical_feature0_median] = "u"
-#     _unique_values = np.unique(categorical_feature1)
-#     # some internal checks
-#     assert _unique_values.shape[0] == 2
-#     assert set(_unique_values) == {"l", "u"}
-#
-#     data = pd.DataFrame(
-#         {
-#             "numerical_feature": numerical_feature0,
-#             "categorical_feature": categorical_feature1,
-#         }
-#     )
-#
-#     # Run
-#     cm_value = ccc(data)
-#     assert cm_value is not None
-#     assert isinstance(cm_value, float)
-#     assert cm_value == 1.0
-#
-#     # flip variables (symmetry)
-#     assert ccc(data.iloc[:, [1, 0]]) == cm_value
-#
-#
-# def test_cm_with_pandas_dataframe_several_features():
-#     # Prepare
-#     np.random.seed(123)
-#
-#     # here I force
-#     data = pd.DataFrame(np.random.rand(20, 100))
-#
-#     # Run
-#     cm_value = ccc(data, internal_n_clusters=3)
-#
-#     # Validate
-#     assert cm_value is not None
-#     assert isinstance(cm_value, np.ndarray)
-#     assert cm_value.shape == (int(data.shape[1] * (data.shape[1] - 1) / 2),)
-#     assert np.issubdtype(cm_value.dtype, float)
-#
-#
-# def test_cm_with_too_few_objects():
-#     # Prepare
-#     np.random.seed(123)
-#
-#     # here I force
-#     data = np.random.rand(10, 2)
-#
-#     # Run
-#     with pytest.raises(ValueError) as e:
-#         ccc(data, internal_n_clusters=3)
-#
-#     assert "too few objects" in str(e.value)
+def test_cm_numerical_and_categorical_features_a_single_categorical_value():
+    # Prepare
+    rs = np.random.RandomState(123)
+
+    # two features on 100 objects
+    numerical_feature0 = rs.rand(100)
+
+    # create a categorical variable with a single value
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "c", dtype="S1")
+    _unique_values = np.unique(categorical_feature1)
+    # some internal checks
+    assert _unique_values.shape[0] == 1
+
+    # Run
+    res = ccc(
+        numerical_feature0,
+        categorical_feature1,
+        pvalue_n_permutations=100,
+        random_state=1,
+    )
+
+    # Validate
+    assert len(res) == 2
+    cm_value, pvalue = res
+
+    assert cm_value is not None
+    assert isinstance(cm_value, float)
+    assert cm_value == 0.0
+
+    assert pvalue is not None
+    assert isinstance(pvalue, float)
+    assert pvalue == pytest.approx(1.0, abs=0.01)
+
+    # Run with flipped variables (symmetry)
+    assert (
+        ccc(
+            categorical_feature1,
+            numerical_feature0,
+            pvalue_n_permutations=100,
+            random_state=1,
+        )
+        == res
+    )
+
+
+def test_cm_with_pandas_dataframe_several_features():
+    # Prepare
+    rs = np.random.RandomState(123)
+
+    # here I force
+    data = pd.DataFrame(rs.rand(20, 50))
+
+    # Run
+    res = ccc(data, internal_n_clusters=3, pvalue_n_permutations=10, random_state=1)
+
+    # Validate
+    assert len(res) == 2
+    cm_value, pvalue = res
+
+    assert cm_value is not None
+    assert isinstance(cm_value, np.ndarray)
+    assert cm_value.shape == (int(50 * (50 - 1) / 2),)
+    assert np.issubdtype(cm_value.dtype, float)
+
+    assert pvalue is not None
+    assert isinstance(pvalue, np.ndarray)
+    assert pvalue.shape == cm_value.shape
+    assert np.issubdtype(pvalue.dtype, float)
