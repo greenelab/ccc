@@ -380,7 +380,7 @@ def test_cm_quadratic():
     # Prepare
     np.random.seed(1)
 
-    # two features on 100 objects with a linear relationship
+    # two features on 100 objects with a quadratic relationship
     feature0 = minmax_scale(np.random.rand(100), (-1.0, 1.0))
     feature1 = np.power(feature0, 2.0)
 
@@ -391,11 +391,11 @@ def test_cm_quadratic():
     assert cm_value > 0.40
 
 
-def test_cm_quadratic2():
+def test_cm_quadratic_noisy():
     # Prepare
     np.random.seed(1)
 
-    # two features on 100 objects with a linear relationship
+    # two features on 100 objects with a quadratic relationship
     feature0 = minmax_scale(np.random.rand(100), (-1.0, 1.0))
     feature1 = np.power(feature0, 2.0) + (0.10 * np.random.rand(feature0.shape[0]))
 
