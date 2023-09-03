@@ -544,21 +544,30 @@ def ccc(
                 if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
                     # compute CCC on permuted data
                     p_ccc_values = np.full(pvalue_n_permutations, np.nan, dtype=float)
+
+                    # select the variable that generated more partitions as the one
+                    # to permute
+                    obj_parts_sel_i = obji_parts
+                    obj_parts_sel_j = objj_parts
+                    if (obji_parts[:, 0] >= 0).sum() > (objj_parts[:, 0] >= 0).sum():
+                        obj_parts_sel_i = objj_parts
+                        obj_parts_sel_j = obji_parts
+
                     for idx_perm in range(pvalue_n_permutations):
                         # generate a random permutation of the partitions of one
                         # variable/feature
                         perm_idx = np.random.permutation(n_objects)
-                        objj_parts_permuted = np.array(
+                        obj_parts_sel_j_permuted = np.array(
                             [
-                                objj_parts[i, perm_idx]
-                                for i in range(objj_parts.shape[0])
+                                obj_parts_sel_j[i, perm_idx]
+                                for i in range(obj_parts_sel_j.shape[0])
                             ]
                         )
 
                         # compute the CCC using the permuted partitions
                         p_comp_values = cdist_func(
-                            obji_parts,
-                            objj_parts_permuted,
+                            obj_parts_sel_i,
+                            obj_parts_sel_j_permuted,
                         )
                         p_max_flat_idx = p_comp_values.argmax()
                         p_max_idx = unravel_index_2d(
