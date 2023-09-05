@@ -314,7 +314,6 @@ def ccc(
     random_state: int = None,
     n_jobs: int = 1,
     pvalue_n_jobs: int = 1,
-    pvalue_chunksize: int = 100,
 ) -> tuple[NDArray[float], NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch Correlation
@@ -344,9 +343,6 @@ def ccc(
           values will use `os.cpu_count() - n_jobs`. Default is 1.
         pvalue_n_jobs: number of CPU cores to use for parallelization when
             computing the p-value of the coefficient using permutations.
-        pvalue_chunksize: number of permutations to compute in each chunk when
-            computing the p-value of the coefficient using permutations. It's the
-            chunksize parameter of the executor.map function.
 
 
     Returns:
@@ -596,7 +592,6 @@ def ccc(
                             executor_perms.map(
                                 compute_permutations,
                                 np.arange(pvalue_n_perms),
-                                chunksize=pvalue_chunksize,
                             ),
                         ):
                             p_ccc_values[p_idx] = p_ccc_val
