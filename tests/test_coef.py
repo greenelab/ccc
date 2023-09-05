@@ -345,14 +345,12 @@ def test_cm_ari_is_negative():
 
 def test_cm_random_data():
     # Prepare
-    np.random.seed(123)
+    rs = np.random.RandomState(123)
 
     for i in range(10):
         # two features on 100 objects (random data)
-        feature0 = minmax_scale(
-            np.random.rand(100), (-1.0, 1.0)
-        )  # with negative values
-        feature1 = np.random.rand(100)  # all positive values between 0 and 1
+        feature0 = minmax_scale(rs.rand(100), (-1.0, 1.0))  # with negative values
+        feature1 = rs.rand(100)  # all positive values between 0 and 1
 
         # Run
         cm_value = ccc(feature0, feature1)
