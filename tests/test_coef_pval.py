@@ -20,7 +20,7 @@ def test_cm_basic_pvalue_n_permutations_not_given():
     feature1 = rs.rand(100)
 
     # Run
-    cm_value = ccc(feature0, feature1, pvalue_n_permutations=None)
+    cm_value = ccc(feature0, feature1, pvalue_n_perms=None)
 
     # Validate
     assert cm_value is not None
@@ -37,7 +37,7 @@ def test_cm_basic_pvalue_n_permutations_is_zero():
     feature1 = rs.rand(100)
 
     # Run
-    cm_value = ccc(feature0, feature1, pvalue_n_permutations=0)
+    cm_value = ccc(feature0, feature1, pvalue_n_perms=0)
 
     # Validate
     assert cm_value is not None
@@ -54,7 +54,7 @@ def test_cm_basic_pvalue_n_permutations_is_1():
     feature1 = rs.rand(100)
 
     # Run
-    res = ccc(feature0, feature1, pvalue_n_permutations=1)
+    res = ccc(feature0, feature1, pvalue_n_perms=1)
 
     # Validate
     assert len(res) == 2
@@ -78,7 +78,7 @@ def test_cm_basic_pvalue_n_permutations_is_10():
     feature1 = rs.rand(100)
 
     # Run
-    res = ccc(feature0, feature1, pvalue_n_permutations=10)
+    res = ccc(feature0, feature1, pvalue_n_perms=10)
 
     # Validate
     assert len(res) == 2
@@ -101,7 +101,7 @@ def test_cm_linear_pvalue_n_permutations_10():
     feature1 = feature0 * 5.0
 
     # Run
-    res = ccc(feature0, feature1, pvalue_n_permutations=10)
+    res = ccc(feature0, feature1, pvalue_n_perms=10)
 
     # Validate
     assert len(res) == 2
@@ -124,7 +124,7 @@ def test_cm_linear_pvalue_n_permutations_100():
     feature1 = feature0 * 5.0
 
     # Run
-    res = ccc(feature0, feature1, pvalue_n_permutations=100)
+    res = ccc(feature0, feature1, pvalue_n_perms=100)
 
     # Validate
     assert len(res) == 2
@@ -147,7 +147,7 @@ def test_cm_quadratic_pvalue():
     feature1 = np.power(feature0, 2.0)
 
     # Run
-    res = ccc(feature0, feature1, pvalue_n_permutations=100)
+    res = ccc(feature0, feature1, pvalue_n_perms=100)
 
     # Validate
     assert len(res) == 2
@@ -170,7 +170,7 @@ def test_cm_quadratic_noisy_pvalue_with_random_state():
     feature1 = np.power(feature0, 2.0) + (2.0 * rs.rand(feature0.shape[0]))
 
     # Run
-    res = ccc(feature0, feature1, pvalue_n_permutations=100, random_state=2)
+    res = ccc(feature0, feature1, pvalue_n_perms=100, random_state=2)
 
     # Validate
     assert len(res) == 2
@@ -196,7 +196,7 @@ def test_cm_one_feature_with_all_same_values_pvalue():
     feature1 = np.array([5] * feature0.shape[0])
 
     # Run
-    res = ccc(feature0, feature1, pvalue_n_permutations=100)
+    res = ccc(feature0, feature1, pvalue_n_perms=100)
 
     # Validate
     assert len(res) == 2
@@ -222,7 +222,7 @@ def test_cm_single_argument_is_matrix():
     input_data = np.array([feature0, feature1, feature2])
 
     # Run
-    res = ccc(input_data, pvalue_n_permutations=100, random_state=1)
+    res = ccc(input_data, pvalue_n_perms=100, random_state=1)
 
     # Validate
     assert len(res) == 2
@@ -252,11 +252,11 @@ def test_cm_large_n_objects_pvalue_computation_is_parallelized():
 
     # Run
     start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_permutations=50, n_jobs=1)
+    res = ccc(feature0, feature1, pvalue_n_perms=50, n_jobs=1)
     elapsed_time_single_thread = time.time() - start_time
 
     start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_permutations=50, n_jobs=2)
+    res = ccc(feature0, feature1, pvalue_n_perms=50, n_jobs=2)
     elapsed_time_multi_thread = time.time() - start_time
 
     # Validate
@@ -273,11 +273,11 @@ def test_cm_medium_n_objects_with_many_pvalue_computation_is_parallelized():
 
     # Run
     start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_permutations=1000, n_jobs=1)
+    res = ccc(feature0, feature1, pvalue_n_perms=1000, n_jobs=1)
     elapsed_time_single_thread = time.time() - start_time
 
     start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_permutations=1000, n_jobs_permutations=2)
+    res = ccc(feature0, feature1, pvalue_n_perms=1000, pvalue_n_jobs=2)
     elapsed_time_multi_thread = time.time() - start_time
 
     # Validate
@@ -298,7 +298,7 @@ def test_cm_return_parts_quadratic_pvalue():
         feature1,
         internal_n_clusters=[2, 3],
         return_parts=True,
-        pvalue_n_permutations=10,
+        pvalue_n_perms=10,
     )
 
     # Validate
@@ -350,7 +350,7 @@ def test_cm_numerical_and_categorical_features_perfect_relationship_pvalue():
     res = ccc(
         numerical_feature0,
         categorical_feature1,
-        pvalue_n_permutations=100,
+        pvalue_n_perms=100,
     )
 
     # Validate
@@ -366,9 +366,7 @@ def test_cm_numerical_and_categorical_features_perfect_relationship_pvalue():
     assert pvalue == (0 + 1) / (100 + 1)
 
     # Run with flipped variables (symmetry)
-    assert (
-        ccc(categorical_feature1, numerical_feature0, pvalue_n_permutations=100) == res
-    )
+    assert ccc(categorical_feature1, numerical_feature0, pvalue_n_perms=100) == res
 
 
 def test_cm_numerical_and_categorical_features_weakly_relationship_pvalue():
@@ -397,7 +395,7 @@ def test_cm_numerical_and_categorical_features_weakly_relationship_pvalue():
     res = ccc(
         categorical_feature1,
         numerical_feature0,
-        pvalue_n_permutations=100,
+        pvalue_n_perms=100,
         random_state=1,
     )
 
@@ -418,7 +416,7 @@ def test_cm_numerical_and_categorical_features_weakly_relationship_pvalue():
         ccc(
             numerical_feature0,
             categorical_feature1,
-            pvalue_n_permutations=100,
+            pvalue_n_perms=100,
             random_state=1,
         )
         == res
@@ -442,7 +440,7 @@ def test_cm_numerical_and_categorical_features_a_single_categorical_value():
     res = ccc(
         numerical_feature0,
         categorical_feature1,
-        pvalue_n_permutations=100,
+        pvalue_n_perms=100,
         random_state=1,
     )
 
@@ -463,7 +461,7 @@ def test_cm_numerical_and_categorical_features_a_single_categorical_value():
         ccc(
             categorical_feature1,
             numerical_feature0,
-            pvalue_n_permutations=100,
+            pvalue_n_perms=100,
             random_state=1,
         )
         == res
@@ -478,7 +476,7 @@ def test_cm_with_pandas_dataframe_several_features():
     data = pd.DataFrame(rs.rand(20, 50))
 
     # Run
-    res = ccc(data, internal_n_clusters=3, pvalue_n_permutations=10, random_state=1)
+    res = ccc(data, internal_n_clusters=3, pvalue_n_perms=10, random_state=1)
 
     # Validate
     assert len(res) == 2
