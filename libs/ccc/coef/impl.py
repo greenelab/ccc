@@ -12,6 +12,7 @@ from numba.typed import List
 
 from ccc.pytorch.core import unravel_index_2d
 from ccc.sklearn.metrics import adjusted_rand_index as ari
+from ccc.sklearn.metrics import adjusted_rand_index_numba as ari_numba
 from ccc.scipy.stats import rank
 from ccc.utils import chunker
 
@@ -189,6 +190,26 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
     return res
 
 
+@njit(cache=True, nogil=True)
+def cdist_parts_basic_numba(x: NDArray, y: NDArray) -> NDArray[float]:
+    """
+    Same as cdist_parts_basic but compiled with numba and using ari_numba.
+    """
+    res = np.zeros((x.shape[0], y.shape[0]))
+
+    for i in range(res.shape[0]):
+        if x[i, 0] < 0:
+            continue
+
+        for j in range(res.shape[1]):
+            if y[j, 0] < 0:
+                continue
+
+            res[i, j] = ari_numba(x[i], y[j])
+
+    return res
+
+
 def cdist_parts_parallel(
     x: NDArray, y: NDArray, executor: ThreadPoolExecutor
 ) -> NDArray[float]:
@@ -304,6 +325,87 @@ def get_feature_type_and_encode(feature_data: NDArray) -> tuple[NDArray, bool]:
     return np.unique(feature_data, return_inverse=True)[1], data_type_is_numerical
 
 
+def compute_ccc(obj_parts_i: NDArray, obj_parts_j: NDArray, cdist_func):
+    """
+    Given a set of partitions for two features, it computes the CCC coefficient.
+
+    Args:
+        obj_parts_i: a 2d array with partitions for one feature. Each row is a
+            partition, and each column is an object.
+        obj_parts_j: a 2d array with partitions for another feature. Each row is
+            a partition, and each column is an object.
+        cdist_func: a function that computes the distance between partitions. It
+            can be either cdist_parts_basic or cdist_parts_parallel.
+
+    Returns:
+        A tuple with two elements: 1) the CCC coefficient, and 2) the indexes
+        of the partitions that maximized the coefficient.
+    """
+    comp_values = cdist_func(
+        obj_parts_i,
+        obj_parts_j,
+    )
+    max_flat_idx = comp_values.argmax()
+    max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+
+    return max(comp_values[max_idx], 0.0), max_idx
+
+
+@njit(cache=True, nogil=True)
+def compute_ccc_numba(obj_parts_i: NDArray, obj_parts_j: NDArray):
+    """
+    Same as compute_ccc but compiled with numba and using ari_numba.
+    """
+    comp_values = cdist_parts_basic_numba(
+        obj_parts_i,
+        obj_parts_j,
+    )
+    max_flat_idx = comp_values.argmax()
+    max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+
+    return max(comp_values[max_idx], 0.0), max_idx
+
+
+def compute_ccc_perms(obj_parts_i: NDArray, obj_parts_j: NDArray, cdist_func) -> float:
+    """
+    Similar to compute_ccc (with same parameters). Given the partitions for two
+    features, it computes the CCC coefficient by permuting the partitions of one of
+    the features.
+
+    Returns:
+        The CCC coefficient using the permuted partitions of one of the features.
+    """
+    n_objects = obj_parts_i.shape[1]
+    perm_idx = np.random.permutation(n_objects)
+
+    # generate a random permutation of the partitions of one
+    # variable/feature
+    obj_parts_j_permuted = np.full_like(obj_parts_j, np.nan)
+    for it in range(obj_parts_j.shape[0]):
+        obj_parts_j_permuted[it] = obj_parts_j[it][perm_idx]
+
+    # compute the CCC using the permuted partitions
+    return compute_ccc(obj_parts_i, obj_parts_j_permuted, cdist_func)[0]
+
+
+@njit(cache=True, nogil=True)
+def compute_ccc_perms_numba(obj_parts_i: NDArray, obj_parts_j: NDArray) -> float:
+    """
+    Same as compute_ccc_perms but compiled with numba and using ari_numba.
+    """
+    n_objects = obj_parts_i.shape[1]
+    perm_idx = np.random.permutation(n_objects)
+
+    # generate a random permutation of the partitions of one
+    # variable/feature
+    obj_parts_j_permuted = np.full_like(obj_parts_j, np.nan)
+    for it in range(obj_parts_j.shape[0]):
+        obj_parts_j_permuted[it] = obj_parts_j[it][perm_idx]
+
+    # compute the CCC using the permuted partitions
+    return compute_ccc_numba(obj_parts_i, obj_parts_j_permuted)[0]
+
+
 def ccc(
     x: NDArray,
     y: NDArray = None,
@@ -311,9 +413,10 @@ def ccc(
     return_parts: bool = False,
     n_chunks_threads_ratio: int = 1,
     pvalue_n_perms: int = None,
+    pvalue_n_jobs: int = 1,
+    use_ari_numba: bool = False,
     random_state: int = None,
     n_jobs: int = 1,
-    pvalue_n_jobs: int = 1,
 ) -> tuple[NDArray[float], NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch Correlation
@@ -336,13 +439,14 @@ def ccc(
           function get_chunks.
         pvalue_n_perms: if given, it computes the p-value of the
             coefficient using the given number of permutations.
+        pvalue_n_jobs: number of CPU cores to use for parallelization when
+            computing the p-value of the coefficient using permutations.
+        use_ari_numba: TODO
         random_state: seed for the random number generator. This is used to compute
             the p-value of the coefficient using permutations.
         n_jobs: number of CPU cores to use for parallelization. The value
           None will use all available cores (`os.cpu_count()`), and negative
           values will use `os.cpu_count() - n_jobs`. Default is 1.
-        pvalue_n_jobs: number of CPU cores to use for parallelization when
-            computing the p-value of the coefficient using permutations.
 
 
     Returns:
@@ -356,10 +460,10 @@ def ccc(
             where n is the number of rows in x. If x and y are given, and they are 1d,
             then cm_values is a scalar. The CCC is always between 0 and 1 (inclusive). If
             any of the two variables being compared has no variation (all values are the
-            same), the coefficient is not defined (np.nan). If pvalue_n_permutations is
+            same), the coefficient is not defined (np.nan). If pvalue_n_perms is
             an integer greater than 0, then cm_vlaues is a tuple with two elements:
             the first element are the CCC values, and the second element are the p-values
-            using pvalue_n_permutations permutations.
+            using pvalue_n_perms permutations.
 
         max_parts: an array with n * (n - 1)) / 2 rows (one for each object
             pair) and two columns. It has the indexes pointing to each object's
@@ -534,15 +638,14 @@ def ccc(
 
                 # compare all partitions of one object to the all the partitions
                 # of the other object, and get the maximium ARI
-                comp_values = cdist_func(
-                    obji_parts,
-                    objj_parts,
-                )
-                max_flat_idx = comp_values.argmax()
-
-                max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
-                max_part_idx_list[idx] = max_idx
-                max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
+                if not use_ari_numba:
+                    max_ari_list[idx], max_part_idx_list[idx] = compute_ccc(
+                        obji_parts, objj_parts, cdist_func
+                    )
+                else:
+                    max_ari_list[idx], max_part_idx_list[idx] = compute_ccc_numba(
+                        obji_parts, objj_parts
+                    )
 
                 # compute p-value if requested
                 if pvalue_n_perms is not None and pvalue_n_perms > 0:
@@ -559,32 +662,25 @@ def ccc(
                             obj_parts_sel_i = objj_parts
                             obj_parts_sel_j = obji_parts
 
+                        # do not use cdist_parts_parallel here unless pvalue_n_jobs is 1
+                        # otherwise, there is no time gain
                         cdist_here = cdist_parts_basic
                         if pvalue_n_jobs == 1:
                             cdist_here = cdist_func
 
-                        def compute_permutations(_):
-                            perm_idx = np.random.permutation(n_objects)
+                        if not use_ari_numba:
 
-                            # generate a random permutation of the partitions of one
-                            # variable/feature
-                            obj_parts_sel_j_permuted = np.array(
-                                [
-                                    obj_parts_sel_j[it, perm_idx]
-                                    for it in range(obj_parts_sel_j.shape[0])
-                                ]
-                            )
+                            def compute_permutations(_):
+                                return compute_ccc_perms(
+                                    obj_parts_sel_i, obj_parts_sel_j, cdist_here
+                                )
 
-                            # compute the CCC using the permuted partitions
-                            p_comp_values = cdist_here(
-                                obj_parts_sel_i,
-                                obj_parts_sel_j_permuted,
-                            )
-                            p_max_flat_idx = p_comp_values.argmax()
-                            p_max_idx = unravel_index_2d(
-                                p_max_flat_idx, p_comp_values.shape
-                            )
-                            return np.max((p_comp_values[p_max_idx], 0.0))
+                        else:
+
+                            def compute_permutations(_):
+                                return compute_ccc_perms_numba(
+                                    obj_parts_sel_i, obj_parts_sel_j
+                                )
 
                         p_ccc_values = np.full(pvalue_n_perms, np.nan, dtype=float)
                         for p_idx, p_ccc_val in zip(

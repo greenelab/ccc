@@ -140,3 +140,20 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
         return 1.0
 
     return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
+
+
+@njit(cache=True, nogil=True)
+def adjusted_rand_index_numba(part0: np.ndarray, part1: np.ndarray) -> float:
+    """
+    Same as adjusted_rand_index, but compiled with numba. This version should NOT
+    be used when the number of objects is very large since it can lead to overflow.
+    """
+    (tn, fp), (fn, tp) = get_pair_confusion_matrix(part0, part1)
+    # convert to Python integer types, to avoid overflow or underflow
+    tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
+
+    # Special cases: empty data or full agreement
+    if fn == 0 and fp == 0:
+        return 1.0
+
+    return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))

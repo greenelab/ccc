@@ -1424,3 +1424,15 @@ def test_cm_with_too_few_objects():
         ccc(data, internal_n_clusters=3)
 
     assert "too few objects" in str(e.value)
+
+
+def test_cm_ari_numba():
+    # Prepare
+    rs = np.random.RandomState(123)
+
+    # two features on 100 objects (random data)
+    feature0 = rs.rand(100)
+    feature1 = rs.rand(100)
+
+    # Run
+    assert ccc(feature0, feature1) == ccc(feature0, feature1, use_ari_numba=True)
