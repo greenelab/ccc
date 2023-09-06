@@ -28,34 +28,52 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
-from ccc.coef import ccc
+from ccc import conf
 
 # %% [markdown] tags=[]
-# # Generate random data
+# # Settings
 
-# %% tags=[]
-data = np.random.rand(100, 1000)
+# %%
 
-# %% tags=[]
-data.shape
+# %% [markdown]
+# # Paths
+
+# %%
+OUTPUT_DIR = conf.RESULTS_DIR / "ccc_null-pvalues"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# %%
+OUTPUT_DIR
 
 # %% [markdown] tags=[]
-# # Run CCC
+# # Load CCC values and pvalues
 
 # %% tags=[]
-res = ccc(data, n_jobs=20, pvalue_n_perms=1000, use_ari_numba=True)
+output_file = OUTPUT_DIR / "cm_values.npy"
+cm_values = np.load(output_file)
+display(cm_values.shape)
+
+# %% tags=[]
+output_file = OUTPUT_DIR / "cm_pvalues.npy"
+cm_pvalues = np.load(output_file)
+display(cm_pvalues.shape)
+
+# %%
+n_perms = cm_pvalues.shape[0]
+min_pvalue_resolution = (0 + 1) / (n_perms + 1)
+display(min_pvalue_resolution)
 
 # %% [markdown] tags=[]
 # # Plots
 
 # %% tags=[]
-plt.hist(res[1], bins=10, edgecolor="k")  # Adjust the number of bins as needed
+plt.hist(cm_pvalues, bins=10, edgecolor="k")  # Adjust the number of bins as needed
 plt.title("Distribution of Values")
 plt.xlabel("Value")
 plt.ylabel("Frequency")
 
 # %% tags=[]
-sns.histplot(res[1], kde=True, color="blue")
+sns.histplot(cm_pvalues, kde=True, color="blue")
 plt.title("Distribution of Values")
 plt.xlabel("Value")
 plt.ylabel("Density")
@@ -64,6 +82,6 @@ plt.ylabel("Density")
 # # KS
 
 # %% tags=[]
-stats.ks_1samp(res[1], stats.uniform.cdf)
+stats.kstest(cm_pvalues, stats.uniform.cdf, args=(min_pvalue_resolution, 1-min_pvalue_resolution))
 
-# %% tags=[]
+# %%
