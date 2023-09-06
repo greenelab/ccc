@@ -30,7 +30,8 @@ setuptools.setup(
     ],
     python_requires=">=3.9",
     install_requires=[
-        "numpy",
+        # numpy.typing is only available in numpy>=1.21.0
+        "numpy>=1.21.0",
         "scipy",
         "numba",
     ],
