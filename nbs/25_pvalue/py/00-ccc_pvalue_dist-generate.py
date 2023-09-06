@@ -36,7 +36,7 @@ rs = np.random.RandomState(0)
 
 # %%
 DATA_N_OBJS, DATA_N_FEATURES = 100, 1000
-PVALUE_N_PERMS = 10000
+PVALUE_N_PERMS = 1000
 
 # %% [markdown]
 # # Paths
