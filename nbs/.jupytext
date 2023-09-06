@@ -1,2 +1,3 @@
 cell_metadata_filter = "all,-execution,-papermill,-trusted"
+notebook_metadata_filter="-jupytext.text_representation.jupytext_version"
 formats = "ipynb,py//auto:percent"
