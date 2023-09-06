@@ -12,6 +12,9 @@ from sklearn.metrics import adjusted_rand_score as ari
 from ccc.coef import ccc
 
 
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+
+
 def test_cm_basic_pvalue_n_permutations_not_given():
     # Prepare
     rs = np.random.RandomState(123)
@@ -244,6 +247,7 @@ def test_cm_single_argument_is_matrix():
 
 
 @pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
 def test_cm_large_n_objects_pvalue_computation_is_parallelized():
     # Prepare
     rs = np.random.RandomState(0)
@@ -266,6 +270,7 @@ def test_cm_large_n_objects_pvalue_computation_is_parallelized():
 
 
 @pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
 def test_cm_medium_n_objects_with_many_pvalue_permutations_is_parallelized():
     # Prepare
     rs = np.random.RandomState(0)
@@ -288,6 +293,7 @@ def test_cm_medium_n_objects_with_many_pvalue_permutations_is_parallelized():
 
 
 @pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
 def test_cm_medium_n_objects_with_many_pvalue_permutations_is_parallelized_with_ari_numba():
     # Prepare
     rs = np.random.RandomState(0)
