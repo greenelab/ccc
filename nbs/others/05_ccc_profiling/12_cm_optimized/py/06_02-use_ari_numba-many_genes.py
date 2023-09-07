@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# Clustermatch run using a larger number of genes.
+# CCC run using a larger number of genes with `use_ari_numba=True`.
 
 # %% [markdown] tags=[]
 # # Use only one CPU core
@@ -79,7 +79,7 @@ data.shape
 # %% tags=[]
 def func():
     n_clust = list(range(2, 10 + 1))
-    return ccc(data, internal_n_clusters=n_clust)
+    return ccc(data, internal_n_clusters=n_clust, use_ari_numba=True)
 
 
 # %% tags=[]
@@ -87,7 +87,7 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 50 -T 06-cm_many_genes.txt
+# %%prun -s cumulative -l 50 -T 06_02-use_ari_numba-cm_many_genes.txt
 func()
 
 # %% tags=[]

@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# Clustermatch run using a larger number of samples.
+# Similar as `07` but with numba disabled to compare with a pure Python implementation.
 
 # %% [markdown] tags=[]
 # # Use only one CPU core
@@ -29,6 +29,12 @@
 # %env OPEN_BLAS_NUM_THREADS=1
 # %env NUMEXPR_NUM_THREADS=1
 # %env OMP_NUM_THREADS=1
+
+# %% [markdown] tags=[]
+# # Disable numba
+
+# %% tags=[]
+# %env NUMBA_DISABLE_JIT=1
 
 # %% [markdown] tags=[]
 # # Remove pycache dir
@@ -87,9 +93,12 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 50 -T 07-cm_many_samples-default_internal_n_clusters.txt
+# %%prun -s cumulative -l 50 -T 07_01-disable_numba-cm_many_samples-default_internal_n_clusters.txt
 func()
 
+
+# %% [markdown] tags=[]
+# These results are just slightly worse than the numba-compiled version (notebook `07`).
 
 # %% [markdown] tags=[]
 # # With reduced `internal_n_clusters`
@@ -105,7 +114,10 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 50 -T 07-cm_many_samples-less_internal_n_clusters.txt
+# %%prun -s cumulative -l 50 -T 07_01-disable_numba-cm_many_samples-less_internal_n_clusters.txt
 func()
+
+# %% [markdown] tags=[]
+# These results are slightly better than the numba-compiled version (notebook `07`), which is surprising. In the future, it would be interesting to disable threading here to get accurate profiling results to debug this issue.
 
 # %% tags=[]

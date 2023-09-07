@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# Clustermatch run using a larger number of genes.
+# CCC run using a larger number of samples.
 
 # %% [markdown] tags=[]
 # # Use only one CPU core
@@ -40,7 +40,7 @@
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
 
 # %% tags=[]
-# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -exec rm -rf {} \;
+# !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -prune -exec rm -rf {} \;
 
 # %% tags=[]
 # !find ${CODE_DIR} -regex '^.*\(__pycache__\)$' -print
@@ -61,7 +61,7 @@ ccc(np.random.rand(10), np.random.rand(10))
 # # Data
 
 # %% tags=[]
-n_genes, n_samples = 100, 1000
+n_genes, n_samples = 10, 30000
 
 # %% tags=[]
 np.random.seed(0)
@@ -74,12 +74,12 @@ data.shape
 
 
 # %% [markdown] tags=[]
-# # Profile
+# # With default `internal_n_clusters`
 
 # %% tags=[]
 def func():
     n_clust = list(range(2, 10 + 1))
-    return ccc(data, internal_n_clusters=n_clust, use_ari_numba=True)
+    return ccc(data, internal_n_clusters=n_clust)
 
 
 # %% tags=[]
@@ -87,7 +87,25 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 50 -T 10-cm_many_genes.txt
+# %%prun -s cumulative -l 50 -T 07_00-default-cm_many_samples-default_internal_n_clusters.txt
+func()
+
+
+# %% [markdown] tags=[]
+# # With reduced `internal_n_clusters`
+
+# %% tags=[]
+def func():
+    n_clust = list(range(2, 5 + 1))
+    return ccc(data, internal_n_clusters=n_clust)
+
+
+# %% tags=[]
+# %%timeit func()
+func()
+
+# %% tags=[]
+# %%prun -s cumulative -l 50 -T 07_00-default-cm_many_samples-less_internal_n_clusters.txt
 func()
 
 # %% tags=[]

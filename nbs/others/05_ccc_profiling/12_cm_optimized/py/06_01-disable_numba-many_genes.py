@@ -93,7 +93,7 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 50 -T 08-cm_many_genes.txt
+# %%prun -s cumulative -l 50 -T 06_01-disable_numba-cm_many_genes.txt
 func()
 
 # %% [markdown] tags=[]

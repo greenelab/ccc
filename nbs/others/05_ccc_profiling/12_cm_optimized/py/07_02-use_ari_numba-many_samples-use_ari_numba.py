@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# Similar as `07` but with numba disabled to compare with a pure Python implementation.
+# Clustermatch run using a larger number of samples with `use_ari_numba=True`.
 
 # %% [markdown] tags=[]
 # # Use only one CPU core
@@ -29,12 +29,6 @@
 # %env OPEN_BLAS_NUM_THREADS=1
 # %env NUMEXPR_NUM_THREADS=1
 # %env OMP_NUM_THREADS=1
-
-# %% [markdown] tags=[]
-# # Disable numba
-
-# %% tags=[]
-# %env NUMBA_DISABLE_JIT=1
 
 # %% [markdown] tags=[]
 # # Remove pycache dir
@@ -85,7 +79,7 @@ data.shape
 # %% tags=[]
 def func():
     n_clust = list(range(2, 10 + 1))
-    return ccc(data, internal_n_clusters=n_clust)
+    return ccc(data, internal_n_clusters=n_clust, use_ari_numba=True)
 
 
 # %% tags=[]
@@ -93,12 +87,9 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 50 -T 09-cm_many_samples-default_internal_n_clusters.txt
+# %%prun -s cumulative -l 50 -T 07_02-use_ari_numba-cm_many_samples-default_internal_n_clusters.txt
 func()
 
-
-# %% [markdown] tags=[]
-# These results are just slightly worse than the numba-compiled version (notebook `07`).
 
 # %% [markdown] tags=[]
 # # With reduced `internal_n_clusters`
@@ -106,7 +97,7 @@ func()
 # %% tags=[]
 def func():
     n_clust = list(range(2, 5 + 1))
-    return ccc(data, internal_n_clusters=n_clust)
+    return ccc(data, internal_n_clusters=n_clust, use_ari_numba=True)
 
 
 # %% tags=[]
@@ -114,10 +105,7 @@ def func():
 func()
 
 # %% tags=[]
-# %%prun -s cumulative -l 50 -T 09-cm_many_samples-less_internal_n_clusters.txt
+# %%prun -s cumulative -l 50 -T 07_02-use_ari_numba-cm_many_samples-less_internal_n_clusters.txt
 func()
-
-# %% [markdown] tags=[]
-# These results are slightly better than the numba-compiled version (notebook `07`), which is surprising. In the future, it would be interesting to disable threading here to get accurate profiling results to debug this issue.
 
 # %% tags=[]
