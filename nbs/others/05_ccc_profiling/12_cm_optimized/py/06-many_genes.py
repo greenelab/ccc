@@ -20,6 +20,17 @@
 # Clustermatch run using a larger number of genes.
 
 # %% [markdown] tags=[]
+# # Use only one CPU core
+
+# %% tags=[]
+# %env CM_N_JOBS=1
+# %env NUMBA_NUM_THREADS=1
+# %env MKL_NUM_THREADS=1
+# %env OPEN_BLAS_NUM_THREADS=1
+# %env NUMEXPR_NUM_THREADS=1
+# %env OMP_NUM_THREADS=1
+
+# %% [markdown] tags=[]
 # # Remove pycache dir
 
 # %% tags=[]

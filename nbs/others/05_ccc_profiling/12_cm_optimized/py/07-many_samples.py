@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -18,6 +18,17 @@
 
 # %% [markdown] tags=[]
 # Clustermatch run using a larger number of samples.
+
+# %% [markdown] tags=[]
+# # Use only one CPU core
+
+# %% tags=[]
+# %env CM_N_JOBS=1
+# %env NUMBA_NUM_THREADS=1
+# %env MKL_NUM_THREADS=1
+# %env OPEN_BLAS_NUM_THREADS=1
+# %env NUMEXPR_NUM_THREADS=1
+# %env OMP_NUM_THREADS=1
 
 # %% [markdown] tags=[]
 # # Remove pycache dir

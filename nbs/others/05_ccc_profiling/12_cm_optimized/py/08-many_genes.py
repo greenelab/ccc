@@ -18,8 +18,17 @@
 
 # %% [markdown] tags=[]
 # Similar as `06` but with numba disabled to compare with a pure Python implementation.
-#
-# Here I had to reduce the number of `n_genes`, since it takes too much otherwise.
+
+# %% [markdown] tags=[]
+# # Use only one CPU core
+
+# %% tags=[]
+# %env CM_N_JOBS=1
+# %env NUMBA_NUM_THREADS=1
+# %env MKL_NUM_THREADS=1
+# %env OPEN_BLAS_NUM_THREADS=1
+# %env NUMEXPR_NUM_THREADS=1
+# %env OMP_NUM_THREADS=1
 
 # %% [markdown] tags=[]
 # # Disable numba
