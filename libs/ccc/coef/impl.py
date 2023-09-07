@@ -369,7 +369,6 @@ def ccc(
     y: NDArray = None,
     internal_n_clusters: Union[int, Iterable[int]] = None,
     return_parts: bool = False,
-    n_chunks_threads_ratio: int = 1,
     pvalue_n_perms: int = None,
     pvalue_n_jobs: int = 1,
     use_ari_numba: bool = False,
@@ -392,9 +391,6 @@ def ccc(
           integer values (a custom list of k values).
         return_parts: if True, for each object pair, it returns the partitions
           that maximized the coefficient.
-        n_chunks_threads_ratio: allows to modify how pairwise comparisons are
-          split across different threads. It's given as the ratio parameter of
-          function get_chunks.
         pvalue_n_perms: if given, it computes the p-value of the
             coefficient using the given number of permutations.
         pvalue_n_jobs: number of CPU cores to use for parallelization when
