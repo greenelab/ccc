@@ -52,6 +52,9 @@ TISSUES = [
 ]
 
 # %% tags=[]
+conf.GENERAL["N_JOBS"]
+
+# %% tags=[]
 CORRELATION_METHOD = lambda x: ccc(x, n_jobs=conf.GENERAL["N_JOBS"])
 CORRELATION_METHOD.__name__ = "ccc"
 
