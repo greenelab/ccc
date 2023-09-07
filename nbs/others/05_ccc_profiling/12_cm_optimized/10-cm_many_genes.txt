@@ -1,0 +1,56 @@
+         225998 function calls (225992 primitive calls) in 20.144 seconds
+
+   Ordered by: cumulative time
+   List reduced from 138 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   20.144   20.144 {built-in method builtins.exec}
+        1    0.000    0.000   20.144   20.144 <string>:1(<module>)
+        1    0.000    0.000   20.144   20.144 1575429100.py:1(func)
+        1    0.017    0.017   20.143   20.143 impl.py:367(ccc)
+     5052    0.006    0.000   20.094    0.004 _base.py:602(result_iterator)
+     5050    0.011    0.000   20.087    0.004 _base.py:418(result)
+     9999    0.013    0.000   20.079    0.002 threading.py:280(wait)
+    29901   20.058    0.001   20.058    0.001 {method 'acquire' of '_thread.lock' objects}
+        2    0.000    0.000    0.032    0.016 _base.py:573(map)
+        2    0.001    0.001    0.032    0.016 _base.py:598(<listcomp>)
+     5050    0.005    0.000    0.031    0.000 thread.py:161(submit)
+     5050    0.002    0.000    0.018    0.000 thread.py:180(_adjust_thread_count)
+     5050    0.004    0.000    0.016    0.000 threading.py:404(acquire)
+     5050    0.002    0.000    0.006    0.000 _base.py:318(__init__)
+    10101    0.004    0.000    0.005    0.000 threading.py:256(__enter__)
+     5052    0.004    0.000    0.005    0.000 threading.py:228(__init__)
+    10101    0.002    0.000    0.003    0.000 threading.py:259(__exit__)
+     5048    0.003    0.000    0.003    0.000 {method '_acquire_restore' of '_thread.RLock' objects}
+    10002    0.001    0.000    0.001    0.000 {built-in method _thread.allocate_lock}
+     5050    0.001    0.000    0.001    0.000 _base.py:388(__get_result)
+     4951    0.001    0.000    0.001    0.000 threading.py:271(_is_owned)
+     5048    0.001    0.000    0.001    0.000 {method '_release_save' of '_thread.RLock' objects}
+     5050    0.001    0.000    0.001    0.000 threading.py:82(RLock)
+     4951    0.001    0.000    0.001    0.000 threading.py:265(_release_save)
+     5050    0.001    0.000    0.001    0.000 {method '__enter__' of '_thread.RLock' objects}
+     4951    0.001    0.000    0.001    0.000 threading.py:268(_acquire_restore)
+    15153    0.001    0.000    0.001    0.000 {method '__exit__' of '_thread.lock' objects}
+     9999    0.001    0.000    0.001    0.000 {method 'append' of 'collections.deque' objects}
+     5050    0.001    0.000    0.001    0.000 thread.py:47(__init__)
+     5051    0.001    0.000    0.001    0.000 {method '__exit__' of '_thread.RLock' objects}
+     5050    0.001    0.000    0.001    0.000 {method 'pop' of 'list' objects}
+     9898    0.001    0.000    0.001    0.000 {built-in method time.monotonic}
+     5048    0.000    0.000    0.000    0.000 {method '_is_owned' of '_thread.RLock' objects}
+     5051    0.000    0.000    0.000    0.000 {method '__enter__' of '_thread.lock' objects}
+     5051    0.000    0.000    0.000    0.000 {method 'put' of '_queue.SimpleQueue' objects}
+     4949    0.000    0.000    0.000    0.000 {method 'remove' of 'collections.deque' objects}
+     4952    0.000    0.000    0.000    0.000 {method 'release' of '_thread.lock' objects}
+     4949    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        1    0.000    0.000    0.000    0.000 {method 'seed' of 'numpy.random.mtrand.RandomState' objects}
+        2    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        9    0.000    0.000    0.000    0.000 typedlist.py:341(append)
+        1    0.000    0.000    0.000    0.000 _base.py:636(__exit__)
+        1    0.000    0.000    0.000    0.000 random.py:791(getrandbits)
+        1    0.000    0.000    0.000    0.000 thread.py:216(shutdown)
+        1    0.000    0.000    0.000    0.000 {built-in method posix.urandom}
+        1    0.000    0.000    0.000    0.000 threading.py:1021(join)
+        1    0.000    0.000    0.000    0.000 typedlist.py:298(_initialise_list)
+        1    0.000    0.000    0.000    0.000 threading.py:1059(_wait_for_tstate_lock)
+        1    0.000    0.000    0.000    0.000 contextlib.py:76(inner)
+        1    0.000    0.000    0.000    0.000 impl.py:75(get_range_n_clusters)
