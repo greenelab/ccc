@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -50,7 +50,7 @@ ccc(np.random.rand(10), np.random.rand(10))
 # # Data
 
 # %% tags=[]
-n_genes, n_samples = 500, 1000
+n_genes, n_samples = 100, 1000
 
 # %% tags=[]
 np.random.seed(0)
