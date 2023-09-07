@@ -22,3 +22,6 @@ below.
 * `11_cm_optimized`:
   * after all optimization in 10_cm_optimized, this is a copy of 07_cm_optimized to check
     if the matrix data input keeps working correctly.
+
+* `12_cm_optimized`:
+  * here I'm just recording the speed of the implementation in a new machine.
