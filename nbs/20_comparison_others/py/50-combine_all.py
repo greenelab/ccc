@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -46,6 +46,7 @@ METHOD_NAME = "mic"
 
 # %% tags=[]
 COMPARISONS_DIR = DATASET_CONFIG["RESULTS_DIR"] / "comparison_others"
+COMPARISONS_DIR.mkdir(parents=True, exist_ok=True)
 display(COMPARISONS_DIR)
 
 # %% tags=[]
