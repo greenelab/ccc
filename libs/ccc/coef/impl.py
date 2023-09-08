@@ -309,7 +309,7 @@ def ccc(
     y: NDArray = None,
     internal_n_clusters: Union[int, Iterable[int]] = None,
     return_parts: bool = False,
-    n_chunks_threads_ratio: int = 1,
+    n_chunks_threads_ratio: int = 2,
     n_jobs: int = 1,
     pvalue_n_perms: int = None,
     pvalue_n_jobs: int = 1,
