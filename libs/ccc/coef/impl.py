@@ -7,7 +7,7 @@ from typing import Iterable, Union
 
 import numpy as np
 from numpy.typing import NDArray
-from numba import njit
+from numba import njit, prange
 from numba.typed import List
 
 from ccc.pytorch.core import unravel_index_2d
@@ -226,12 +226,20 @@ def cdist_parts_parallel(
     """
     res = np.zeros((x.shape[0], y.shape[0]))
 
-    inputs = list(chunker(np.arange(res.shape[0]), 1))
+    inputs = [(x[[idxs]], y) for idxs in range(res.shape[0])]
 
-    tasks = {executor.submit(cdist_parts_basic, x[idxs], y): idxs for idxs in inputs}
-    for t in as_completed(tasks):
-        idx = tasks[t]
-        res[idx, :] = t.result()
+    def func(t):
+        return cdist_parts_basic(t[0], t[1])
+
+    for idx, r in zip(
+            np.arange(res.shape[0]),
+            executor.map(
+                func,
+                inputs,
+                chunksize=10,
+            ),
+    ):
+        res[idx, :] = r
 
     return res
 
@@ -362,6 +370,151 @@ def compute_ccc_perms_numba(obj_parts_i: NDArray, obj_parts_j: NDArray) -> float
 
     # compute the CCC using the permuted partitions
     return compute_ccc_numba(obj_parts_i, obj_parts_j_permuted)[0]
+
+
+def compute_ccc_full(idx, n_features, parts, pvalue_n_perms, cdist_func, pvalue_n_jobs):
+    """
+    Given a list of indexes representing each a pair of
+    objects/rows/genes, it computes the CCC coefficient for
+    each of them. This function is supposed to be used to parallelize
+    processing.
+
+    Args:
+        idx_list: a list of indexes (integers), each of them
+          representing a pair of objects.
+
+    Returns:
+        Returns a tuple with two arrays. These two arrays are the same
+          arrays returned by the main cm function (cm_values and
+          max_parts) but for a subset of the data.
+    """
+    max_ari = np.nan
+    max_part_idx = np.zeros((1, 2), dtype=np.uint64)
+    pvalue = np.nan
+
+    # for idx, data_idx in enumerate(idx_list):
+    i, j = get_coords_from_index(n_features, idx)
+
+    # get partitions for the pair of objects
+    obji_parts, objj_parts = parts[i], parts[j]
+
+    # compute ari only if partitions are not marked as "missing"
+    # (negative values), which is assigned when partitions have
+    # one cluster (usually when all data in the feature has the same
+    # value).
+    if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
+        return max_ari, max_part_idx, pvalue
+
+    # compare all partitions of one object to the all the partitions
+    # of the other object, and get the maximium ARI
+    max_ari, max_part_idx = compute_ccc(obji_parts, objj_parts, cdist_func)
+
+    # compute p-value if requested
+    if pvalue_n_perms is not None and pvalue_n_perms > 0:
+        with ThreadPoolExecutor(max_workers=pvalue_n_jobs) as executor_perms:
+            # select the variable that generated more partitions as the one
+            # to permute
+            obj_parts_sel_i = obji_parts
+            obj_parts_sel_j = objj_parts
+            if (obji_parts[:, 0] >= 0).sum() > (objj_parts[:, 0] >= 0).sum():
+                obj_parts_sel_i = objj_parts
+                obj_parts_sel_j = obji_parts
+
+            # do not use cdist_parts_parallel here unless pvalue_n_jobs is 1
+            # otherwise, there is no time gain
+            cdist_here = cdist_parts_basic
+            if pvalue_n_jobs == 1:
+                cdist_here = cdist_func
+
+            def compute_permutations(_):
+                return compute_ccc_perms(
+                    obj_parts_sel_i, obj_parts_sel_j, cdist_here
+                )
+
+            p_ccc_values = np.full(pvalue_n_perms, np.nan, dtype=float)
+            for p_idx, p_ccc_val in zip(
+                    np.arange(pvalue_n_perms),
+                    executor_perms.map(
+                        compute_permutations,
+                        np.arange(pvalue_n_perms),
+                        chunksize=100,
+                    ),
+            ):
+                p_ccc_values[p_idx] = p_ccc_val
+
+        # compute p-value
+        pvalue = (np.sum(p_ccc_values >= max_ari) + 1) / (pvalue_n_perms + 1)
+
+    return max_ari, max_part_idx, pvalue
+
+
+@njit(cache=True, nogil=True, parallel=True)
+def compute_ccc_full_perms_numba(pvalue_n_perms, obj_parts_sel_i, obj_parts_sel_j):
+    p_ccc_values = np.full(pvalue_n_perms, np.nan)
+
+    for p_idx in prange(pvalue_n_perms):
+        p_ccc_values[p_idx] = compute_ccc_perms_numba(
+            obj_parts_sel_i, obj_parts_sel_j
+        )
+
+    return p_ccc_values
+
+
+@njit(cache=True, nogil=True)
+def compute_ccc_full_numba(idx, n_features, parts, pvalue_n_perms):
+    """
+    Given a list of indexes representing each a pair of
+    objects/rows/genes, it computes the CCC coefficient for
+    each of them. This function is supposed to be used to parallelize
+    processing.
+
+    Args:
+        idx_list: a list of indexes (integers), each of them
+          representing a pair of objects.
+
+    Returns:
+        Returns a tuple with two arrays. These two arrays are the same
+          arrays returned by the main cm function (cm_values and
+          max_parts) but for a subset of the data.
+    """
+    max_ari = np.nan
+    max_part_idx = tuple((int(0), int(0)))
+    pvalue = np.nan
+
+    # for idx, data_idx in enumerate(idx_list):
+    i, j = get_coords_from_index(n_features, idx)
+
+    # get partitions for the pair of objects
+    obji_parts, objj_parts = parts[i], parts[j]
+
+    # compute ari only if partitions are not marked as "missing"
+    # (negative values), which is assigned when partitions have
+    # one cluster (usually when all data in the feature has the same
+    # value).
+    if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
+        return max_ari, max_part_idx, pvalue
+
+    # compare all partitions of one object to the all the partitions
+    # of the other object, and get the maximium ARI
+    max_ari, max_part_idx = compute_ccc_numba(obji_parts, objj_parts)
+
+    # compute p-value if requested
+    if pvalue_n_perms is not None and pvalue_n_perms > 0:
+        p_ccc_values = np.full(pvalue_n_perms, np.nan)
+        # select the variable that generated more partitions as the one
+        # to permute
+        obj_parts_sel_i = obji_parts
+        obj_parts_sel_j = objj_parts
+        if (obji_parts[:, 0] >= 0).sum() > (objj_parts[:, 0] >= 0).sum():
+            obj_parts_sel_i = objj_parts
+            obj_parts_sel_j = obji_parts
+
+        p_ccc_values = compute_ccc_full_perms_numba(pvalue_n_perms, obj_parts_sel_i, obj_parts_sel_j)
+
+        # compute p-value
+        pvalue = (np.sum(p_ccc_values >= max_ari) + 1) / (pvalue_n_perms + 1)
+
+    return max_ari, max_part_idx, pvalue
 
 
 def ccc(
@@ -530,7 +683,7 @@ def ccc(
         def compute_parts(idx):
             return np.array(get_parts(X[idx], range_n_clusters, X_numerical_type[idx]))
 
-        for idx, ps in zip(inputs, executor.map(compute_parts, inputs)):
+        for idx, ps in zip(inputs, executor.map(compute_parts, inputs, chunksize=10)):
             parts[idx] = ps
 
         # Below, there are two layers of parallelism: 1) parallel execution
@@ -543,7 +696,9 @@ def ccc(
         cdist_parts_enable_threading = True if n_features_comp == 1 else False
 
         cdist_func = None
-        map_func = executor.map
+        def map_func(fn, *args):
+            return executor.map(fn, *args, chunksize=100)
+
         if cdist_parts_enable_threading:
             map_func = map
 
@@ -553,96 +708,12 @@ def ccc(
         else:
             cdist_func = cdist_parts_basic
 
-        compute_ccc_func = None
-        compute_ccc_perms_func = None
         if not use_ari_numba:
-
-            def compute_ccc_func(p0, p1):
-                return compute_ccc(p0, p1, cdist_func)
-
-            def compute_ccc_perms_func(p0, p1, cdist_func):
-                return compute_ccc_perms(p0, p1, cdist_func)
-
+            def compute_coef(idx):
+                return compute_ccc_full(idx, n_features, parts, pvalue_n_perms, cdist_func, pvalue_n_jobs)
         else:
-            compute_ccc_func = compute_ccc_numba
-
-            def compute_ccc_perms_func(p0, p1, *args):
-                return compute_ccc_perms_numba(p0, p1)
-
-        # compute coefficients
-        def compute_coef(idx):
-            """
-            Given a list of indexes representing each a pair of
-            objects/rows/genes, it computes the CCC coefficient for
-            each of them. This function is supposed to be used to parallelize
-            processing.
-
-            Args:
-                idx_list: a list of indexes (integers), each of them
-                  representing a pair of objects.
-
-            Returns:
-                Returns a tuple with two arrays. These two arrays are the same
-                  arrays returned by the main cm function (cm_values and
-                  max_parts) but for a subset of the data.
-            """
-            max_ari = np.nan
-            max_part_idx = np.zeros((1, 2), dtype=np.uint64)
-            pvalue = np.nan
-
-            # for idx, data_idx in enumerate(idx_list):
-            i, j = get_coords_from_index(n_features, idx)
-
-            # get partitions for the pair of objects
-            obji_parts, objj_parts = parts[i], parts[j]
-
-            # compute ari only if partitions are not marked as "missing"
-            # (negative values), which is assigned when partitions have
-            # one cluster (usually when all data in the feature has the same
-            # value).
-            if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
-                return max_ari, max_part_idx, pvalue
-
-            # compare all partitions of one object to the all the partitions
-            # of the other object, and get the maximium ARI
-            max_ari, max_part_idx = compute_ccc_func(obji_parts, objj_parts)
-
-            # compute p-value if requested
-            if pvalue_n_perms is not None and pvalue_n_perms > 0:
-                with ThreadPoolExecutor(max_workers=pvalue_n_jobs) as executor_perms:
-                    # select the variable that generated more partitions as the one
-                    # to permute
-                    obj_parts_sel_i = obji_parts
-                    obj_parts_sel_j = objj_parts
-                    if (obji_parts[:, 0] >= 0).sum() > (objj_parts[:, 0] >= 0).sum():
-                        obj_parts_sel_i = objj_parts
-                        obj_parts_sel_j = obji_parts
-
-                    # do not use cdist_parts_parallel here unless pvalue_n_jobs is 1
-                    # otherwise, there is no time gain
-                    cdist_here = cdist_parts_basic
-                    if pvalue_n_jobs == 1:
-                        cdist_here = cdist_func
-
-                    def compute_permutations(_):
-                        return compute_ccc_perms_func(
-                            obj_parts_sel_i, obj_parts_sel_j, cdist_here
-                        )
-
-                    p_ccc_values = np.full(pvalue_n_perms, np.nan, dtype=float)
-                    for p_idx, p_ccc_val in zip(
-                        np.arange(pvalue_n_perms),
-                        executor_perms.map(
-                            compute_permutations,
-                            np.arange(pvalue_n_perms),
-                        ),
-                    ):
-                        p_ccc_values[p_idx] = p_ccc_val
-
-                # compute p-value
-                pvalue = (np.sum(p_ccc_values >= max_ari) + 1) / (pvalue_n_perms + 1)
-
-            return max_ari, max_part_idx, pvalue
+            def compute_coef(idx):
+                return compute_ccc_full_numba(idx, n_features, parts, pvalue_n_perms)
 
         # iterate over all chunks of object pairs and compute the coefficient
         inputs = np.arange(n_features_comp)
