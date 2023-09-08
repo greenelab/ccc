@@ -310,10 +310,10 @@ def ccc(
     internal_n_clusters: Union[int, Iterable[int]] = None,
     return_parts: bool = False,
     n_chunks_threads_ratio: int = 1,
-    pvalue_n_permutations: int = None,
+    pvalue_n_perms: int = None,
     random_state: int = None,
     n_jobs: int = 1,
-    n_jobs_permutations: int = 1,
+    pvalue_n_jobs: int = 1,
 ) -> tuple[NDArray[float], NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch Correlation
@@ -334,14 +334,14 @@ def ccc(
         n_chunks_threads_ratio: allows to modify how pairwise comparisons are
           split across different threads. It's given as the ratio parameter of
           function get_chunks.
-        pvalue_n_permutations: if given, it computes the p-value of the
+        pvalue_n_perms: if given, it computes the p-value of the
             coefficient using the given number of permutations.
         random_state: seed for the random number generator. This is used to compute
             the p-value of the coefficient using permutations.
         n_jobs: number of CPU cores to use for parallelization. The value
           None will use all available cores (`os.cpu_count()`), and negative
           values will use `os.cpu_count() - n_jobs`. Default is 1.
-        n_jobs_permutations: number of CPU cores to use for parallelization when
+        pvalue_n_jobs: number of CPU cores to use for parallelization when
             computing the p-value of the coefficient using permutations.
 
 
@@ -545,9 +545,9 @@ def ccc(
                 max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
 
                 # compute p-value if requested
-                if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+                if pvalue_n_perms is not None and pvalue_n_perms > 0:
                     with ThreadPoolExecutor(
-                        max_workers=n_jobs_permutations
+                        max_workers=pvalue_n_jobs
                     ) as executor_perms:
                         # select the variable that generated more partitions as the one
                         # to permute
@@ -560,7 +560,7 @@ def ccc(
                             obj_parts_sel_j = obji_parts
 
                         cdist_here = cdist_parts_basic
-                        if n_jobs_permutations == 1:
+                        if pvalue_n_jobs == 1:
                             cdist_here = cdist_func
 
                         def compute_permutations(_):
@@ -586,24 +586,19 @@ def ccc(
                             )
                             return np.max((p_comp_values[p_max_idx], 0.0))
 
-                        p_ccc_values = np.full(
-                            pvalue_n_permutations, np.nan, dtype=float
-                        )
+                        p_ccc_values = np.full(pvalue_n_perms, np.nan, dtype=float)
                         for p_idx, p_ccc_val in zip(
-                            np.arange(pvalue_n_permutations),
+                            np.arange(pvalue_n_perms),
                             executor_perms.map(
                                 compute_permutations,
-                                np.arange(pvalue_n_permutations),
-                                chunksize=100,
+                                np.arange(pvalue_n_perms),
                             ),
                         ):
-                            # for i in range(pvalue_n_permutations):
                             p_ccc_values[p_idx] = p_ccc_val
-                            # p_ccc_values[i] = compute_permutations()
 
                     # compute p-value
                     pvalues[idx] = (np.sum(p_ccc_values >= max_ari_list[idx]) + 1) / (
-                        pvalue_n_permutations + 1
+                        pvalue_n_perms + 1
                     )
 
             return max_ari_list, max_part_idx_list, pvalues
@@ -621,23 +616,23 @@ def ccc(
     # return an array of values or a single scalar, depending on the input data
     if cm_values.shape[0] == 1:
         if return_parts:
-            if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+            if pvalue_n_perms is not None and pvalue_n_perms > 0:
                 return (cm_values[0], cm_pvalues[0]), max_parts[0], parts
             else:
                 return cm_values[0], max_parts[0], parts
         else:
-            if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+            if pvalue_n_perms is not None and pvalue_n_perms > 0:
                 return cm_values[0], cm_pvalues[0]
             else:
                 return cm_values[0]
 
     if return_parts:
-        if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+        if pvalue_n_perms is not None and pvalue_n_perms > 0:
             return (cm_values, cm_pvalues), max_parts, parts
         else:
             return cm_values, max_parts, parts
     else:
-        if pvalue_n_permutations is not None and pvalue_n_permutations > 0:
+        if pvalue_n_perms is not None and pvalue_n_perms > 0:
             return cm_values, cm_pvalues
         else:
             return cm_values
