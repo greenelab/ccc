@@ -31,21 +31,21 @@ from ccc import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 rs = np.random.RandomState(0)
 
-# %%
+# %% tags=[]
 DATA_N_OBJS, DATA_N_FEATURES = 100, 1000
 PVALUE_N_PERMS = 1000
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Paths
 
-# %%
+# %% tags=[]
 OUTPUT_DIR = conf.RESULTS_DIR / "ccc_null-pvalues"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# %%
+# %% tags=[]
 OUTPUT_DIR
 
 # %% [markdown] tags=[]
@@ -61,28 +61,32 @@ data.shape
 # # Run CCC
 
 # %% tags=[]
-res = ccc(data, n_jobs=conf.GENERAL["N_JOBS"], pvalue_n_perms=PVALUE_N_PERMS, use_ari_numba=True)
+res = ccc(
+    data,
+    n_jobs=conf.GENERAL["N_JOBS"],
+    pvalue_n_perms=PVALUE_N_PERMS,
+)
 
-# %%
+# %% tags=[]
 cm_values, cm_pvalues = res
 
-# %%
+# %% tags=[]
 cm_values.shape
 
-# %%
+# %% tags=[]
 cm_pvalues.shape
 
 # %% [markdown] tags=[]
 # # Save
 
-# %%
+# %% tags=[]
 output_file = OUTPUT_DIR / "cm_values.npy"
 display(output_file)
 
 np.save(output_file, cm_values)
 
-# %%
+# %% tags=[]
 output_file = OUTPUT_DIR / "cm_pvalues.npy"
 np.save(output_file, cm_pvalues)
 
-# %%
+# %% tags=[]
