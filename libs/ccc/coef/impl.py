@@ -310,10 +310,10 @@ def ccc(
     internal_n_clusters: Union[int, Iterable[int]] = None,
     return_parts: bool = False,
     n_chunks_threads_ratio: int = 1,
-    pvalue_n_perms: int = None,
-    random_state: int = None,
     n_jobs: int = 1,
+    pvalue_n_perms: int = None,
     pvalue_n_jobs: int = 1,
+    random_state: int = None,
 ) -> tuple[NDArray[float], NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch Correlation
@@ -334,15 +334,15 @@ def ccc(
         n_chunks_threads_ratio: allows to modify how pairwise comparisons are
           split across different threads. It's given as the ratio parameter of
           function get_chunks.
-        pvalue_n_perms: if given, it computes the p-value of the
-            coefficient using the given number of permutations.
-        random_state: seed for the random number generator. This is used to compute
-            the p-value of the coefficient using permutations.
         n_jobs: number of CPU cores to use for parallelization. The value
           None will use all available cores (`os.cpu_count()`), and negative
           values will use `os.cpu_count() - n_jobs`. Default is 1.
+        pvalue_n_perms: if given, it computes the p-value of the
+            coefficient using the given number of permutations.
         pvalue_n_jobs: number of CPU cores to use for parallelization when
             computing the p-value of the coefficient using permutations.
+        random_state: seed for the random number generator. This is used to compute
+            the p-value of the coefficient using permutations.
 
 
     Returns:
@@ -559,6 +559,8 @@ def ccc(
                             obj_parts_sel_i = objj_parts
                             obj_parts_sel_j = obji_parts
 
+                        # do not use cdist_parts_parallel here unless pvalue_n_jobs is 1
+                        # otherwise, there is no time gain
                         cdist_here = cdist_parts_basic
                         if pvalue_n_jobs == 1:
                             cdist_here = cdist_func
