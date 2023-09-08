@@ -33,16 +33,16 @@ from ccc import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Paths
 
-# %%
+# %% tags=[]
 OUTPUT_DIR = conf.RESULTS_DIR / "ccc_null-pvalues"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# %%
+# %% tags=[]
 OUTPUT_DIR
 
 # %% [markdown] tags=[]
@@ -58,7 +58,7 @@ output_file = OUTPUT_DIR / "cm_pvalues.npy"
 cm_pvalues = np.load(output_file)
 display(cm_pvalues.shape)
 
-# %%
+# %% tags=[]
 n_perms = cm_pvalues.shape[0]
 min_pvalue_resolution = (0 + 1) / (n_perms + 1)
 display(min_pvalue_resolution)
@@ -82,6 +82,10 @@ plt.ylabel("Density")
 # # KS
 
 # %% tags=[]
-stats.kstest(cm_pvalues, stats.uniform.cdf, args=(min_pvalue_resolution, 1-min_pvalue_resolution))
+stats.kstest(
+    cm_pvalues,
+    stats.uniform.cdf,
+    args=(min_pvalue_resolution, 1 - min_pvalue_resolution),
+)
 
-# %%
+# %% tags=[]
