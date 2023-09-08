@@ -26,8 +26,7 @@
 
 # %% tags=[]
 import numpy as np
-from scipy.spatial.distance import squareform
-from sklearn.metrics import pairwise_distances
+from joblib import Parallel, delayed
 
 from ccc.coef import ccc
 from ccc import conf
@@ -37,6 +36,13 @@ from ccc import conf
 
 # %% tags=[]
 rs = np.random.RandomState(0)
+
+# %%
+N_JOBS = conf.GENERAL["N_JOBS"] // 2
+display(N_JOBS)
+
+PVALUE_N_JOBS = 2
+display(PVALUE_N_JOBS)
 
 # %% tags=[]
 DATA_N_OBJS, DATA_N_FEATURES = 100, 1000
@@ -67,18 +73,29 @@ data.shape
 
 # %%
 def ccc_single(x, y):
-    return ccc(x, y, n_jobs=1, pvalue_n_perms=PVALUE_N_PERMS, pvalue_n_jobs=conf.GENERAL["N_JOBS"])
+    return ccc(
+        x, y, n_jobs=1, pvalue_n_perms=PVALUE_N_PERMS, pvalue_n_jobs=PVALUE_N_JOBS
+    )
 
 
 # %%
-cm_values = []
-cm_pvalues = []
+results = Parallel(n_jobs=N_JOBS)(
+    delayed(ccc_single)(data[i], data[j])
+    for i in range(data.shape[0] - 1)
+    for j in range(i + 1, data.shape[0])
+)
 
-for i in range(data.shape[0] - 1):
-    for j in range(i+1, data.shape[0]):
-        v, p = ccc_single(data[i], data[j])
-        cm_values.append(v)
-        cm_pvalues.append(p)
+# %%
+assert len(results) == (DATA_N_OBJS * (DATA_N_OBJS - 1)) / 2
+
+# %%
+results[0]
+
+# %%
+cm_values = [x[0] for x in results]
+
+# %%
+cm_pvalues = [x[1] for x in results]
 
 # %%
 assert len(cm_values) == len(cm_pvalues)
