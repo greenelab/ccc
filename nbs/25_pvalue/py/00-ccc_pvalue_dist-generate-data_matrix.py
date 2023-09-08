@@ -18,6 +18,8 @@
 
 # %% [markdown] tags=[]
 # Generates a distribution of pvalues under the null hypothesis of no association.
+#
+# This notebook uses a data matrix as input for CCC and parallelizes computation across gene pairs.
 
 # %% [markdown] tags=[]
 # # Modules loading
@@ -80,13 +82,15 @@ cm_pvalues.shape
 # # Save
 
 # %% tags=[]
-output_file = OUTPUT_DIR / "cm_values.npy"
+output_file = OUTPUT_DIR / "data_matrix-cm_values.npy"
 display(output_file)
 
 np.save(output_file, cm_values)
 
 # %% tags=[]
-output_file = OUTPUT_DIR / "cm_pvalues.npy"
+output_file = OUTPUT_DIR / "data_matrix-cm_pvalues.npy"
+display(output_file)
+
 np.save(output_file, cm_pvalues)
 
 # %% tags=[]
