@@ -1,12 +1,10 @@
+import os
 import time
-from concurrent.futures import ThreadPoolExecutor
-from random import shuffle
 
 import numpy as np
 import pandas as pd
 import pytest
 from sklearn.preprocessing import minmax_scale
-from sklearn.metrics import adjusted_rand_score as ari
 
 from ccc.coef import ccc
 
@@ -242,7 +240,8 @@ def test_cm_single_argument_is_matrix():
     assert pvalue[2] == pytest.approx(0.752, abs=0.01)
 
 
-def test_cm_large_n_objects_pvalue_computation_is_parallelized():
+@pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+def test_cm_large_n_objects_pvalue_permutations_is_parallelized():
     # Prepare
     rs = np.random.RandomState(0)
 
@@ -263,7 +262,8 @@ def test_cm_large_n_objects_pvalue_computation_is_parallelized():
     assert elapsed_time_multi_thread < 0.75 * elapsed_time_single_thread
 
 
-def test_cm_medium_n_objects_with_many_pvalue_computation_is_parallelized():
+@pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+def test_cm_medium_n_objects_with_many_pvalue_permutations_is_parallelized():
     # Prepare
     rs = np.random.RandomState(0)
 
@@ -273,7 +273,7 @@ def test_cm_medium_n_objects_with_many_pvalue_computation_is_parallelized():
 
     # Run
     start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_perms=1000, n_jobs=1)
+    res = ccc(feature0, feature1, pvalue_n_perms=1000, pvalue_n_jobs=1)
     elapsed_time_single_thread = time.time() - start_time
 
     start_time = time.time()
