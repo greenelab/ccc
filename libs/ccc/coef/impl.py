@@ -565,35 +565,47 @@ def ccc(
                         if pvalue_n_jobs == 1:
                             cdist_here = cdist_func
 
-                        def compute_permutations(_):
-                            perm_idx = np.random.permutation(n_objects)
-
-                            # generate a random permutation of the partitions of one
-                            # variable/feature
-                            obj_parts_sel_j_permuted = np.array(
-                                [
-                                    obj_parts_sel_j[it, perm_idx]
-                                    for it in range(obj_parts_sel_j.shape[0])
-                                ]
+                        def compute_permutations(p_idx_list):
+                            p_ccc_values_list = np.full(
+                                len(p_idx_list), np.nan, dtype=float
                             )
 
-                            # compute the CCC using the permuted partitions
-                            p_comp_values = cdist_here(
-                                obj_parts_sel_i,
-                                obj_parts_sel_j_permuted,
-                            )
-                            p_max_flat_idx = p_comp_values.argmax()
-                            p_max_idx = unravel_index_2d(
-                                p_max_flat_idx, p_comp_values.shape
-                            )
-                            return np.max((p_comp_values[p_max_idx], 0.0))
+                            for idx, p_idx in enumerate(p_idx_list):
+                                perm_idx = np.random.permutation(n_objects)
+
+                                # generate a random permutation of the partitions of one
+                                # variable/feature
+                                obj_parts_sel_j_permuted = np.array(
+                                    [
+                                        obj_parts_sel_j[it, perm_idx]
+                                        for it in range(obj_parts_sel_j.shape[0])
+                                    ]
+                                )
+
+                                # compute the CCC using the permuted partitions
+                                p_comp_values = cdist_here(
+                                    obj_parts_sel_i,
+                                    obj_parts_sel_j_permuted,
+                                )
+                                p_max_flat_idx = p_comp_values.argmax()
+                                p_max_idx = unravel_index_2d(
+                                    p_max_flat_idx, p_comp_values.shape
+                                )
+                                p_ccc_values_list[idx] = np.max(
+                                    (p_comp_values[p_max_idx], 0.0)
+                                )
+
+                            return p_ccc_values_list
 
                         p_ccc_values = np.full(pvalue_n_perms, np.nan, dtype=float)
+                        p_inputs = get_chunks(
+                            pvalue_n_perms, default_n_threads, n_chunks_threads_ratio
+                        )
                         for p_idx, p_ccc_val in zip(
-                            np.arange(pvalue_n_perms),
+                            p_inputs,
                             executor_perms.map(
                                 compute_permutations,
-                                np.arange(pvalue_n_perms),
+                                p_inputs,
                             ),
                         ):
                             p_ccc_values[p_idx] = p_ccc_val
