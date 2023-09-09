@@ -466,6 +466,10 @@ def ccc(
     max_parts = np.zeros((n_features_comp, 2), dtype=np.uint64)
 
     with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
+        map_func = map
+        if default_n_threads > 1:
+            map_func = executor.map
+
         # pre-compute the internal partitions for each object in parallel
         inputs = get_chunks(n_features, default_n_threads, n_chunks_threads_ratio)
 
@@ -474,7 +478,7 @@ def ccc(
                 [get_parts(X[i], range_n_clusters, X_numerical_type[i]) for i in idxs]
             )
 
-        for idx, ps in zip(inputs, executor.map(compute_parts, inputs)):
+        for idx, ps in zip(inputs, map_func(compute_parts, inputs)):
             parts[idx] = ps
 
         # Below, there are two layers of parallelism: 1) parallel execution
@@ -484,18 +488,21 @@ def ccc(
         # we have several feature pairs to compare), because parallelization is
         # already performed at this level. Otherwise, more threads than
         # specified by the user are started.
-        cdist_parts_enable_threading = True if n_features_comp == 1 else False
+        cdist_func = cdist_parts_basic
+        map_func = map
 
-        cdist_func = None
-        map_func = executor.map
-        if cdist_parts_enable_threading:
-            map_func = map
+        if default_n_threads > 1:
+            cdist_parts_enable_threading = True if n_features_comp == 1 else False
 
-            def cdist_func(x, y):
-                return cdist_parts_parallel(x, y, executor)
+            if cdist_parts_enable_threading:
+                map_func = map
 
-        else:
-            cdist_func = cdist_parts_basic
+                def cdist_func(x, y):
+                    return cdist_parts_parallel(x, y, executor)
+
+            else:
+                map_func = executor.map
+                cdist_func = cdist_parts_basic
 
         # compute coefficients
         def compute_coef(idx_list):
