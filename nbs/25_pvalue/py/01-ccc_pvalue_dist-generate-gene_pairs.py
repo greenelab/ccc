@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -37,7 +37,7 @@ from ccc import conf
 # %% tags=[]
 rs = np.random.RandomState(0)
 
-# %%
+# %% tags=[]
 N_JOBS = conf.GENERAL["N_JOBS"] // 2
 display(N_JOBS)
 
@@ -71,33 +71,31 @@ data.shape
 # %% [markdown] tags=[]
 # # Run CCC
 
-# %%
+# %% tags=[]
 def ccc_single(x, y):
-    return ccc(
-        x, y, n_jobs=1, pvalue_n_perms=PVALUE_N_PERMS, pvalue_n_jobs=PVALUE_N_JOBS
-    )
+    return ccc(x, y, pvalue_n_perms=PVALUE_N_PERMS, n_jobs=PVALUE_N_JOBS)
 
 
-# %%
+# %% tags=[]
 results = Parallel(n_jobs=N_JOBS)(
     delayed(ccc_single)(data[i], data[j])
     for i in range(data.shape[0] - 1)
     for j in range(i + 1, data.shape[0])
 )
 
-# %%
+# %% tags=[]
 assert len(results) == (DATA_N_OBJS * (DATA_N_OBJS - 1)) / 2
 
-# %%
+# %% tags=[]
 results[0]
 
-# %%
+# %% tags=[]
 cm_values = [x[0] for x in results]
 
-# %%
+# %% tags=[]
 cm_pvalues = [x[1] for x in results]
 
-# %%
+# %% tags=[]
 assert len(cm_values) == len(cm_pvalues)
 assert len(cm_values) == (DATA_N_OBJS * (DATA_N_OBJS - 1)) / 2
 
@@ -108,7 +106,7 @@ cm_pvalues = np.array(cm_pvalues)
 # %% tags=[]
 cm_values.shape
 
-# %%
+# %% tags=[]
 cm_values
 
 # %% tags=[]
