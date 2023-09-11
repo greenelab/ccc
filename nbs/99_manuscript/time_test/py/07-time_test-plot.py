@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -32,7 +32,7 @@ from ccc import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 INPUT_FILENAME_TEMPLATE = "time_test"
 
 # %% [markdown] tags=[]
@@ -60,22 +60,22 @@ display(INPUT_DIR)
 # %% [markdown] tags=[]
 # # Load results
 
-# %%
+# %% tags=[]
 time_results = pd.read_pickle(INPUT_DIR / f"{INPUT_FILENAME_TEMPLATE}.pkl")
 
-# %%
+# %% tags=[]
 time_results.shape
 
-# %%
+# %% tags=[]
 time_results.head()
 
-# %%
+# %% tags=[]
 time_results["method"].unique()
 
 # %% [markdown] tags=[]
 # # Processing
 
-# %%
+# %% tags=[]
 time_results = time_results.replace(
     {
         "method": {
@@ -93,19 +93,19 @@ time_results = time_results.replace(
     }
 )
 
-# %%
+# %% tags=[]
 time_results.shape
 
-# %%
+# %% tags=[]
 time_results.head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Run numbers
 
-# %%
+# %% tags=[]
 plot_data = time_results
 
-# %%
+# %% tags=[]
 run_numbers = (
     plot_data[
         plot_data["method"].str.contains("1 core", regex=False)
@@ -116,21 +116,21 @@ run_numbers = (
 )
 display(run_numbers)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Plot
 
-# %%
+# %% tags=[]
 hue_order = sorted(time_results["method"].unique())
 
-# %%
+# %% tags=[]
 hue_order
 
-# %%
+# %% tags=[]
 deep_colors = sns.color_palette("Paired")
 display(deep_colors)
 
 
-# %%
+# %% tags=[]
 def format_data_size(x):
     if x < 1000:
         return f"{int(x)}"
@@ -142,13 +142,13 @@ def format_data_size(x):
 
 plot_data = plot_data.assign(data_size=plot_data["data_size"].apply(format_data_size))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## First analysis
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here I take a look if using more than 1 core benefits methods.
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.5):
     g = sns.catplot(
         kind="point",
@@ -165,7 +165,7 @@ with sns.plotting_context("paper", font_scale=1.5):
     plt.xlabel("Number of measured objects")
     plt.ylabel("Time (seconds)")
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.5):
     g = sns.catplot(
         kind="point",
@@ -184,13 +184,13 @@ with sns.plotting_context("paper", font_scale=1.5):
 
     g.ax.set_yscale("log")
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Only CCC is really taking advantage of more than 1 core, so I'll remove the rest below.
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Final analysis
 
-# %%
+# %% tags=[]
 # select runs with 3 cores for the other methods
 plot_data = plot_data.replace(
     {
@@ -203,10 +203,10 @@ plot_data = plot_data.replace(
     }
 )
 
-# %%
+# %% tags=[]
 plot_data["method"].unique()
 
-# %%
+# %% tags=[]
 hue_order = [
     "MIC",
     r"$\mathregular{MIC_e}$",
@@ -216,7 +216,7 @@ hue_order = [
     "Pearson",
 ]
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.5):
     g = sns.catplot(
         kind="point",
@@ -241,7 +241,7 @@ with sns.plotting_context("paper", font_scale=1.5):
         facecolor="white",
     )
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.5):
     g = sns.catplot(
         kind="point",
@@ -257,7 +257,7 @@ with sns.plotting_context("paper", font_scale=1.5):
     )
 
     plt.legend(loc="best", fontsize="small", framealpha=0.5)
-    plt.xlabel("Number of measured objects")
+    plt.xlabel("Number of objects")
     plt.ylabel("Time (seconds) in log scale")
     g.ax.set_yscale("log")
 
@@ -270,10 +270,10 @@ with sns.plotting_context("paper", font_scale=1.5):
 # %% [markdown] tags=[]
 # # Create final figure
 
-# %%
+# %% tags=[]
 from svgutils.compose import Figure, SVG
 
-# %%
+# %% tags=[]
 Figure(
     "19.79335cm",
     "17.09335cm",
@@ -283,7 +283,7 @@ Figure(
     SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.05),
 ).save(OUTPUT_FIGURE_DIR / "time_test-main.svg")
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Compile the manuscript with manubot and make sure the image has a white background and displays properly.
 
-# %%
+# %% tags=[]
