@@ -50,6 +50,9 @@ TISSUES = [
     # "Artery - Tibial",
 ]
 
+# %% tags=[]
+conf.GENERAL["N_JOBS"]
+
 
 # %% tags=[]
 def mic_parallel(data):
