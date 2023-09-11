@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -44,7 +44,7 @@ GENE_SEL_STRATEGY = "var_pc_log2"
 # this is used for the cumulative histogram
 GENE_PAIRS_PERCENT = 0.70
 
-# %%
+# %% tags=[]
 CLUSTERMATCH_LABEL = "CCC"
 PEARSON_LABEL = "Pearson"
 SPEARMAN_LABEL = "Spearman"
@@ -107,23 +107,23 @@ corrs_df.describe().applymap(str)
 # skewness
 corrs_df.apply(lambda x: stats.skew(x))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # MIC subset: all gene pairs
 
-# %%
+# %% tags=[]
 # this is supposed to be one of the values of column "mic_subset"
 mic_subset = "all"
 
 # %% [markdown] tags=[]
 # ## Select MIC subset
 
-# %%
+# %% tags=[]
 df = corrs_df
 
-# %%
+# %% tags=[]
 df.shape
 
-# %%
+# %% tags=[]
 df.head()
 
 # %% [markdown] tags=[]
@@ -209,19 +209,19 @@ with sns.plotting_context("talk", font_scale=1.0):
 # %% [markdown] tags=[]
 # These are the correlation between the correlation values (!). The idea is to see how coefficient match.
 
-# %%
+# %% tags=[]
 df.corr()
 
-# %%
+# %% tags=[]
 df.corr("spearman")
 
 # %% [markdown] tags=[]
 # # Create final figure
 
-# %%
+# %% tags=[]
 from svgutils.compose import Figure, SVG, Panel, Text
 
-# %%
+# %% tags=[]
 Figure(
     "64.371cm",
     "42.766cm",
@@ -251,7 +251,7 @@ Figure(
     ).move(0, 22),
 ).save(OUTPUT_FIGURE_DIR / "dist-main.svg")
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Compile the manuscript with manubot and make sure the image has a white background and displays properly.
 
-# %%
+# %% tags=[]

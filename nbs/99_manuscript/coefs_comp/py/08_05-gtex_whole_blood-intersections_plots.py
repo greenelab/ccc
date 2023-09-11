@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -37,7 +37,7 @@ from ccc import conf
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
@@ -50,7 +50,7 @@ assert (
     conf.MANUSCRIPT["BASE_DIR"] is not None and conf.MANUSCRIPT["BASE_DIR"].exists()
 ), "Manuscript dir not set"
 
-# %%
+# %% tags=[]
 OUTPUT_DATA_DIR = DATASET_CONFIG["GENE_PAIR_INTERSECTIONS"]
 assert OUTPUT_DATA_DIR.exists()
 display(OUTPUT_DATA_DIR)
@@ -86,57 +86,57 @@ assert INPUT_GENE_PAIRS_INTERSECTIONS_FILE.exists()
 # %% [markdown] tags=[]
 # ## Gene Ensembl ID -> Symbol mapping
 
-# %%
+# %% tags=[]
 gene_map = pd.read_pickle(
     DATASET_CONFIG["DATA_DIR"] / "gtex_gene_id_symbol_mappings.pkl"
 )
 
-# %%
+# %% tags=[]
 gene_map = gene_map.set_index("gene_ens_id")["gene_symbol"].to_dict()
 
-# %%
+# %% tags=[]
 assert gene_map["ENSG00000145309.5"] == "CABS1"
 
 # %% [markdown] tags=[]
 # ## Gene expression
 
-# %%
+# %% tags=[]
 gene_expr_df = pd.read_pickle(INPUT_GENE_EXPR_FILE)
 
-# %%
+# %% tags=[]
 gene_expr_df.shape
 
-# %%
+# %% tags=[]
 gene_expr_df.head()
 
 # %% [markdown] tags=[]
 # ## Gene pairs intersection
 
-# %%
+# %% tags=[]
 df_plot = pd.read_pickle(INPUT_GENE_PAIRS_INTERSECTIONS_FILE)
 
-# %%
+# %% tags=[]
 df_plot.shape
 
-# %%
+# %% tags=[]
 df_plot.head()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Gene pairs percentiles
 
-# %%
+# %% tags=[]
 df_plot_percentiles = df_plot[["ccc", "pearson", "spearman"]].quantile(
     np.arange(0.1, 1.0, 0.01)
 )
 
-# %%
+# %% tags=[]
 with pd.option_context("display.max_rows", None):
     display(df_plot_percentiles)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Look at specific gene pair cases
 
-# %%
+# %% tags=[]
 # add columns with ranks
 df_r_data = pd.concat(
     [
@@ -154,22 +154,22 @@ df_r_data = pd.concat(
     axis=1,
 )
 
-# %%
+# %% tags=[]
 df_r_data.head()
 
-# %%
+# %% tags=[]
 df_r_data_boolean_cols = set(
     [x for x in df_r_data.columns if " (high)" in x or " (low)" in x]
 )
 
-# %%
+# %% tags=[]
 df_r_data_boolean_cols
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Functions
 
-# %%
+# %% tags=[]
 def plot_gene_pair(top_pairs_df, idx, bins="log", plot_gene_ids=True):
     """
     It plots a gene pair using a hexbin plot. The idea of this function is
@@ -224,7 +224,7 @@ def plot_gene_pair(top_pairs_df, idx, bins="log", plot_gene_ids=True):
     return p
 
 
-# %%
+# %% tags=[]
 def get_gene_pairs(first_coef, query_set):
     """
     It queries a dataframe with the intersections of different groups (i.e.,
@@ -283,7 +283,7 @@ def get_gene_pairs(first_coef, query_set):
     return _tmp_df
 
 
-# %%
+# %% tags=[]
 def plot_and_save_gene_pair(data, gene0_id, gene1_id, output_file_subset):
     """
     This function creates a joint plot of a pair of genes. It's used to to
@@ -317,7 +317,7 @@ def plot_and_save_gene_pair(data, gene0_id, gene1_id, output_file_subset):
         )
 
 
-# %%
+# %% tags=[]
 def save_gene_pairs(df, gene_set_name):
     """
     Given a dataframe with gene pairs (prioritized by one correlation coefficient over the other coefficients)
@@ -342,7 +342,7 @@ def save_gene_pairs(df, gene_set_name):
 # %% [markdown] tags=[]
 # ## CCC/Spearman vs Pearson
 
-# %%
+# %% tags=[]
 _tmp_df = get_gene_pairs(
     "ccc",
     {
@@ -355,20 +355,20 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Preview
 
-# %%
+# %% tags=[]
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Selection
 
-# %%
+# %% tags=[]
 gene_pair_subset = "c_rs_vs_r"
 
 gene0_id = "ENSG00000135094.10"
@@ -381,7 +381,7 @@ plot_and_save_gene_pair(
     output_file_subset=gene_pair_subset,
 )
 
-# %%
+# %% tags=[]
 gene_pair_subset = "c_rs_vs_r"
 
 gene0_id = "ENSG00000130208.9"
@@ -397,7 +397,7 @@ plot_and_save_gene_pair(
 # %% [markdown] tags=[]
 # ## CCC vs Pearson
 
-# %%
+# %% tags=[]
 _tmp_df = get_gene_pairs(
     "ccc",
     {
@@ -411,20 +411,20 @@ save_gene_pairs(_tmp_df, "clustermatch_vs_pearson")
 display(_tmp_df.shape)
 display(_tmp_df)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Preview
 
-# %%
+# %% tags=[]
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Selection
 
-# %%
+# %% tags=[]
 gene_pair_subset = "c_vs_r"
 
 gene0_id = "ENSG00000275385.1"
@@ -440,7 +440,7 @@ plot_and_save_gene_pair(
 # %% [markdown] tags=[]
 # ## CCC vs Spearman
 
-# %%
+# %% tags=[]
 _tmp_df = get_gene_pairs(
     "ccc",
     {
@@ -454,20 +454,20 @@ save_gene_pairs(_tmp_df, "clustermatch_vs_spearman")
 display(_tmp_df.shape)
 display(_tmp_df)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Preview
 
-# %%
+# %% tags=[]
 for i in range(min(_tmp_df.shape[0], 30)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Selection
 
-# %%
+# %% tags=[]
 gene_pair_subset = "c_vs_rs"
 
 gene0_id = "ENSG00000147050.14"
@@ -480,11 +480,11 @@ plot_and_save_gene_pair(
     output_file_subset=gene_pair_subset,
 )
 
-# %%
+# %% tags=[]
 # get percentiles
 df_plot.loc[(gene0_id, gene1_id), ["ccc", "pearson", "spearman"]]
 
-# %%
+# %% tags=[]
 gene_pair_subset = "c_vs_rs"
 
 gene0_id = "ENSG00000115165.9"
@@ -497,14 +497,14 @@ plot_and_save_gene_pair(
     output_file_subset=gene_pair_subset,
 )
 
-# %%
+# %% tags=[]
 # get percentiles
 df_plot.loc[(gene0_id, gene1_id), ["ccc", "pearson", "spearman"]]
 
 # %% [markdown] tags=[]
 # ## CCC vs Spearman/Pearson
 
-# %%
+# %% tags=[]
 _tmp_df = get_gene_pairs(
     "ccc",
     {
@@ -519,20 +519,20 @@ save_gene_pairs(_tmp_df, "clustermatch_vs_pearson_spearman")
 display(_tmp_df.shape)
 display(_tmp_df)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Preview
 
-# %%
+# %% tags=[]
 for i in range(min(_tmp_df.shape[0], 10)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Selection
 
-# %%
+# %% tags=[]
 gene_pair_subset = "c_vs_r_rs"
 
 gene0_id = "ENSG00000162413.16"
@@ -548,7 +548,7 @@ plot_and_save_gene_pair(
 # %% [markdown] tags=[]
 # ## Pearson vs CCC
 
-# %%
+# %% tags=[]
 _tmp_df = get_gene_pairs(
     "pearson",
     {
@@ -562,20 +562,20 @@ save_gene_pairs(_tmp_df, "pearson_vs_clustermatch")
 display(_tmp_df.shape)
 display(_tmp_df)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Preview
 
-# %%
+# %% tags=[]
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Selection
 
-# %%
+# %% tags=[]
 gene_pair_subset = "r_vs_c"
 
 gene0_id = "ENSG00000130598.15"
@@ -591,7 +591,7 @@ plot_and_save_gene_pair(
 # %% [markdown] tags=[]
 # ## Pearson vs Spearman
 
-# %%
+# %% tags=[]
 _tmp_df = get_gene_pairs(
     "pearson",
     {
@@ -603,23 +603,23 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Preview
 
-# %%
+# %% tags=[]
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Selection
 
 # %% [markdown] tags=[]
 # ## Pearson vs Spearman/CCC
 
-# %%
+# %% tags=[]
 _tmp_df = get_gene_pairs(
     "pearson",
     {
@@ -634,20 +634,20 @@ save_gene_pairs(_tmp_df, "pearson_vs_clustermatch_spearman")
 display(_tmp_df.shape)
 display(_tmp_df)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Preview
 
-# %%
+# %% tags=[]
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Selection
 
-# %%
+# %% tags=[]
 gene_pair_subset = "r_vs_c_rs"
 
 gene0_id = "ENSG00000198467.13"
@@ -663,7 +663,7 @@ plot_and_save_gene_pair(
 # %% [markdown] tags=[]
 # ## Spearman vs Pearson
 
-# %%
+# %% tags=[]
 _tmp_df = get_gene_pairs(
     "spearman",
     {
@@ -675,17 +675,17 @@ _tmp_df = get_gene_pairs(
 display(_tmp_df.shape)
 display(_tmp_df)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Preview
 
-# %%
+# %% tags=[]
 for i in range(min(_tmp_df.shape[0], 5)):
     display(f"Index: {i}")
     p = plot_gene_pair(_tmp_df, i)
     display(p.fig)
     plt.close(p.fig)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Selection
 
-# %%
+# %% tags=[]
