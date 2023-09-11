@@ -26,10 +26,13 @@
 # # Modules
 
 # %% tags=[]
+from time import time
+
 import pandas as pd
 from tqdm import tqdm
 
 from ccc import conf
+from ccc.utils import simplify_string
 from ccc.corr import pearson
 
 # %% [markdown] tags=[]
@@ -37,6 +40,16 @@ from ccc.corr import pearson
 
 # %% tags=[]
 GENE_SELECTION_STRATEGY = "var_pc_log2"
+
+# %% tags=[]
+# select the top 5 tissues (according to sample size, see nbs/05_preprocessing/00-gtex_v8-split_by_tissue.ipynb)
+TISSUES = [
+    # "Muscle - Skeletal",
+    "Whole Blood",
+    # "Skin - Sun Exposed (Lower leg)",
+    # "Adipose - Subcutaneous",
+    # "Artery - Tibial",
+]
 
 # %% tags=[]
 CORRELATION_METHOD = pearson
@@ -65,11 +78,17 @@ display(OUTPUT_DIR)
 # # Data loading
 
 # %% tags=[]
+tissue_in_file_names = [f"_data_{simplify_string(t.lower())}-" for t in TISSUES]
+
+# %% tags=[]
 input_files = sorted(list(INPUT_DIR.glob(f"*-{GENE_SELECTION_STRATEGY}.pkl")))
+input_files = [
+    f for f in input_files if any(tn in f.name for tn in tissue_in_file_names)
+]
 display(len(input_files))
 
-assert len(input_files) == conf.GTEX["N_TISSUES"], len(input_files)
-display(input_files[:5])
+assert len(input_files) == len(TISSUES), len(TISSUES)
+display(input_files)
 
 # %% [markdown] tags=[]
 # # Compute similarity
@@ -97,7 +116,7 @@ display(_tmp.shape)
 display(_tmp)
 
 # %% tags=[]
-# %timeit CORRELATION_METHOD(test_data)
+# %timeit -r1 CORRELATION_METHOD(test_data)
 
 # %% [markdown] tags=[]
 # ## Run
@@ -112,7 +131,13 @@ for tissue_data_file in pbar:
     data = pd.read_pickle(tissue_data_file)
 
     # compute correlations
+    start_time = time()
+
     data_corrs = CORRELATION_METHOD(data)
+
+    end_time = time()
+    elapsed_time = end_time - start_time
+    display(elapsed_time)
 
     # save
     output_filename = f"{tissue_data_file.stem}-{method_name}.pkl"
