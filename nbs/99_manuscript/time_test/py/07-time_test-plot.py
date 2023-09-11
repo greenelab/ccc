@@ -89,6 +89,11 @@ time_results = time_results.replace(
             "cm-3": "CCC (3 cores)",
             "mic-3": "MIC (3 cores)",
             "mic_e-3": "MICe (3 cores)",
+            "p-6": "Pearson (6 cores)",
+            "s-6": "Spearman (6 cores)",
+            "cm-6": "CCC (6 cores)",
+            "mic-6": "MIC (6 cores)",
+            "mic_e-6": "MICe (6 cores)",
         }
     }
 )
@@ -110,13 +115,14 @@ run_numbers = (
     plot_data[
         plot_data["method"].str.contains("1 core", regex=False)
         | plot_data["method"].str.contains("CCC (3 cores)", regex=False)
+        | plot_data["method"].str.contains("CCC (6 cores)", regex=False)
     ]
     .groupby(["data_size", "method"])["time"]
     .describe()
 )
 display(run_numbers)
 
-# %%
+# %% tags=[]
 # this is necessary to make sure we did not mix results when running the time test notebooks
 # that could happen if the notebooks are run separately without running them all together
 assert run_numbers["count"].unique().shape[0] == 2
@@ -167,7 +173,7 @@ with sns.plotting_context("paper", font_scale=1.5):
         aspect=1.4,
     )
 
-    plt.xlabel("Number of measured objects")
+    plt.xlabel("Number of objects")
     plt.ylabel("Time (seconds)")
 
 # %% tags=[]
@@ -184,7 +190,7 @@ with sns.plotting_context("paper", font_scale=1.5):
         aspect=1.4,
     )
 
-    plt.xlabel("Number of measured objects")
+    plt.xlabel("Number of objects")
     plt.ylabel("Time (seconds) in log scale")
 
     g.ax.set_yscale("log")
@@ -200,10 +206,10 @@ with sns.plotting_context("paper", font_scale=1.5):
 plot_data = plot_data.replace(
     {
         "method": {
-            "Pearson (3 cores)": "Pearson",
-            "Spearman (3 cores)": "Spearman",
-            "MIC (3 cores)": "MIC",
-            "MICe (3 cores)": r"$\mathregular{MIC_e}$",
+            "Pearson (6 cores)": "Pearson",
+            "Spearman (6 cores)": "Spearman",
+            "MIC (6 cores)": "MIC",
+            "MICe (6 cores)": r"$\mathregular{MIC_e}$",
         }
     }
 )
@@ -217,6 +223,7 @@ hue_order = [
     r"$\mathregular{MIC_e}$",
     "CCC (1 core)",
     "CCC (3 cores)",
+    "CCC (6 cores)",
     "Spearman",
     "Pearson",
 ]
@@ -237,7 +244,7 @@ with sns.plotting_context("paper", font_scale=1.5):
     )
 
     plt.legend(loc="best")
-    plt.xlabel("Number of measured objects")
+    plt.xlabel("Number of objects")
     plt.ylabel("Time (seconds)")
 
     plt.savefig(
