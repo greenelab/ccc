@@ -1,56 +1,56 @@
-         8190 function calls (8184 primitive calls) in 0.487 seconds
+         8491 function calls (8485 primitive calls) in 0.469 seconds
 
    Ordered by: cumulative time
-   List reduced from 106 to 50 due to restriction <50>
+   List reduced from 167 to 50 due to restriction <50>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000    0.487    0.487 {built-in method builtins.exec}
-        1    0.000    0.000    0.487    0.487 <string>:1(<module>)
-        1    0.001    0.001    0.487    0.487 1375007101.py:1(func)
-        1    0.001    0.001    0.486    0.486 impl.py:307(ccc)
-        2    0.000    0.000    0.325    0.162 impl.py:476(compute_parts)
-        2    0.000    0.000    0.322    0.161 impl.py:478(<listcomp>)
-       10    0.322    0.032    0.322    0.032 impl.py:110(get_parts)
-        2    0.001    0.000    0.159    0.080 impl.py:508(compute_coef)
-       45    0.009    0.000    0.158    0.004 impl.py:154(cdist_parts_basic)
-     3645    0.017    0.000    0.149    0.000 metrics.py:107(adjusted_rand_index)
-     3645    0.132    0.000    0.132    0.000 metrics.py:72(get_pair_confusion_matrix)
-        2    0.003    0.002    0.003    0.002 {built-in method numpy.array}
-       45    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(amax)
-       53    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
-       49    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
-       45    0.000    0.000    0.000    0.000 fromnumeric.py:2638(amax)
-       45    0.000    0.000    0.000    0.000 fromnumeric.py:69(_wrapreduction)
+        1    0.000    0.000    0.469    0.469 {built-in method builtins.exec}
+        1    0.000    0.000    0.469    0.469 <string>:1(<module>)
+        1    0.001    0.001    0.469    0.469 1375007101.py:1(func)
+        1    0.003    0.003    0.468    0.468 impl.py:511(ccc)
+        1    0.003    0.003    0.307    0.307 impl.py:154(get_feature_parts)
+       90    0.305    0.003    0.305    0.003 impl.py:110(get_parts)
+        1    0.000    0.000    0.157    0.157 impl.py:405(compute_coef)
+       45    0.000    0.000    0.157    0.003 impl.py:344(compute_ccc)
+       45    0.009    0.000    0.156    0.003 impl.py:191(cdist_parts_basic)
+     3645    0.017    0.000    0.147    0.000 metrics.py:107(adjusted_rand_index)
+     3645    0.130    0.000    0.130    0.000 metrics.py:72(get_pair_confusion_matrix)
+        1    0.000    0.000    0.000    0.000 process.py:573(__init__)
+        5    0.000    0.000    0.000    0.000 synchronize.py:50(__init__)
         1    0.000    0.000    0.000    0.000 {method 'seed' of 'numpy.random.mtrand.RandomState' objects}
-       45    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+        4    0.000    0.000    0.000    0.000 context.py:65(Lock)
+        1    0.000    0.000    0.000    0.000 process.py:160(__init__)
+        4    0.000    0.000    0.000    0.000 synchronize.py:161(__init__)
+        1    0.000    0.000    0.000    0.000 queues.py:37(__init__)
+        2    0.000    0.000    0.000    0.000 _base.py:636(__exit__)
+       49    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        1    0.000    0.000    0.000    0.000 process.py:731(shutdown)
         9    0.000    0.000    0.000    0.000 typedlist.py:341(append)
-        1    0.000    0.000    0.000    0.000 contextlib.py:76(inner)
+        1    0.000    0.000    0.000    0.000 context.py:110(SimpleQueue)
+        1    0.000    0.000    0.000    0.000 queues.py:340(__init__)
         1    0.000    0.000    0.000    0.000 typedlist.py:298(_initialise_list)
-        1    0.000    0.000    0.000    0.000 {function SeedSequence.generate_state at 0x7f47e25879d0}
-        2    0.000    0.000    0.000    0.000 impl.py:242(get_chunks)
-        7    0.000    0.000    0.000    0.000 numeric.py:289(full)
-       45    0.000    0.000    0.000    0.000 {method 'argmax' of 'numpy.ndarray' objects}
-        2    0.000    0.000    0.000    0.000 abstract.py:60(__call__)
+        1    0.000    0.000    0.000    0.000 contextlib.py:76(inner)
+       90    0.000    0.000    0.000    0.000 {built-in method numpy.array}
+        5    0.000    0.000    0.000    0.000 synchronize.py:114(_make_name)
         1    0.000    0.000    0.000    0.000 random.py:791(getrandbits)
         1    0.000    0.000    0.000    0.000 {built-in method posix.urandom}
+       11    0.000    0.000    0.000    0.000 {built-in method builtins.next}
+        5    0.000    0.000    0.000    0.000 tempfile.py:149(__next__)
+        1    0.000    0.000    0.000    0.000 {function SeedSequence.generate_state at 0x7fdbc84009d0}
+        5    0.000    0.000    0.000    0.000 tempfile.py:152(<listcomp>)
+        1    0.000    0.000    0.000    0.000 context.py:85(BoundedSemaphore)
+       40    0.000    0.000    0.000    0.000 random.py:343(choice)
+        2    0.000    0.000    0.000    0.000 abstract.py:60(__call__)
+        1    0.000    0.000    0.000    0.000 synchronize.py:144(__init__)
+       45    0.000    0.000    0.000    0.000 {method 'argmax' of 'numpy.ndarray' objects}
+        5    0.000    0.000    0.000    0.000 numeric.py:289(full)
+        2    0.000    0.000    0.000    0.000 impl.py:279(get_chunks)
         2    0.000    0.000    0.000    0.000 typeof.py:25(typeof)
         1    0.000    0.000    0.000    0.000 typedlist.py:270(_parse_arg)
+        1    0.000    0.000    0.000    0.000 impl.py:699(<listcomp>)
         2    0.000    0.000    0.000    0.000 functools.py:883(wrapper)
-       45    0.000    0.000    0.000    0.000 core.py:85(unravel_index_2d)
-        7    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(copyto)
-        2    0.000    0.000    0.000    0.000 abstract.py:48(_intern)
-        1    0.000    0.000    0.000    0.000 dispatcher.py:677(typeof_pyval)
-        2    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
-       45    0.000    0.000    0.000    0.000 fromnumeric.py:70(<dictcomp>)
-       46    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
-        1    0.000    0.000    0.000    0.000 containers.py:618(__init__)
-        1    0.000    0.000    0.000    0.000 typeof.py:257(_typeof_nb_type)
-       45    0.000    0.000    0.000    0.000 impl.py:218(get_coords_from_index)
-        1    0.000    0.000    0.000    0.000 thread.py:123(__init__)
-        1    0.000    0.000    0.000    0.000 _base.py:636(__exit__)
-        2    0.000    0.000    0.000    0.000 _ufunc_config.py:32(seterr)
-        1    0.000    0.000    0.000    0.000 _ufunc_config.py:429(__enter__)
-        9    0.000    0.000    0.000    0.000 typedlist.py:81(_append)
-        2    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
-        7    0.000    0.000    0.000    0.000 {built-in method numpy.empty}
-        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(concatenate)
+       40    0.000    0.000    0.000    0.000 random.py:237(_randbelow_with_getrandbits)
+        6    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        1    0.000    0.000    0.000    0.000 process.py:77(wakeup)
+        1    0.000    0.000    0.000    0.000 impl.py:700(<listcomp>)
+        1    0.000    0.000    0.000    0.000 impl.py:688(<listcomp>)

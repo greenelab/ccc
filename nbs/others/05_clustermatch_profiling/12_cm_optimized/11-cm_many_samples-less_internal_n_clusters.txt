@@ -1,56 +1,56 @@
-         11755 function calls (11485 primitive calls) in 1.306 seconds
+         32399 function calls (32129 primitive calls) in 1.308 seconds
 
    Ordered by: cumulative time
-   List reduced from 106 to 50 due to restriction <50>
+   List reduced from 167 to 50 due to restriction <50>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.000    0.000    1.306    1.306 {built-in method builtins.exec}
-        1    0.000    0.000    1.306    1.306 <string>:1(<module>)
-        1    0.000    0.000    1.306    1.306 3892363018.py:1(func)
-       45    0.005    0.000    1.306    0.029 impl.py:307(ccc)
-       90    0.000    0.000    1.251    0.014 impl.py:476(compute_parts)
-       90    0.001    0.000    1.249    0.014 impl.py:478(<listcomp>)
-       90    1.248    0.014    1.248    0.014 impl.py:110(get_parts)
-       45    0.001    0.000    0.038    0.001 impl.py:508(compute_coef)
-       45    0.002    0.000    0.036    0.001 impl.py:154(cdist_parts_basic)
-      720    0.004    0.000    0.033    0.000 metrics.py:107(adjusted_rand_index)
-      720    0.030    0.000    0.030    0.000 metrics.py:72(get_pair_confusion_matrix)
+        1    0.000    0.000    1.308    1.308 {built-in method builtins.exec}
+        1    0.000    0.000    1.308    1.308 <string>:1(<module>)
+        1    0.000    0.000    1.308    1.308 3892363018.py:1(func)
+       45    0.005    0.000    1.308    0.029 impl.py:516(ccc)
+       45    0.005    0.000    1.243    0.028 impl.py:154(get_feature_parts)
+      360    1.238    0.003    1.238    0.003 impl.py:110(get_parts)
+       45    0.001    0.000    0.033    0.001 impl.py:410(compute_coef)
+       45    0.000    0.000    0.032    0.001 impl.py:349(compute_ccc)
+       45    0.002    0.000    0.032    0.001 impl.py:196(cdist_parts_basic)
+      720    0.004    0.000    0.029    0.000 metrics.py:107(adjusted_rand_index)
+      720    0.026    0.000    0.026    0.000 metrics.py:72(get_pair_confusion_matrix)
+       45    0.000    0.000    0.012    0.000 process.py:573(__init__)
+      225    0.005    0.000    0.009    0.000 synchronize.py:50(__init__)
+      180    0.000    0.000    0.008    0.000 context.py:65(Lock)
+      180    0.000    0.000    0.007    0.000 synchronize.py:161(__init__)
+       45    0.000    0.000    0.007    0.000 process.py:160(__init__)
+       45    0.000    0.000    0.007    0.000 queues.py:37(__init__)
        45    0.002    0.000    0.006    0.000 {method 'seed' of 'numpy.random.mtrand.RandomState' objects}
+       45    0.000    0.000    0.004    0.000 context.py:110(SimpleQueue)
+       45    0.000    0.000    0.004    0.000 queues.py:340(__init__)
        45    0.000    0.000    0.003    0.000 contextlib.py:76(inner)
-       45    0.003    0.000    0.003    0.000 {function SeedSequence.generate_state at 0x7ff0dc2089d0}
+      225    0.000    0.000    0.003    0.000 synchronize.py:114(_make_name)
+       45    0.003    0.000    0.003    0.000 {function SeedSequence.generate_state at 0x7f65546659d0}
+      495    0.000    0.000    0.003    0.000 {built-in method builtins.next}
       180    0.000    0.000    0.003    0.000 typedlist.py:341(append)
-       90    0.002    0.000    0.002    0.000 {built-in method numpy.array}
+      225    0.000    0.000    0.003    0.000 tempfile.py:149(__next__)
+       90    0.000    0.000    0.003    0.000 _base.py:636(__exit__)
+       45    0.001    0.000    0.002    0.000 process.py:731(shutdown)
        45    0.000    0.000    0.002    0.000 typedlist.py:298(_initialise_list)
+      225    0.000    0.000    0.002    0.000 tempfile.py:152(<listcomp>)
+     1800    0.001    0.000    0.002    0.000 random.py:343(choice)
+       45    0.000    0.000    0.002    0.000 context.py:85(BoundedSemaphore)
+       45    0.000    0.000    0.002    0.000 synchronize.py:144(__init__)
+      270    0.001    0.000    0.001    0.000 {built-in method numpy.zeros}
        90    0.000    0.000    0.001    0.000 abstract.py:60(__call__)
-      225    0.001    0.000    0.001    0.000 {built-in method numpy.zeros}
+     1800    0.001    0.000    0.001    0.000 random.py:237(_randbelow_with_getrandbits)
        45    0.000    0.000    0.001    0.000 typedlist.py:270(_parse_arg)
       226    0.000    0.000    0.001    0.000 numeric.py:289(full)
        90    0.000    0.000    0.001    0.000 typeof.py:25(typeof)
-       90    0.001    0.000    0.001    0.000 impl.py:242(get_chunks)
-      316    0.000    0.000    0.001    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+      270    0.000    0.000    0.001    0.000 util.py:171(register_after_fork)
+       90    0.001    0.000    0.001    0.000 impl.py:284(get_chunks)
        90    0.000    0.000    0.001    0.000 functools.py:883(wrapper)
        45    0.000    0.000    0.001    0.000 dispatcher.py:677(typeof_pyval)
-       45    0.000    0.000    0.001    0.000 <__array_function__ internals>:2(amax)
+      135    0.000    0.000    0.001    0.000 connection.py:521(Pipe)
        90    0.000    0.000    0.001    0.000 abstract.py:48(_intern)
-       90    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
-      226    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(copyto)
-       45    0.000    0.000    0.000    0.000 fromnumeric.py:2638(amax)
-       45    0.000    0.000    0.000    0.000 typeof.py:257(_typeof_nb_type)
-       45    0.000    0.000    0.000    0.000 fromnumeric.py:69(_wrapreduction)
-       45    0.000    0.000    0.000    0.000 containers.py:618(__init__)
-       45    0.000    0.000    0.000    0.000 thread.py:123(__init__)
-       90    0.000    0.000    0.000    0.000 _ufunc_config.py:32(seterr)
-       45    0.000    0.000    0.000    0.000 random.py:791(getrandbits)
-       45    0.000    0.000    0.000    0.000 _ufunc_config.py:429(__enter__)
-       45    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}
-       45    0.000    0.000    0.000    0.000 {built-in method posix.urandom}
-      405    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
-      180    0.000    0.000    0.000    0.000 typedlist.py:81(_append)
-  540/450    0.000    0.000    0.000    0.000 abstract.py:120(__eq__)
-      226    0.000    0.000    0.000    0.000 {built-in method numpy.empty}
-       45    0.000    0.000    0.000    0.000 threading.py:398(__init__)
-       45    0.000    0.000    0.000    0.000 _ufunc_config.py:434(__exit__)
-       45    0.000    0.000    0.000    0.000 _base.py:636(__exit__)
-       90    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
-       45    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(concatenate)
-   180/90    0.000    0.000    0.000    0.000 abstract.py:117(__hash__)
+      270    0.000    0.000    0.001    0.000 weakref.py:165(__setitem__)
+       45    0.000    0.000    0.001    0.000 process.py:67(__init__)
+      360    0.001    0.000    0.001    0.000 {built-in method numpy.array}
+       90    0.000    0.000    0.001    0.000 {method 'get' of 'dict' objects}
+       45    0.000    0.000    0.000    0.000 context.py:60(Pipe)
