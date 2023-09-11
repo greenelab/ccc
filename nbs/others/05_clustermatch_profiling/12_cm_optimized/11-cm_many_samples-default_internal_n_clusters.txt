@@ -1,0 +1,56 @@
+         18955 function calls (18685 primitive calls) in 3.127 seconds
+
+   Ordered by: cumulative time
+   List reduced from 106 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    3.127    3.127 {built-in method builtins.exec}
+        1    0.000    0.000    3.127    3.127 <string>:1(<module>)
+        1    0.010    0.010    3.127    3.127 1514735963.py:1(func)
+       45    0.009    0.000    3.117    0.069 impl.py:307(ccc)
+       90    0.000    0.000    2.927    0.033 impl.py:476(compute_parts)
+       90    0.001    0.000    2.889    0.032 impl.py:478(<listcomp>)
+       90    2.889    0.032    2.889    0.032 impl.py:110(get_parts)
+       45    0.001    0.000    0.164    0.004 impl.py:508(compute_coef)
+       45    0.009    0.000    0.161    0.004 impl.py:154(cdist_parts_basic)
+     3645    0.017    0.000    0.152    0.000 metrics.py:107(adjusted_rand_index)
+     3645    0.135    0.000    0.135    0.000 metrics.py:72(get_pair_confusion_matrix)
+       90    0.038    0.000    0.038    0.000 {built-in method numpy.array}
+       45    0.002    0.000    0.007    0.000 {method 'seed' of 'numpy.random.mtrand.RandomState' objects}
+      405    0.001    0.000    0.005    0.000 typedlist.py:341(append)
+       45    0.000    0.000    0.004    0.000 contextlib.py:76(inner)
+       45    0.000    0.000    0.003    0.000 typedlist.py:298(_initialise_list)
+       45    0.003    0.000    0.003    0.000 {function SeedSequence.generate_state at 0x7ff0dc2089d0}
+       90    0.000    0.000    0.002    0.000 abstract.py:60(__call__)
+      225    0.002    0.000    0.002    0.000 {built-in method numpy.zeros}
+       90    0.000    0.000    0.001    0.000 typeof.py:25(typeof)
+       45    0.000    0.000    0.001    0.000 typedlist.py:270(_parse_arg)
+      316    0.001    0.000    0.001    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+       90    0.001    0.000    0.001    0.000 impl.py:242(get_chunks)
+      226    0.000    0.000    0.001    0.000 numeric.py:289(full)
+       90    0.000    0.000    0.001    0.000 functools.py:883(wrapper)
+       45    0.000    0.000    0.001    0.000 dispatcher.py:677(typeof_pyval)
+       45    0.000    0.000    0.001    0.000 <__array_function__ internals>:2(amax)
+       90    0.000    0.000    0.001    0.000 abstract.py:48(_intern)
+       45    0.000    0.000    0.001    0.000 fromnumeric.py:2638(amax)
+       90    0.000    0.000    0.001    0.000 {method 'get' of 'dict' objects}
+       45    0.000    0.000    0.001    0.000 typeof.py:257(_typeof_nb_type)
+       45    0.000    0.000    0.001    0.000 fromnumeric.py:69(_wrapreduction)
+      226    0.000    0.000    0.001    0.000 <__array_function__ internals>:2(copyto)
+       45    0.000    0.000    0.001    0.000 random.py:791(getrandbits)
+       45    0.000    0.000    0.001    0.000 containers.py:618(__init__)
+       45    0.000    0.000    0.001    0.000 thread.py:123(__init__)
+       90    0.000    0.000    0.000    0.000 _ufunc_config.py:32(seterr)
+       45    0.000    0.000    0.000    0.000 _ufunc_config.py:429(__enter__)
+       45    0.000    0.000    0.000    0.000 {built-in method posix.urandom}
+      405    0.000    0.000    0.000    0.000 typedlist.py:81(_append)
+      405    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+       45    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+       45    0.000    0.000    0.000    0.000 threading.py:398(__init__)
+       45    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(concatenate)
+       45    0.000    0.000    0.000    0.000 _base.py:636(__exit__)
+  540/450    0.000    0.000    0.000    0.000 abstract.py:120(__eq__)
+       90    0.000    0.000    0.000    0.000 functools.py:817(dispatch)
+      226    0.000    0.000    0.000    0.000 {built-in method numpy.empty}
+       90    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
+   180/90    0.000    0.000    0.000    0.000 abstract.py:117(__hash__)

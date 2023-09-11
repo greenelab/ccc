@@ -1,0 +1,56 @@
+         2310 function calls (2304 primitive calls) in 0.175 seconds
+
+   Ordered by: cumulative time
+   List reduced from 106 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.175    0.175 {built-in method builtins.exec}
+        1    0.000    0.000    0.175    0.175 <string>:1(<module>)
+        1    0.000    0.000    0.175    0.175 3466635110.py:1(func)
+        1    0.001    0.001    0.175    0.175 impl.py:307(ccc)
+        2    0.000    0.000    0.140    0.070 impl.py:476(compute_parts)
+        2    0.000    0.000    0.139    0.070 impl.py:478(<listcomp>)
+       10    0.139    0.014    0.139    0.014 impl.py:110(get_parts)
+        2    0.001    0.000    0.034    0.017 impl.py:508(compute_coef)
+       45    0.002    0.000    0.033    0.001 impl.py:154(cdist_parts_basic)
+      720    0.003    0.000    0.031    0.000 metrics.py:107(adjusted_rand_index)
+      720    0.027    0.000    0.027    0.000 metrics.py:72(get_pair_confusion_matrix)
+        2    0.001    0.000    0.001    0.000 {built-in method numpy.array}
+       45    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(amax)
+       53    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+       45    0.000    0.000    0.000    0.000 fromnumeric.py:2638(amax)
+       45    0.000    0.000    0.000    0.000 fromnumeric.py:69(_wrapreduction)
+       49    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        1    0.000    0.000    0.000    0.000 {method 'seed' of 'numpy.random.mtrand.RandomState' objects}
+       45    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+        4    0.000    0.000    0.000    0.000 typedlist.py:341(append)
+        1    0.000    0.000    0.000    0.000 typedlist.py:298(_initialise_list)
+        1    0.000    0.000    0.000    0.000 contextlib.py:76(inner)
+        1    0.000    0.000    0.000    0.000 {function SeedSequence.generate_state at 0x7f47e25879d0}
+        2    0.000    0.000    0.000    0.000 abstract.py:60(__call__)
+        2    0.000    0.000    0.000    0.000 impl.py:242(get_chunks)
+       45    0.000    0.000    0.000    0.000 {method 'argmax' of 'numpy.ndarray' objects}
+        7    0.000    0.000    0.000    0.000 numeric.py:289(full)
+        1    0.000    0.000    0.000    0.000 random.py:791(getrandbits)
+        2    0.000    0.000    0.000    0.000 typeof.py:25(typeof)
+        1    0.000    0.000    0.000    0.000 typedlist.py:270(_parse_arg)
+        1    0.000    0.000    0.000    0.000 {built-in method posix.urandom}
+        2    0.000    0.000    0.000    0.000 functools.py:883(wrapper)
+       45    0.000    0.000    0.000    0.000 core.py:85(unravel_index_2d)
+        2    0.000    0.000    0.000    0.000 abstract.py:48(_intern)
+        1    0.000    0.000    0.000    0.000 dispatcher.py:677(typeof_pyval)
+        7    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(copyto)
+        2    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+       45    0.000    0.000    0.000    0.000 fromnumeric.py:70(<dictcomp>)
+        1    0.000    0.000    0.000    0.000 containers.py:618(__init__)
+        1    0.000    0.000    0.000    0.000 typeof.py:257(_typeof_nb_type)
+       46    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+       45    0.000    0.000    0.000    0.000 impl.py:218(get_coords_from_index)
+        2    0.000    0.000    0.000    0.000 _ufunc_config.py:32(seterr)
+        1    0.000    0.000    0.000    0.000 thread.py:123(__init__)
+        1    0.000    0.000    0.000    0.000 _ufunc_config.py:429(__enter__)
+        1    0.000    0.000    0.000    0.000 _base.py:636(__exit__)
+       10    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+        2    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
+        1    0.000    0.000    0.000    0.000 thread.py:216(shutdown)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(concatenate)

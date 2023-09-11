@@ -1,0 +1,56 @@
+         203270 function calls in 53.259 seconds
+
+   Ordered by: cumulative time
+   List reduced from 106 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   53.259   53.259 {built-in method builtins.exec}
+        1    0.000    0.000   53.259   53.259 <string>:1(<module>)
+        1    0.001    0.001   53.259   53.259 1375007101.py:1(func)
+        1    0.003    0.003   53.258   53.258 impl.py:307(ccc)
+        2    0.000    0.000   53.000   26.500 impl.py:508(compute_coef)
+       45    0.012    0.000   52.998    1.178 impl.py:154(cdist_parts_basic)
+     3645    0.017    0.000   52.986    0.015 metrics.py:107(adjusted_rand_index)
+     3645    0.035    0.000   52.969    0.015 metrics.py:72(get_pair_confusion_matrix)
+     3645   52.671    0.014   52.867    0.015 metrics.py:42(get_contingency_matrix)
+    15173    0.006    0.000    0.415    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        2    0.000    0.000    0.255    0.128 impl.py:476(compute_parts)
+        2    0.000    0.000    0.255    0.128 impl.py:478(<listcomp>)
+       10    0.001    0.000    0.255    0.026 impl.py:110(get_parts)
+       90    0.009    0.000    0.213    0.002 impl.py:36(run_quantile_clustering)
+    25605    0.204    0.000    0.204    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+     7335    0.003    0.000    0.194    0.000 <__array_function__ internals>:2(amax)
+     7335    0.005    0.000    0.187    0.000 fromnumeric.py:2638(amax)
+     7335    0.007    0.000    0.182    0.000 fromnumeric.py:69(_wrapreduction)
+      270    0.000    0.000    0.173    0.001 fromnumeric.py:51(_wrapfunc)
+       90    0.000    0.000    0.172    0.002 <__array_function__ internals>:2(argsort)
+       90    0.000    0.000    0.171    0.002 fromnumeric.py:1006(argsort)
+       90    0.171    0.002    0.171    0.002 {method 'argsort' of 'numpy.ndarray' objects}
+    18225    0.007    0.000    0.043    0.000 {method 'sum' of 'numpy.ndarray' objects}
+       10    0.000    0.000    0.041    0.004 impl.py:144(<listcomp>)
+       90    0.000    0.000    0.041    0.000 <__array_function__ internals>:2(unique)
+       90    0.000    0.000    0.041    0.000 arraysetops.py:138(unique)
+       90    0.001    0.000    0.041    0.000 arraysetops.py:320(_unique1d)
+       90    0.040    0.000    0.040    0.000 {method 'sort' of 'numpy.ndarray' objects}
+    18225    0.004    0.000    0.036    0.000 _methods.py:46(_sum)
+       90    0.022    0.000    0.031    0.000 stats.py:65(rank)
+     7380    0.003    0.000    0.015    0.000 <__array_function__ internals>:2(ravel)
+     7380    0.004    0.000    0.008    0.000 fromnumeric.py:1718(ravel)
+     7290    0.007    0.000    0.007    0.000 {method 'dot' of 'numpy.ndarray' objects}
+       90    0.006    0.000    0.006    0.000 {method 'cumsum' of 'numpy.ndarray' objects}
+     7335    0.002    0.000    0.002    0.000 fromnumeric.py:70(<dictcomp>)
+     3884    0.002    0.000    0.002    0.000 {built-in method numpy.zeros}
+     7380    0.002    0.000    0.002    0.000 {method 'ravel' of 'numpy.ndarray' objects}
+     3922    0.002    0.000    0.002    0.000 {built-in method numpy.empty}
+       90    0.000    0.000    0.002    0.000 <__array_function__ internals>:2(nonzero)
+       90    0.000    0.000    0.002    0.000 fromnumeric.py:1829(nonzero)
+       90    0.001    0.000    0.001    0.000 {method 'nonzero' of 'numpy.ndarray' objects}
+       90    0.000    0.000    0.001    0.000 impl.py:19(get_perc_from_k)
+     7384    0.001    0.000    0.001    0.000 {built-in method builtins.isinstance}
+       90    0.001    0.000    0.001    0.000 impl.py:33(<listcomp>)
+     7335    0.001    0.000    0.001    0.000 fromnumeric.py:2633(_amax_dispatcher)
+     3645    0.001    0.000    0.001    0.000 {method 'transpose' of 'numpy.ndarray' objects}
+     7380    0.001    0.000    0.001    0.000 fromnumeric.py:1714(_ravel_dispatcher)
+     7560    0.001    0.000    0.001    0.000 {built-in method numpy.asanyarray}
+       92    0.001    0.000    0.001    0.000 {built-in method numpy.arange}
+     7335    0.001    0.000    0.001    0.000 {method 'items' of 'dict' objects}
