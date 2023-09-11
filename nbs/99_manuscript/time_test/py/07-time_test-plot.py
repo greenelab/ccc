@@ -116,6 +116,11 @@ run_numbers = (
 )
 display(run_numbers)
 
+# %%
+# this is necessary to make sure we did not mix results when running the time test notebooks
+# that could happen if the notebooks are run separately without running them all together
+assert run_numbers["count"].unique().shape[0] == 2
+
 # %% [markdown] tags=[]
 # # Plot
 
