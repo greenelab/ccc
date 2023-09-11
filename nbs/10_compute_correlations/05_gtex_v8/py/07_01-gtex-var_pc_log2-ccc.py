@@ -29,6 +29,7 @@
 from time import time
 
 import pandas as pd
+from tqdm import tqdm
 
 from ccc import conf
 from ccc.utils import simplify_string
@@ -122,8 +123,10 @@ display(_tmp)
 # ## Run
 
 # %% tags=[]
-for tissue_data_file in input_files:
-    display(tissue_data_file.stem)
+pbar = tqdm(input_files, ncols=100)
+
+for tissue_data_file in pbar:
+    pbar.set_description(tissue_data_file.stem)
 
     # read
     data = pd.read_pickle(tissue_data_file)
