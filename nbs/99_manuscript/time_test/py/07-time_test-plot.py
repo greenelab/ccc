@@ -222,7 +222,6 @@ hue_order = [
     "MIC",
     r"$\mathregular{MIC_e}$",
     "CCC (1 core)",
-    "CCC (3 cores)",
     "CCC (6 cores)",
     "Spearman",
     "Pearson",
