@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -33,6 +33,7 @@
 # %env OMP_NUM_THREADS=3
 
 # %% tags=[]
+import os
 from time import time
 
 import numpy as np
@@ -47,6 +48,10 @@ from ccc.methods import mic
 # # Settings
 
 # %% tags=[]
+N_JOBS = int(os.environ["CM_N_JOBS"])
+display(N_JOBS)
+
+# %% tags=[]
 OUTPUT_FILENAME = "time_test.pkl"
 
 # %% tags=[]
@@ -59,6 +64,7 @@ DATA_SIZES = [
     50000,
     100000,
     1000000,
+    10000000,
 ]
 
 N_REPS = 10
@@ -122,7 +128,7 @@ for s in DATA_SIZES:
     run_method(lambda x, y: spearmanr(x, y)[0], "s-3", s)
 
     print("  cm")
-    run_method(lambda x, y: ccc(x, y), "cm-3", s)
+    run_method(lambda x, y: ccc(x, y, n_jobs=N_JOBS), "cm-3", s)
 
     if s <= 50000:
         print("  mic_e")
