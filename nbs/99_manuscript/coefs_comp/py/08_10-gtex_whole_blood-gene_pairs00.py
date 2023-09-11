@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -36,7 +36,7 @@ from ccc.coef import ccc
 # %% [markdown] tags=[]
 # # Settings
 
-# %%
+# %% tags=[]
 # this gene pair was originally found with ccc on whole blood
 # interesting: https://clincancerres.aacrjournals.org/content/26/21/5567.figures-only
 gene0_id, gene1_id = "ENSG00000147050.14", "ENSG00000183878.15"
@@ -45,7 +45,7 @@ gene0_symbol, gene1_symbol = "KDM6A", "UTY"
 # %% [markdown] tags=[]
 # # Paths
 
-# %%
+# %% tags=[]
 TISSUE_DIR = conf.GTEX["DATA_DIR"] / "data_by_tissue"
 assert TISSUE_DIR.exists()
 
@@ -58,41 +58,41 @@ OUTPUT_FIGURE_DIR = (
 OUTPUT_FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_FIGURE_DIR)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Data
 
 # %% [markdown] tags=[]
 # ## GTEx metadata
 
-# %%
+# %% tags=[]
 gtex_metadata = pd.read_pickle(conf.GTEX["DATA_DIR"] / "gtex_v8-sample_metadata.pkl")
 
-# %%
+# %% tags=[]
 gtex_metadata.shape
 
-# %%
+# %% tags=[]
 gtex_metadata.head()
 
 # %% [markdown] tags=[]
 # ## Gene Ensembl ID -> Symbol mapping
 
-# %%
+# %% tags=[]
 gene_map = pd.read_pickle(conf.GTEX["DATA_DIR"] / "gtex_gene_id_symbol_mappings.pkl")
 
-# %%
+# %% tags=[]
 gene_map = gene_map.set_index("gene_ens_id")["gene_symbol"].to_dict()
 
-# %%
+# %% tags=[]
 assert gene_map["ENSG00000145309.5"] == "CABS1"
 
-# %%
+# %% tags=[]
 assert gene_map[gene0_id] == gene0_symbol
 assert gene_map[gene1_id] == gene1_symbol
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Compute correlation on all tissues
 
-# %%
+# %% tags=[]
 res_all = pd.DataFrame(
     {
         f.stem.split("_data_")[1]: {
@@ -106,26 +106,26 @@ res_all = pd.DataFrame(
     }
 ).T.abs()
 
-# %%
+# %% tags=[]
 res_all.shape
 
-# %%
+# %% tags=[]
 res_all.head()
 
-# %%
+# %% tags=[]
 res_all.sort_values("cm")
 
-# %%
+# %% tags=[]
 res_all.sort_values("pearson")
 
-# %%
+# %% tags=[]
 res_all.sort_values("spearman")
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Plot
 
-# %%
+# %% tags=[]
 def get_tissue_file(name):
     """
     Given a part of a tissue name, it returns a file path to the
@@ -148,23 +148,23 @@ def get_tissue_file(name):
     return tissue_files[0]
 
 
-# %%
+# %% tags=[]
 # testing
 _tmp = get_tissue_file("whole_blood")
 assert _tmp.exists()
 
 
-# %%
+# %% tags=[]
 def simplify_tissue_name(tissue_name):
     return f"{tissue_name[0].upper()}{tissue_name[1:].replace('_', ' ')}"
 
 
-# %%
+# %% tags=[]
 assert simplify_tissue_name("whole_blood") == "Whole blood"
 assert simplify_tissue_name("uterus") == "Uterus"
 
 
-# %%
+# %% tags=[]
 def plot_gene_pair(
     tissue_name, gene0, gene1, hue=None, kind="hex", ylim=None, bins="log"
 ):
@@ -244,10 +244,10 @@ def plot_gene_pair(
     return tissue_data
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## In whole blood (where this gene pair was found)
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "whole_blood",
     gene0_id,
@@ -259,7 +259,7 @@ _tissue_data = plot_gene_pair(
 # %% [markdown] tags=[]
 # ## Lowest tissues in ccc
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "uterus",
     gene0_id,
@@ -268,7 +268,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "ovary",
     gene0_id,
@@ -277,7 +277,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "vagina",
     gene0_id,
@@ -286,7 +286,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "brain_cerebellum",
     gene0_id,
@@ -295,7 +295,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "small_intestine_terminal_ileum",
     gene0_id,
@@ -304,7 +304,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "brain_spinal_cord_cervical_c1",
     gene0_id,
@@ -313,7 +313,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "testis",
     gene0_id,
@@ -325,7 +325,7 @@ _tissue_data = plot_gene_pair(
 # %% [markdown] tags=[]
 # ## Highest tissues in ccc
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "cells_cultured_fibroblasts",
     gene0_id,
@@ -334,7 +334,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "breast_mammary_tissue",
     gene0_id,
@@ -343,10 +343,10 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Pearson low, CCC high
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "brain_anterior_cingulate_cortex_ba24",
     gene0_id,
@@ -355,7 +355,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "brain_amygdala",
     gene0_id,
@@ -364,7 +364,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "brain_frontal_cortex_ba9",
     gene0_id,
@@ -373,7 +373,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "bladder",
     gene0_id,
@@ -382,7 +382,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "heart_atrial_appendage",
     gene0_id,
@@ -391,10 +391,10 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Spearman low, CCC high
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "heart_left_ventricle",
     gene0_id,
@@ -403,7 +403,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "adipose_visceral_omentum",
     gene0_id,
@@ -412,7 +412,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "skin_not_sun_exposed_suprapubic",
     gene0_id,
@@ -421,7 +421,7 @@ _tissue_data = plot_gene_pair(
     kind="scatter",
 )
 
-# %%
+# %% tags=[]
 _tissue_data = plot_gene_pair(
     "pancreas",
     gene0_id,
@@ -433,10 +433,10 @@ _tissue_data = plot_gene_pair(
 # %% [markdown] tags=[]
 # # Create final figure
 
-# %%
+# %% tags=[]
 from svgutils.compose import Figure, SVG, Panel
 
-# %%
+# %% tags=[]
 Figure(
     "607.67480cm",
     "870.45984cm",
@@ -477,7 +477,7 @@ Figure(
     ).move(0, 220 * 3),
 ).save(OUTPUT_FIGURE_DIR / "gtex-KDM6A_vs_UTY-main.svg")
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Now open the file, reside to fit drawing to page, and add a white rectangle to the background.
 
-# %%
+# %% tags=[]
