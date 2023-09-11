@@ -1,0 +1,56 @@
+         42365 function calls in 10.670 seconds
+
+   Ordered by: cumulative time
+   List reduced from 106 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   10.670   10.670 {built-in method builtins.exec}
+        1    0.000    0.000   10.670   10.670 <string>:1(<module>)
+        1    0.000    0.000   10.670   10.670 3466635110.py:1(func)
+        1    0.000    0.000   10.670   10.670 impl.py:307(ccc)
+        2    0.000    0.000   10.560    5.280 impl.py:508(compute_coef)
+       45    0.003    0.000   10.558    0.235 impl.py:154(cdist_parts_basic)
+      720    0.003    0.000   10.556    0.015 metrics.py:107(adjusted_rand_index)
+      720    0.007    0.000   10.552    0.015 metrics.py:72(get_pair_confusion_matrix)
+      720   10.493    0.015   10.532    0.015 metrics.py:42(get_contingency_matrix)
+     3173    0.001    0.000    0.132    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        2    0.000    0.000    0.110    0.055 impl.py:476(compute_parts)
+        2    0.000    0.000    0.110    0.055 impl.py:478(<listcomp>)
+       10    0.000    0.000    0.110    0.011 impl.py:110(get_parts)
+       40    0.004    0.000    0.094    0.002 impl.py:36(run_quantile_clustering)
+      120    0.000    0.000    0.077    0.001 fromnumeric.py:51(_wrapfunc)
+       40    0.000    0.000    0.076    0.002 <__array_function__ internals>:2(argsort)
+       40    0.000    0.000    0.076    0.002 fromnumeric.py:1006(argsort)
+       40    0.076    0.002    0.076    0.002 {method 'argsort' of 'numpy.ndarray' objects}
+     5130    0.040    0.000    0.040    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+     1485    0.001    0.000    0.039    0.000 <__array_function__ internals>:2(amax)
+     1485    0.001    0.000    0.037    0.000 fromnumeric.py:2638(amax)
+     1485    0.002    0.000    0.036    0.000 fromnumeric.py:69(_wrapreduction)
+       10    0.000    0.000    0.016    0.002 impl.py:144(<listcomp>)
+       40    0.000    0.000    0.016    0.000 <__array_function__ internals>:2(unique)
+       40    0.000    0.000    0.016    0.000 arraysetops.py:138(unique)
+       40    0.000    0.000    0.016    0.000 arraysetops.py:320(_unique1d)
+       40    0.015    0.000    0.015    0.000 {method 'sort' of 'numpy.ndarray' objects}
+       40    0.009    0.000    0.013    0.000 stats.py:65(rank)
+     3600    0.001    0.000    0.008    0.000 {method 'sum' of 'numpy.ndarray' objects}
+     3600    0.001    0.000    0.007    0.000 _methods.py:46(_sum)
+     1480    0.001    0.000    0.003    0.000 <__array_function__ internals>:2(ravel)
+       40    0.003    0.000    0.003    0.000 {method 'cumsum' of 'numpy.ndarray' objects}
+     1480    0.001    0.000    0.002    0.000 fromnumeric.py:1718(ravel)
+     1440    0.001    0.000    0.001    0.000 {method 'dot' of 'numpy.ndarray' objects}
+      859    0.001    0.000    0.001    0.000 {built-in method numpy.zeros}
+       40    0.000    0.000    0.001    0.000 <__array_function__ internals>:2(nonzero)
+       40    0.000    0.000    0.001    0.000 fromnumeric.py:1829(nonzero)
+       40    0.001    0.000    0.001    0.000 {method 'nonzero' of 'numpy.ndarray' objects}
+     1485    0.000    0.000    0.000    0.000 fromnumeric.py:70(<dictcomp>)
+        1    0.000    0.000    0.000    0.000 {method 'seed' of 'numpy.random.mtrand.RandomState' objects}
+      847    0.000    0.000    0.000    0.000 {built-in method numpy.empty}
+       45    0.000    0.000    0.000    0.000 impl.py:218(get_coords_from_index)
+     1480    0.000    0.000    0.000    0.000 {method 'ravel' of 'numpy.ndarray' objects}
+       42    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
+       45    0.000    0.000    0.000    0.000 core.py:85(unravel_index_2d)
+       40    0.000    0.000    0.000    0.000 impl.py:19(get_perc_from_k)
+       40    0.000    0.000    0.000    0.000 impl.py:33(<listcomp>)
+        1    0.000    0.000    0.000    0.000 random.py:791(getrandbits)
+        1    0.000    0.000    0.000    0.000 {built-in method posix.urandom}
+       40    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(searchsorted)

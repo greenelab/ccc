@@ -1,0 +1,56 @@
+         21956760 function calls (21956754 primitive calls) in 102.486 seconds
+
+   Ordered by: cumulative time
+   List reduced from 106 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000  102.486  102.486 {built-in method builtins.exec}
+        1    0.000    0.000  102.486  102.486 <string>:1(<module>)
+        1    0.000    0.000  102.486  102.486 1375007101.py:1(func)
+        1    0.005    0.005  102.486  102.486 impl.py:307(ccc)
+        2    1.512    0.756  102.174   51.087 impl.py:508(compute_coef)
+   124750   25.803    0.000   99.395    0.001 impl.py:154(cdist_parts_basic)
+ 10104750   45.819    0.000   73.540    0.000 metrics.py:107(adjusted_rand_index)
+ 10104750   27.722    0.000   27.722    0.000 metrics.py:72(get_pair_confusion_matrix)
+   124750    0.071    0.000    1.030    0.000 <__array_function__ internals>:2(amax)
+   124758    0.066    0.000    0.944    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+   124750    0.106    0.000    0.878    0.000 fromnumeric.py:2638(amax)
+   124750    0.213    0.000    0.772    0.000 fromnumeric.py:69(_wrapreduction)
+   124750    0.460    0.000    0.460    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+        2    0.000    0.000    0.305    0.153 impl.py:476(compute_parts)
+        2    0.001    0.001    0.300    0.150 impl.py:478(<listcomp>)
+      500    0.299    0.001    0.299    0.001 impl.py:110(get_parts)
+   124750    0.129    0.000    0.129    0.000 {method 'argmax' of 'numpy.ndarray' objects}
+   124750    0.069    0.000    0.069    0.000 core.py:85(unravel_index_2d)
+   124754    0.052    0.000    0.052    0.000 {built-in method numpy.zeros}
+   124750    0.047    0.000    0.047    0.000 fromnumeric.py:70(<dictcomp>)
+   124750    0.039    0.000    0.039    0.000 impl.py:218(get_coords_from_index)
+   124751    0.037    0.000    0.037    0.000 {built-in method builtins.getattr}
+   124750    0.015    0.000    0.015    0.000 {method 'items' of 'dict' objects}
+   124750    0.015    0.000    0.015    0.000 fromnumeric.py:2633(_amax_dispatcher)
+        2    0.005    0.003    0.005    0.003 {built-in method numpy.array}
+        1    0.000    0.000    0.001    0.001 {method 'seed' of 'numpy.random.mtrand.RandomState' objects}
+        1    0.000    0.000    0.000    0.000 random.py:791(getrandbits)
+        1    0.000    0.000    0.000    0.000 {built-in method posix.urandom}
+        7    0.000    0.000    0.000    0.000 numeric.py:289(full)
+        7    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(copyto)
+        2    0.000    0.000    0.000    0.000 impl.py:242(get_chunks)
+        9    0.000    0.000    0.000    0.000 typedlist.py:341(append)
+        1    0.000    0.000    0.000    0.000 typedlist.py:298(_initialise_list)
+        1    0.000    0.000    0.000    0.000 contextlib.py:76(inner)
+        2    0.000    0.000    0.000    0.000 {built-in method numpy.arange}
+        1    0.000    0.000    0.000    0.000 {function SeedSequence.generate_state at 0x7fd0685e59d0}
+        2    0.000    0.000    0.000    0.000 abstract.py:60(__call__)
+        2    0.000    0.000    0.000    0.000 typeof.py:25(typeof)
+        1    0.000    0.000    0.000    0.000 typedlist.py:270(_parse_arg)
+        2    0.000    0.000    0.000    0.000 functools.py:883(wrapper)
+        1    0.000    0.000    0.000    0.000 dispatcher.py:677(typeof_pyval)
+        2    0.000    0.000    0.000    0.000 abstract.py:48(_intern)
+        1    0.000    0.000    0.000    0.000 thread.py:123(__init__)
+        2    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 containers.py:618(__init__)
+        1    0.000    0.000    0.000    0.000 typeof.py:257(_typeof_nb_type)
+        7    0.000    0.000    0.000    0.000 {built-in method numpy.empty}
+        1    0.000    0.000    0.000    0.000 _base.py:636(__exit__)
+        2    0.000    0.000    0.000    0.000 _ufunc_config.py:32(seterr)
+        1    0.000    0.000    0.000    0.000 _ufunc_config.py:429(__enter__)
