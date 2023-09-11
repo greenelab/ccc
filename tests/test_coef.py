@@ -1,5 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from random import shuffle
+import time
+import os
 
 import numpy as np
 import pandas as pd
@@ -18,6 +20,9 @@ from ccc.coef import (
     cdist_parts_parallel,
     get_chunks,
 )
+
+
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
 
 
 def test_get_perc_from_k_with_k_less_than_two():
@@ -1393,6 +1398,134 @@ def test_cm_numerical_and_categorical_features_with_pandas_dataframe_two_feature
 
     # flip variables (symmetry)
     assert ccc(data.iloc[:, [1, 0]]) == cm_value
+
+
+def test_cm_numpy_array_input():
+    # Prepare
+    np.random.seed(123)
+
+    # here I force
+    data = np.random.rand(20, 100)
+
+    # Run
+    cm_value = ccc(data)
+
+    # Validate
+    assert cm_value is not None
+    assert isinstance(cm_value, np.ndarray)
+    assert cm_value.shape == (int(data.shape[0] * (data.shape[0] - 1) / 2),)
+    assert np.issubdtype(cm_value.dtype, float)
+
+
+@pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
+def test_cm_numpy_array_input_with_n_jobs():
+    # Prepare
+    np.random.seed(123)
+
+    # here I force
+    data = np.random.rand(100, 1000)
+
+    # Run
+    start_time = time.time()
+    res0 = ccc(data, n_jobs=1)
+    elapsed_time_single_thread = time.time() - start_time
+
+    start_time = time.time()
+    res1 = ccc(data, n_jobs=2)
+    elapsed_time_multi_thread = time.time() - start_time
+
+    # Validate
+    assert elapsed_time_multi_thread < 0.75 * elapsed_time_single_thread
+
+    assert res0 is not None
+    assert isinstance(res0, np.ndarray)
+    assert res0.shape == (int(data.shape[0] * (data.shape[0] - 1) / 2),)
+    assert np.issubdtype(res0.dtype, float)
+    np.testing.assert_array_equal(res0, res1)
+
+
+@pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
+def test_cm_two_features_input_with_n_jobs():
+    # Prepare
+    np.random.seed(123)
+
+    # here I force
+    x = np.random.rand(100000)
+    y = np.random.rand(100000)
+
+    # Run
+    start_time = time.time()
+    res0 = ccc(x, y, n_jobs=1)
+    elapsed_time_single_thread = time.time() - start_time
+
+    start_time = time.time()
+    res1 = ccc(x, y, n_jobs=2)
+    elapsed_time_multi_thread = time.time() - start_time
+
+    # Validate
+    assert elapsed_time_multi_thread < 0.75 * elapsed_time_single_thread
+
+    assert res0 is not None
+    assert isinstance(res0, float)
+    assert res0 == res1
+
+
+@pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
+def test_cm_two_features_input_with_n_jobs_using_threads_for_partitioning():
+    # Prepare
+    np.random.seed(123)
+
+    # here I force
+    x = np.random.rand(100000)
+    y = np.random.rand(100000)
+
+    # Run
+    start_time = time.time()
+    res0 = ccc(x, y, n_jobs=1)
+    elapsed_time_single_thread = time.time() - start_time
+
+    start_time = time.time()
+    res1 = ccc(x, y, n_jobs=2, partitioning_executor="thread")
+    elapsed_time_multi_thread = time.time() - start_time
+
+    # Validate
+    assert elapsed_time_multi_thread < 0.75 * elapsed_time_single_thread
+
+    assert res0 is not None
+    assert isinstance(res0, float)
+    assert res0 == res1
+
+
+@pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
+@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
+def test_cm_two_features_input_with_n_jobs_using_process_for_partitioning():
+    # Prepare
+    np.random.seed(123)
+
+    # here I force
+    x = np.random.rand(100000)
+    y = np.random.rand(100000)
+
+    # Run
+    start_time = time.time()
+    res0 = ccc(x, y, n_jobs=1)
+    elapsed_time_single_thread = time.time() - start_time
+
+    start_time = time.time()
+    res1 = ccc(x, y, n_jobs=2, partitioning_executor="process")
+    elapsed_time_multi_thread = time.time() - start_time
+
+    # Validate
+    # less stringent than with threads, because the overhead of using processes
+    # seems to be larger
+    assert elapsed_time_multi_thread < elapsed_time_single_thread
+
+    assert res0 is not None
+    assert isinstance(res0, float)
+    assert res0 == res1
 
 
 def test_cm_with_pandas_dataframe_several_features():

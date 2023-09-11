@@ -254,34 +254,11 @@ def test_cm_large_n_objects_pvalue_permutations_is_parallelized():
 
     # Run
     start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_perms=50, n_jobs=1)
+    res = ccc(feature0, feature1, pvalue_n_perms=500, n_jobs=1)
     elapsed_time_single_thread = time.time() - start_time
 
     start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_perms=50, n_jobs=2)
-    elapsed_time_multi_thread = time.time() - start_time
-
-    # Validate
-    assert elapsed_time_multi_thread < 0.75 * elapsed_time_single_thread
-
-
-@pytest.mark.skipif(os.cpu_count() < 2, reason="requires at least 2 cores")
-@pytest.mark.skipif(IN_GITHUB_ACTIONS, reason="Test doesn't work in Github Actions.")
-def test_cm_medium_n_objects_with_many_pvalue_permutations_is_parallelized():
-    # Prepare
-    rs = np.random.RandomState(0)
-
-    # two features on 100 objects with a linear relationship
-    feature0 = rs.rand(1000)
-    feature1 = rs.rand(1000)
-
-    # Run
-    start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_perms=1000, pvalue_n_jobs=1)
-    elapsed_time_single_thread = time.time() - start_time
-
-    start_time = time.time()
-    res = ccc(feature0, feature1, pvalue_n_perms=1000, pvalue_n_jobs=2)
+    res = ccc(feature0, feature1, pvalue_n_perms=500, n_jobs=2)
     elapsed_time_multi_thread = time.time() - start_time
 
     # Validate
