@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# Reads the gene pair samples across different categories and computes their p-values.
 
 # %% [markdown] tags=[]
 # # Modules loading
@@ -30,6 +30,7 @@ from scipy import stats
 import numpy as np
 import pandas as pd
 from concurrent.futures import as_completed, ProcessPoolExecutor
+from tqdm import tqdm
 
 from ccc.coef import ccc
 from ccc import conf
@@ -42,7 +43,7 @@ DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
 
-PVALUE_N_PERMS = 1000000
+PVALUE_N_PERMS = 10000000
 
 RANDOM_STATE = np.random.RandomState(0)
 
@@ -102,10 +103,11 @@ len(gene_pair_samples)
 sorted(gene_pair_samples.keys())
 
 # %% tags=[]
-gene_pair_samples["all_high"].head()
+_k = list(gene_pair_samples.keys())[0]
+gene_pair_samples[_k].head()
 
 # %% tags=[]
-[i for i in gene_pair_samples["all_high"].head(10).index]
+[i for i in gene_pair_samples[_k].head(10).index]
 
 # %% [markdown] tags=[]
 # # Compute pvalues on sampled gene pairs
@@ -116,7 +118,7 @@ output_file = OUTPUT_DIR / "gene_pair-samples-pvalues.pkl"
 
 # %% tags=[]
 def corr_single(x, y):
-    ccc_val, ccc_pval = ccc(x, y, pvalue_n_perms=PVALUE_N_PERMS, n_jobs=1)
+    ccc_val, ccc_pval = ccc(x, y, pvalue_n_perms=PVALUE_N_PERMS, n_jobs=conf.GENERAL["N_JOBS"])
     p_val, p_pval = stats.pearsonr(x, y)
     s_val, s_pval = stats.spearmanr(x, y)
 
@@ -126,7 +128,10 @@ def corr_single(x, y):
 # %% tags=[]
 results = []
 
-with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
+# I leave the ProcessPoolExecutor here in case I want to easily swith between
+# parallelize across gene pairs (max_workers=conf.GENERAL["N_JOBS"] and n_jobs=1 inside function corr_single)
+# or across permutations for one gene pair (max_workers=1 and n_jobs=conf.GENERAL["N_JOBS"])
+with ProcessPoolExecutor(max_workers=1) as executor:
     tasks = {
         executor.submit(corr_single, data.loc[gene0], data.loc[gene1]): (
             gene0,
@@ -137,7 +142,7 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
         for gene0, gene1 in gene_pair_samples[k].index
     }
 
-    for t_idx, t in enumerate(as_completed(tasks)):
+    for t_idx, t in tqdm(enumerate(as_completed(tasks)), total=len(tasks), ncols=100):
         gene0, gene1, k = tasks[t]
         ccc_val, ccc_pval, p_val, p_pval, s_val, s_pval = t.result()
 
@@ -155,10 +160,10 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
             }
         )
 
-        if t_idx % 10:
-            _df = pd.DataFrame(results)
-            _df["group"] = _df["group"].astype("category")
-            _df.to_pickle(output_file)
+        # save
+        _df = pd.DataFrame(results)
+        _df["group"] = _df["group"].astype("category")
+        _df.to_pickle(output_file)
 
 # %% tags=[]
 len(results)
