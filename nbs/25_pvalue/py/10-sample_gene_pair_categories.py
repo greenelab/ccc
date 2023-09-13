@@ -39,7 +39,7 @@ from ccc import conf
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
-N_MAX_SAMPLES_PER_CATEGORY = 5
+N_MAX_SAMPLES_PER_CATEGORY = 500
 
 RANDOM_STATE = np.random.RandomState(0)
 
@@ -172,6 +172,25 @@ assert len(gene_pair_cats) == 8
 # Here I take all the categories defined above (keys in dictionaries) and I create three subcategories for each, where I take the top genes prioritized by the three coefficients.
 
 # %% tags=[]
+# prepare weights for sampling, where I will put zeros on already sampled gene pairs
+gene_pairs_weights = (
+    df_plot.drop(columns=df_plot.columns[:-1])
+    .rename(columns={df_plot.columns[-1]: "weight"})
+    .assign(weight=1.0)
+    .squeeze()
+    .sort_index()
+)
+
+# %% tags=[]
+gene_pairs_weights
+
+# %% tags=[]
+_tmp = df_plot.sample(n=10, replace=False, weights=gene_pairs_weights)
+assert _tmp.shape[0] == 10
+
+display(_tmp)
+
+# %% tags=[]
 gene_pair_samples = {}
 
 for k, v in gene_pair_cats.items():
@@ -180,9 +199,39 @@ for k, v in gene_pair_cats.items():
 
     n = min(N_MAX_SAMPLES_PER_CATEGORY, df.shape[0])
 
-    for coef in ("ccc", "pearson", "spearman"):
+    for coef in ("ccc", "pearson", "spearman", "random"):
+        if coef == "random":
+            new_k = f"{k}-{coef}"
+
+            # do not sample if all gene pairs were already sampled
+            df_weights = gene_pairs_weights.loc[df.index]
+            if (df_weights > 0).sum() < n:
+                display(f"  WARNING: {new_k}: none selected")
+                continue
+
+            sample_n = df.sample(
+                n=n,
+                replace=False,
+                random_state=RANDOM_STATE,
+                weights=gene_pairs_weights,
+            )
+
+            # do not sample these gene pairs again
+            gene_pairs_weights.loc[sample_n.index] = 0.0
+
+            gene_pair_samples[new_k] = sample_n
+
+            display(f"{new_k}: {gene_pair_samples[new_k].shape}")
+
+            continue
+
         df_coef = df.sort_values(coef, ascending=False)
         sample_n = df_coef.head(n)
+
+        # when taking the top gene pairs by a coefficient, I do not remove repeated ones
+
+        # do not sample these gene pairs again
+        gene_pairs_weights.loc[sample_n.index] = 0.0
 
         new_k = f"{k}-top_{coef}"
         gene_pair_samples[new_k] = sample_n
@@ -218,6 +267,56 @@ display(gene_pair_samples["selected_in_manuscript"].shape)
 
 # %% tags=[]
 gene_pair_samples["selected_in_manuscript"]
+
+# %% [markdown] tags=[]
+# # Include a random sample across the entire dataset
+
+# %% [markdown] tags=[]
+# This includes all possible gene pairs from the top 5k genes initially selected, not the filtered list derived from the intersections.
+
+# %% [markdown] tags=[]
+# ## Load all correlations
+
+# %% tags=[]
+INPUT_CORR_FILE_TEMPLATE = (
+    DATASET_CONFIG["SIMILARITY_MATRICES_DIR"]
+    / DATASET_CONFIG["SIMILARITY_MATRIX_FILENAME_TEMPLATE"]
+)
+display(INPUT_CORR_FILE_TEMPLATE)
+
+# %% tags=[]
+INPUT_CORR_FILE = DATASET_CONFIG["SIMILARITY_MATRICES_DIR"] / str(
+    INPUT_CORR_FILE_TEMPLATE
+).format(
+    tissue=GTEX_TISSUE,
+    gene_sel_strategy=GENE_SEL_STRATEGY,
+    corr_method="all",
+)
+display(INPUT_CORR_FILE)
+
+# %% tags=[]
+df = pd.read_pickle(INPUT_CORR_FILE)
+
+# %% tags=[]
+df.shape
+
+# %% tags=[]
+df.head()
+
+# %% [markdown] tags=[]
+# ## Select 2n here (double)
+
+# %% tags=[]
+sample_n = df.sample(n=int(n * 2), replace=False, random_state=RANDOM_STATE)
+
+new_k = f"entire_dataset-random"
+gene_pair_samples[new_k] = sample_n
+
+# %% tags=[]
+gene_pair_samples[new_k].shape
+
+# %% tags=[]
+gene_pair_samples[new_k]
 
 # %% [markdown] tags=[]
 # # Save
