@@ -38,10 +38,10 @@ from ccc import conf
 rs = np.random.RandomState(0)
 
 # %% tags=[]
-N_JOBS = conf.GENERAL["N_JOBS"] // 2
+N_JOBS = 1
 display(N_JOBS)
 
-PVALUE_N_JOBS = 2
+PVALUE_N_JOBS = conf.GENERAL["N_JOBS"]
 display(PVALUE_N_JOBS)
 
 # %% tags=[]
