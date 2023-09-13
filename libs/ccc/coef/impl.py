@@ -526,7 +526,6 @@ def ccc(
     n_jobs: int = 1,
     pvalue_n_perms: int = None,
     partitioning_executor: str = "thread",
-    random_state: int = None,
 ) -> tuple[NDArray[float], NDArray[float], NDArray[np.uint64], NDArray[np.int16]]:
     """
     This is the main function that computes the Clustermatch Correlation
@@ -557,8 +556,6 @@ def ccc(
             ThreadPoolExecutor for parallelization, which uses less memory. If
             "process", it will use ProcessPoolExecutor, which might be faster. If
             anything else, it will not parallelize the partitioning step.
-        random_state: seed for the random number generator. This is used to compute
-            the p-value of the coefficient using permutations.
 
 
     Returns:
@@ -595,8 +592,6 @@ def ccc(
             singleton cases were found (-1; usually because input data has all the same
             value) or for categorical features (-2).
     """
-    np.random.seed(random_state)
-
     n_objects = None
     n_features = None
     # this is a boolean array of size n_features with True if the feature is numerical and False otherwise
