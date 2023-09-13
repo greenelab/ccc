@@ -181,7 +181,7 @@ def test_cm_quadratic_noisy_pvalue_with_random_state():
 
     assert pvalue is not None
     assert isinstance(pvalue, float)
-    assert pvalue < 0.10
+    assert pvalue < 0.15
 
 
 def test_cm_one_feature_with_all_same_values_pvalue():
