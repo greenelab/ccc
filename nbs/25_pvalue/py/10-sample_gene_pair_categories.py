@@ -167,19 +167,26 @@ assert len(gene_pair_cats) == 8
 # %% [markdown] tags=[]
 # # Sample gene pairs
 
+# %% [markdown] tags=[]
+# Here I take all the categories defined above (keys in dictionaries) and I create three subcategories for each, where I take the top genes prioritized by the three coefficients.
+
 # %% tags=[]
 gene_pair_samples = {}
 
 for k, v in gene_pair_cats.items():
     # sample at most 100 gene pairs
     df = gene_pair_cats[k]
+
     n = min(100, df.shape[0])
-    sample_n = df.sample(n=n, replace=False, random_state=RANDOM_STATE)
-    # sample_fraq = gene_pair_cats[k].sample(fraq=replace=False)
 
-    gene_pair_samples[k] = sample_n
+    for coef in ("ccc", "pearson", "spearman"):
+        df_coef = df.sort_values(coef, ascending=False)
+        sample_n = df_coef.head(n)
 
-    display(f"{k}: {gene_pair_samples[k].shape}")
+        new_k = f"{k}-top_{coef}"
+        gene_pair_samples[new_k] = sample_n
+
+        display(f"{new_k}: {gene_pair_samples[new_k].shape}")
 
 # %% [markdown] tags=[]
 # # Include gene pairs mentioned in the paper
