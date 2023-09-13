@@ -39,6 +39,7 @@ from ccc import conf
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
+N_MAX_SAMPLES_PER_CATEGORY = 10
 
 RANDOM_STATE = np.random.RandomState(0)
 
@@ -177,7 +178,7 @@ for k, v in gene_pair_cats.items():
     # sample at most 100 gene pairs
     df = gene_pair_cats[k]
 
-    n = min(100, df.shape[0])
+    n = min(N_MAX_SAMPLES_PER_CATEGORY, df.shape[0])
 
     for coef in ("ccc", "pearson", "spearman"):
         df_coef = df.sort_values(coef, ascending=False)
