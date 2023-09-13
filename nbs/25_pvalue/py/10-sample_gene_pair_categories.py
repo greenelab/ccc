@@ -39,7 +39,7 @@ from ccc import conf
 DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
-N_MAX_SAMPLES_PER_CATEGORY = 10
+N_MAX_SAMPLES_PER_CATEGORY = 5
 
 RANDOM_STATE = np.random.RandomState(0)
 
