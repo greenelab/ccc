@@ -118,7 +118,9 @@ output_file = OUTPUT_DIR / "gene_pair-samples-pvalues.pkl"
 
 # %% tags=[]
 def corr_single(x, y):
-    ccc_val, ccc_pval = ccc(x, y, pvalue_n_perms=PVALUE_N_PERMS, n_jobs=conf.GENERAL["N_JOBS"])
+    ccc_val, ccc_pval = ccc(
+        x, y, pvalue_n_perms=PVALUE_N_PERMS, n_jobs=conf.GENERAL["N_JOBS"]
+    )
     p_val, p_pval = stats.pearsonr(x, y)
     s_val, s_pval = stats.spearmanr(x, y)
 
