@@ -42,7 +42,7 @@ DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
 
-PVALUE_N_PERMS = 100000
+PVALUE_N_PERMS = 1000000
 
 RANDOM_STATE = np.random.RandomState(0)
 
@@ -77,37 +77,37 @@ OUTPUT_DIR
 # %% [markdown] tags=[]
 # # Load gene expression data
 
-# %%
+# %% tags=[]
 data = pd.read_pickle(INPUT_GENE_EXPR_FILE).sort_index()
 
-# %%
+# %% tags=[]
 data.shape
 
-# %%
+# %% tags=[]
 data.head()
 
 # %% [markdown] tags=[]
 # # Load gene pairs samples
 
-# %%
+# %% tags=[]
 output_file = OUTPUT_DIR / "gene_pair-samples.pkl"
 
-# %%
+# %% tags=[]
 gene_pair_samples = pd.read_pickle(output_file)
 
-# %%
+# %% tags=[]
 len(gene_pair_samples)
 
-# %%
+# %% tags=[]
 sorted(gene_pair_samples.keys())
 
-# %%
+# %% tags=[]
 gene_pair_samples["all_high"].head()
 
-# %%
+# %% tags=[]
 [i for i in gene_pair_samples["all_high"].head(10).index]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Compute pvalues on sampled gene pairs
 
 # %% tags=[]
@@ -119,16 +119,20 @@ def corr_single(x, y):
     ccc_val, ccc_pval = ccc(x, y, pvalue_n_perms=PVALUE_N_PERMS, n_jobs=1)
     p_val, p_pval = stats.pearsonr(x, y)
     s_val, s_pval = stats.spearmanr(x, y)
-    
+
     return ccc_val, ccc_pval, p_val, p_pval, s_val, s_pval
 
 
-# %%
+# %% tags=[]
 results = []
 
 with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
     tasks = {
-        executor.submit(corr_single, data.loc[gene0], data.loc[gene1]): (gene0, gene1, k)
+        executor.submit(corr_single, data.loc[gene0], data.loc[gene1]): (
+            gene0,
+            gene1,
+            k,
+        )
         for k, v in gene_pair_samples.items()
         for gene0, gene1 in gene_pair_samples[k].index
     }
@@ -137,18 +141,20 @@ with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
         gene0, gene1, k = tasks[t]
         ccc_val, ccc_pval, p_val, p_pval, s_val, s_pval = t.result()
 
-        results.append({
-            "gene0": gene0,
-            "gene1": gene1,
-            "group": k,
-            "ccc": ccc_val,
-            "ccc_pvalue": ccc_pval,
-            "pearson": p_val,
-            "pearson_pvalue": p_pval,
-            "spearman": s_val,
-            "spearman_pvalue": s_pval,
-        })
-        
+        results.append(
+            {
+                "gene0": gene0,
+                "gene1": gene1,
+                "group": k,
+                "ccc": ccc_val,
+                "ccc_pvalue": ccc_pval,
+                "pearson": p_val,
+                "pearson_pvalue": p_pval,
+                "spearman": s_val,
+                "spearman_pvalue": s_pval,
+            }
+        )
+
         if t_idx % 10:
             _df = pd.DataFrame(results)
             _df["group"] = _df["group"].astype("category")
@@ -161,10 +167,10 @@ len(results)
 results_df = pd.DataFrame(results)
 results_df["group"] = results_df["group"].astype("category")
 
-# %%
+# %% tags=[]
 results_df.shape
 
-# %%
+# %% tags=[]
 results_df.head()
 
 # %% [markdown] tags=[]
