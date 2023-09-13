@@ -385,13 +385,17 @@ def compute_ccc_perms(params) -> NDArray[float]:
     Returns:
         The CCC coefficient values using the permuted partitions of one of the features.
     """
+    # since this function can be parallelized across different processes, make sure
+    # the random number generator is initialized with a different seed for each process
+    rng = np.random.default_rng()
+
     _, obj_parts_i, obj_parts_j, n_perms = params
 
     n_objects = obj_parts_i.shape[1]
     ccc_perm_values = np.full(n_perms, np.nan, dtype=float)
 
     for idx in range(n_perms):
-        perm_idx = np.random.permutation(n_objects)
+        perm_idx = rng.permutation(n_objects)
 
         # generate a random permutation of the partitions of one
         # variable/feature
