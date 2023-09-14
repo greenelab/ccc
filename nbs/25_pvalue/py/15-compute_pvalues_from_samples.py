@@ -43,7 +43,7 @@ DATASET_CONFIG = conf.GTEX
 GTEX_TISSUE = "whole_blood"
 GENE_SEL_STRATEGY = "var_pc_log2"
 
-PVALUE_N_PERMS = 10000000
+PVALUE_N_PERMS = 1000000
 
 RANDOM_STATE = np.random.RandomState(0)
 
@@ -118,9 +118,7 @@ output_file = OUTPUT_DIR / "gene_pair-samples-pvalues.pkl"
 
 # %% tags=[]
 def corr_single(x, y):
-    ccc_val, ccc_pval = ccc(
-        x, y, pvalue_n_perms=PVALUE_N_PERMS, n_jobs=conf.GENERAL["N_JOBS"]
-    )
+    ccc_val, ccc_pval = ccc(x, y, pvalue_n_perms=PVALUE_N_PERMS, n_jobs=1)
     p_val, p_pval = stats.pearsonr(x, y)
     s_val, s_pval = stats.spearmanr(x, y)
 
@@ -133,7 +131,7 @@ results = []
 # I leave the ProcessPoolExecutor here in case I want to easily swith between
 # parallelize across gene pairs (max_workers=conf.GENERAL["N_JOBS"] and n_jobs=1 inside function corr_single)
 # or across permutations for one gene pair (max_workers=1 and n_jobs=conf.GENERAL["N_JOBS"])
-with ProcessPoolExecutor(max_workers=1) as executor:
+with ProcessPoolExecutor(max_workers=conf.GENERAL["N_JOBS"]) as executor:
     tasks = {
         executor.submit(corr_single, data.loc[gene0], data.loc[gene1]): (
             gene0,
@@ -179,6 +177,18 @@ results_df.shape
 
 # %% tags=[]
 results_df.head()
+
+# %% [markdown] tags=[]
+# # Remove duplicated gene pairs
+
+# %% [markdown] tags=[]
+# This could happen when gene pairs overlap and are the top of different coefficients.
+
+# %% tags=[]
+# results_df = results_df.drop_duplicates(subset=["gene0", "gene1"])
+
+# %% tags=[]
+# results.shape
 
 # %% [markdown] tags=[]
 # # Save
