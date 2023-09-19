@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# It selects a set of specific gene pairs from a tissue, and checks if relationship are replicated on other tissues.
+# It selects a set of specific gene pairs from a tissue, and checks if the relationship is replicated on other tissues.
 # It also uses GTEx metadata (such as sex) to explain relationships.
 
 # %% [markdown] tags=[]
