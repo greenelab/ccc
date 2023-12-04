@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -32,6 +32,15 @@ from sklearn.preprocessing import minmax_scale
 
 from ccc import conf
 from ccc.coef import ccc
+
+# %% tags=[]
+import matplotlib
+
+# matplotlib.rcParams['font.family'] = 'monospace'
+matplotlib.rcParams["mathtext.fontset"] = "custom"
+matplotlib.rcParams["mathtext.rm"] = "monospace"
+matplotlib.rcParams["mathtext.it"] = "monospace:italic"
+matplotlib.rcParams["mathtext.bf"] = "monospace:bold"
 
 # %% [markdown] tags=[]
 # # Settings
@@ -255,6 +264,28 @@ def get_cm_line_points(x, y, max_parts, parts):
 
 
 # %% tags=[]
+def pvalue_to_star(pvalue):
+    s = "   "
+    if pvalue < 0.001:
+        s = "***"
+    elif pvalue < 0.01:
+        s = "** "
+    elif pvalue < 0.05:
+        s = "*  "
+
+    return s
+
+
+# %% tags=[]
+assert pvalue_to_star(0.06) == "   "
+assert pvalue_to_star(0.04) == "*  "
+assert pvalue_to_star(0.02) == "*  "
+assert pvalue_to_star(0.01) == "*  "
+assert pvalue_to_star(0.005) == "** "
+assert pvalue_to_star(0.001) == "** "
+assert pvalue_to_star(0.0001) == "***"
+
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.8):
     g = sns.FacetGrid(
         data=datasets_df,
@@ -275,17 +306,19 @@ with sns.plotting_context("paper", font_scale=1.8):
     g.map(sns.scatterplot, "x", "y", s=50, alpha=1)
     g.set_titles(row_template="{row_name}", col_template="{col_name}")
 
+    mono = {"family": "monospace"}
+
     for ds, ax in g.axes_dict.items():
         df = datasets[ds].to_numpy()
         x, y = df[:, 0], df[:, 1]
 
         # pearson and spearman
-        r = pearsonr(x, y)[0]
-        rs = spearmanr(x, y)[0]
+        r, r_p = pearsonr(x, y)
+        rs, rs_p = spearmanr(x, y)
 
         # ccc
         c, max_parts, parts = ccc(x, y, return_parts=True)
-        c = ccc(x, y)
+        c, c_p = ccc(x, y, pvalue_n_perms=10000)
 
         x_line_points, y_line_points = get_cm_line_points(x, y, max_parts, parts)
         for yp in y_line_points:
@@ -295,16 +328,22 @@ with sns.plotting_context("paper", font_scale=1.8):
             ax.vlines(x=xp, ymin=1.5, ymax=14, color="r", alpha=0.5)
 
         # add text box for the statistics
-        stats = f"$p$ = {r:.2f}\n" f"$s$ = {rs:.2f}\n" f"$c$ = {c:.2f}"
+        stats = (
+            f"$\it{{p}}$ ={r: .2f}{pvalue_to_star(r_p)}\n"
+            f"$\it{{s}}$ ={rs: .2f}{pvalue_to_star(rs_p)}\n"
+            f"$\it{{c}}$ ={c: .2f}{pvalue_to_star(c_p)}"
+        )
         bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.75)
         ax.text(
-            0.95,
+            0.69,
             0.07,
             stats,
             fontsize=14,
+            fontdict=mono,
             bbox=bbox,
             transform=ax.transAxes,
-            horizontalalignment="right",
+            horizontalalignment="left",
+            linespacing=1.1,
         )
 
     plt.savefig(
