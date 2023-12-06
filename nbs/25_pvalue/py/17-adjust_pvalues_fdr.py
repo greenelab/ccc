@@ -34,8 +34,6 @@ from ccc import conf
 
 # %% tags=[]
 DATASET_CONFIG = conf.GTEX
-GTEX_TISSUE = "whole_blood"
-GENE_SEL_STRATEGY = "var_pc_log2"
 
 # %% [markdown] tags=[]
 # # Paths
