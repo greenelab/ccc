@@ -17,21 +17,20 @@
 # # Description
 
 # %% [markdown] tags=[]
-# It selects a set of specific gene pairs from a tissue, and checks if the relationship is replicated on other tissues.
-# It also uses GTEx metadata (such as sex) to explain relationships.
+# It loads the correlation values and p-values and perform some analyses and plots.
 
 # %% [markdown] tags=[]
 # # Modules
 
 # %% tags=[]
+import numpy as np
 import pandas as pd
+from statsmodels.stats.multitest import multipletests
 
-from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from ccc import conf
-from ccc.coef import ccc
 
 # %% [markdown] tags=[]
 # # Settings
@@ -48,6 +47,14 @@ gene0_symbol, gene1_symbol = "KDM6A", "UTY"
 # %% tags=[]
 TISSUE_DIR = conf.GTEX["DATA_DIR"] / "data_by_tissue"
 assert TISSUE_DIR.exists()
+
+# %% tags=[]
+INPUT_DIR = (
+    conf.GTEX["RESULTS_DIR"]
+    / "other_tissues"
+    / f"{gene0_symbol.lower()}_vs_{gene1_symbol.lower()}"
+)
+display(INPUT_DIR)
 
 # %% tags=[]
 OUTPUT_FIGURE_DIR = (
@@ -90,21 +97,10 @@ assert gene_map[gene0_id] == gene0_symbol
 assert gene_map[gene1_id] == gene1_symbol
 
 # %% [markdown] tags=[]
-# # Compute correlation on all tissues
+# ## Correlation on all tissues
 
 # %% tags=[]
-res_all = pd.DataFrame(
-    {
-        f.stem.split("_data_")[1]: {
-            "cm": ccc(data[gene0_id], data[gene1_id]),
-            "pearson": pearsonr(data[gene0_id], data[gene1_id])[0],
-            "spearman": spearmanr(data[gene0_id], data[gene1_id])[0],
-        }
-        for f in TISSUE_DIR.glob("*.pkl")
-        if (data := pd.read_pickle(f).T[[gene0_id, gene1_id]].dropna()) is not None
-        and data.shape[0] > 10
-    }
-).T.abs()
+res_all = pd.read_pickle(INPUT_DIR / "coef_values.pkl")
 
 # %% tags=[]
 res_all.shape
@@ -112,14 +108,37 @@ res_all.shape
 # %% tags=[]
 res_all.head()
 
-# %% tags=[]
-res_all.sort_values("cm")
+# %% [markdown] tags=[]
+# ## P-values on all tissues
 
 # %% tags=[]
-res_all.sort_values("pearson")
+res_pval_all = pd.read_pickle(INPUT_DIR / "coef_pvalues.pkl")
 
 # %% tags=[]
-res_all.sort_values("spearman")
+res_pval_all.shape
+
+# %% tags=[]
+res_pval_all.head()
+
+# %% tags=[]
+-np.log10(res_pval_all).describe()
+
+# %% [markdown] tags=[]
+# ### Adjust p-values
+
+# %% tags=[]
+for col in ("cm", "pearson", "spearman"):
+    adj_pvals = multipletests(res_pval_all[col], alpha=0.05, method="fdr_bh")
+    res_pval_all = res_pval_all.assign(**{col: adj_pvals[1]})
+
+# %% tags=[]
+res_pval_all.shape
+
+# %% tags=[]
+res_pval_all.head()
+
+# %% tags=[]
+-np.log10(res_pval_all).describe()
 
 
 # %% [markdown] tags=[]
@@ -165,6 +184,19 @@ assert simplify_tissue_name("uterus") == "Uterus"
 
 
 # %% tags=[]
+def pvalue_to_star(pvalue):
+    s = ""
+    if pvalue < 0.001:
+        s = "***"
+    elif pvalue < 0.01:
+        s = "**"
+    elif pvalue < 0.05:
+        s = "*"
+
+    return s
+
+
+# %% tags=[]
 def plot_gene_pair(
     tissue_name, gene0, gene1, hue=None, kind="hex", ylim=None, bins="log"
 ):
@@ -189,11 +221,16 @@ def plot_gene_pair(
     display((gene0_symbol, gene1_symbol))
 
     # compute correlations for this gene pair
-    _clustermatch = ccc(tissue_data[gene0], tissue_data[gene1])
-    _pearson = pearsonr(tissue_data[gene0], tissue_data[gene1])[0]
-    _spearman = spearmanr(tissue_data[gene0], tissue_data[gene1])[0]
+    tissue_key = tissue_file.stem.split("_data_")[1]
 
-    _title = f"{simplify_tissue_name(tissue_name)}\n$c={_clustermatch:.2f}$  $p={_pearson:.2f}$  $s={_spearman:.2f}$"
+    _ccc = res_all.loc[tissue_key, "cm"]
+    _ccc_p = pvalue_to_star(res_pval_all.loc[tissue_key, "cm"])
+    _pearson = res_all.loc[tissue_key, "pearson"]
+    _pearson_p = pvalue_to_star(res_pval_all.loc[tissue_key, "pearson"])
+    _spearman = res_all.loc[tissue_key, "spearman"]
+    _spearman_p = pvalue_to_star(res_pval_all.loc[tissue_key, "spearman"])
+
+    _title = f"{simplify_tissue_name(tissue_name)}\n$c={_ccc:.2f}${_ccc_p}  $p={_pearson:.2f}${_pearson_p}  $s={_spearman:.2f}${_spearman_p}"
 
     other_args = {
         "kind": kind,  # if hue is None else "scatter",
@@ -437,45 +474,57 @@ _tissue_data = plot_gene_pair(
 from svgutils.compose import Figure, SVG, Panel
 
 # %% tags=[]
+name_suffix = f"{gene0_symbol}_vs_{gene1_symbol}"
+display(name_suffix)
+
+# %% tags=[]
 Figure(
-    "607.67480cm",
-    "870.45984cm",
+    "6.0767480cm",
+    "8.7045984cm",
     Panel(
-        SVG(OUTPUT_FIGURE_DIR / "gtex_whole_blood-KDM6A_vs_UTY.svg").scale(0.5),
-        SVG(OUTPUT_FIGURE_DIR / "gtex_testis-KDM6A_vs_UTY.svg").scale(0.5).move(200, 0),
-        SVG(OUTPUT_FIGURE_DIR / "gtex_cells_cultured_fibroblasts-KDM6A_vs_UTY.svg")
-        .scale(0.5)
-        .move(200 * 2, 0),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_whole_blood-{name_suffix}.svg").scale(0.005),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_testis-{name_suffix}.svg")
+        .scale(0.005)
+        .move(2, 0),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_cells_cultured_fibroblasts-{name_suffix}.svg")
+        .scale(0.005)
+        .move(2 * 2, 0),
     ),
     Panel(
-        SVG(OUTPUT_FIGURE_DIR / "gtex_brain_cerebellum-KDM6A_vs_UTY.svg").scale(0.5),
-        SVG(OUTPUT_FIGURE_DIR / "gtex_small_intestine_terminal_ileum-KDM6A_vs_UTY.svg")
-        .scale(0.5)
-        .move(200, 0),
-        SVG(OUTPUT_FIGURE_DIR / "gtex_breast_mammary_tissue-KDM6A_vs_UTY.svg")
-        .scale(0.5)
-        .move(200 * 2, 0),
-    ).move(0, 220),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_brain_cerebellum-{name_suffix}.svg").scale(
+            0.005
+        ),
+        SVG(
+            OUTPUT_FIGURE_DIR / f"gtex_small_intestine_terminal_ileum-{name_suffix}.svg"
+        )
+        .scale(0.005)
+        .move(2, 0),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_breast_mammary_tissue-{name_suffix}.svg")
+        .scale(0.005)
+        .move(2 * 2, 0),
+    ).move(0, 2.2),
     Panel(
         SVG(
             OUTPUT_FIGURE_DIR
-            / "gtex_brain_anterior_cingulate_cortex_ba24-KDM6A_vs_UTY.svg"
-        ).scale(0.5),
-        SVG(OUTPUT_FIGURE_DIR / "gtex_brain_amygdala-KDM6A_vs_UTY.svg")
-        .scale(0.5)
-        .move(200, 0),
-        SVG(OUTPUT_FIGURE_DIR / "gtex_heart_atrial_appendage-KDM6A_vs_UTY.svg")
-        .scale(0.5)
-        .move(200 * 2, 0),
-    ).move(0, 220 * 2),
+            / f"gtex_brain_anterior_cingulate_cortex_ba24-{name_suffix}.svg"
+        ).scale(0.005),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_brain_amygdala-{name_suffix}.svg")
+        .scale(0.005)
+        .move(2, 0),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_heart_atrial_appendage-{name_suffix}.svg")
+        .scale(0.005)
+        .move(2 * 2, 0),
+    ).move(0, 2.2 * 2),
     Panel(
-        SVG(OUTPUT_FIGURE_DIR / "gtex_vagina-KDM6A_vs_UTY.svg").scale(0.5),
-        SVG(OUTPUT_FIGURE_DIR / "gtex_ovary-KDM6A_vs_UTY.svg").scale(0.5).move(200, 0),
-        SVG(OUTPUT_FIGURE_DIR / "gtex_uterus-KDM6A_vs_UTY.svg")
-        .scale(0.5)
-        .move(200 * 2, 0),
-    ).move(0, 220 * 3),
-).save(OUTPUT_FIGURE_DIR / "gtex-KDM6A_vs_UTY-main.svg")
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_vagina-{name_suffix}.svg").scale(0.005),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_ovary-{name_suffix}.svg")
+        .scale(0.005)
+        .move(2, 0),
+        SVG(OUTPUT_FIGURE_DIR / f"gtex_uterus-{name_suffix}.svg")
+        .scale(0.005)
+        .move(2 * 2, 0),
+    ).move(0, 2.2 * 3),
+).save(OUTPUT_FIGURE_DIR / f"gtex-{name_suffix}-main.svg")
 
 # %% [markdown] tags=[]
 # Now open the file, reside to fit drawing to page, and add a white rectangle to the background.
