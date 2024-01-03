@@ -97,6 +97,26 @@ def download_gtex_v8_data(**kwargs):
     )
 
 
+def download_understudied_genes_s1_data(**kwargs):
+    output_file = conf.UNDERSTUDIED_GENES_ARTICLE["S1_DATA_FILE"]
+    curl(
+        "https://doi.org/10.1371/journal.pbio.2006643.s014",
+        output_file,
+        "9b054e7c8d9ffeadccfdc0d08583cfd0",
+        logger=logger,
+    )
+
+
+def download_understudied_genes_s3_table(**kwargs):
+    output_file = conf.UNDERSTUDIED_GENES_ARTICLE["S3_TABLE_FILE"]
+    curl(
+        "https://doi.org/10.1371/journal.pbio.2006643.s018",
+        output_file,
+        "664952f391b4f2077757b1d3a17603f0",
+        logger=logger,
+    )
+
+
 if __name__ == "__main__":
     import argparse
     from collections import defaultdict
