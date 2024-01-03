@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -61,14 +61,14 @@ display(OUTPUT_DIR)
 # %% [markdown] tags=[]
 # # Summarize
 
-# %%
+# %% tags=[]
 all_subsets_dfs = []
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Functions
 
-# %%
+# %% tags=[]
 def read_hdf(filepath, subset):
     return pd.read_hdf(filepath, key="data").assign(
         order=int(filepath.name.split("-")[0]),
@@ -78,131 +78,131 @@ def read_hdf(filepath, subset):
     )
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## CCC vs Pearson
 
-# %%
+# %% tags=[]
 subset = "clustermatch_vs_pearson"
 
-# %%
+# %% tags=[]
 subset_files = sorted(list((OUTPUT_DIR / subset).glob("*.h5")))
 display(len(subset_files))
 display(subset_files[:3])
 
-# %%
+# %% tags=[]
 _dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## CCC vs Pearson/Spearman
 
-# %%
+# %% tags=[]
 subset = "clustermatch_vs_pearson_spearman"
 
-# %%
+# %% tags=[]
 subset_files = sorted(list((OUTPUT_DIR / subset).glob("*.h5")))
 display(len(subset_files))
 display(subset_files[:3])
 
-# %%
+# %% tags=[]
 _dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## CCC vs Spearman
 
-# %%
+# %% tags=[]
 subset = "clustermatch_vs_spearman"
 
-# %%
+# %% tags=[]
 subset_files = sorted(list((OUTPUT_DIR / subset).glob("*.h5")))
 display(len(subset_files))
 display(subset_files[:3])
 
-# %%
+# %% tags=[]
 _dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Pearson vs CCC
 
-# %%
+# %% tags=[]
 subset = "pearson_vs_clustermatch"
 
-# %%
+# %% tags=[]
 subset_files = sorted(list((OUTPUT_DIR / subset).glob("*.h5")))
 display(len(subset_files))
 display(subset_files[:3])
 
-# %%
+# %% tags=[]
 _dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Pearson vs CCC/Spearman
 
-# %%
+# %% tags=[]
 subset = "pearson_vs_clustermatch_spearman"
 
-# %%
+# %% tags=[]
 subset_files = sorted(list((OUTPUT_DIR / subset).glob("*.h5")))
 display(len(subset_files))
 display(subset_files[:3])
 
-# %%
+# %% tags=[]
 _dfs = [read_hdf(f, subset) for f in subset_files]
 
 display(_dfs[0].head())
 all_subsets_dfs.extend(_dfs)
 display(len(all_subsets_dfs))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Combine
 
-# %%
+# %% tags=[]
 df = pd.concat(all_subsets_dfs, ignore_index=True)
 
-# %%
+# %% tags=[]
 df.shape
 
-# %%
+# %% tags=[]
 df.head()
 
-# %%
+# %% tags=[]
 df["order"].unique()
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Stats
 
-# %%
+# %% tags=[]
 df_stats = df.groupby(["subset"])["gene_pair"].nunique()
 display(df_stats)
 
-# %%
+# %% tags=[]
 assert df_stats["clustermatch_vs_pearson"] == N_TOP_GENE_PAIRS
 assert df_stats["pearson_vs_clustermatch"] == N_TOP_GENE_PAIRS
 assert df_stats["pearson_vs_clustermatch_spearman"] == N_TOP_GENE_PAIRS
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Combine subsets
 
-# %%
+# %% tags=[]
 subset_cm_vs_rest = "clustermatch_vs_rest"
 subset_p_vs_rest = "pearson_vs_rest"
 
-# %%
+# %% tags=[]
 df = df.replace(
     {
         "subset": {
@@ -215,21 +215,21 @@ df = df.replace(
     }
 )
 
-# %%
+# %% tags=[]
 df.head()
 
-# %%
+# %% tags=[]
 assert df["subset"].unique().shape[0] == 2
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Analyses
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Here we read the gene pair queries sent to GIANT to see 1) which cell type were predicted for each of them and 2) the characteristics of the predicted networks for each gene pair.
 #
 # This allows us to assess whether gene pairs found by our correlation coefficients in GTEx (whole blood) replicate in GIANT by seeing if the predicted cell types is a blood cell lineage (leukocyte, etc) and the network connectivity is high.
 
-# %%
+# %% tags=[]
 # for each subset (ccc vs etc, pearson vs etc), sort by top gene pairs
 # for that, for each subset, sort by "order", which indicates, for each subset
 # the gene pairs with the largest correlation value
@@ -239,28 +239,28 @@ top_gene_pairs = df.groupby(["subset"], group_keys=False).apply(
     ].unique()
 )
 
-# %%
+# %% tags=[]
 top_gene_pairs
 
-# %%
+# %% tags=[]
 # now use the order of gene pairs within subsets to actually select the top ones
 top_df = df.groupby(["subset"], group_keys=False).apply(
     lambda x: x[x["gene_pair"].isin(top_gene_pairs.loc[x.name][:N_TOP_GENE_PAIRS])]
 )
 
-# %%
+# %% tags=[]
 top_df.shape
 
-# %%
+# %% tags=[]
 top_df.head()
 
-# %%
+# %% tags=[]
 plot_stats = top_df.groupby(["subset", "tissue"])["gene_pair"].nunique()
 
-# %%
+# %% tags=[]
 plot_stats.head()
 
-# %%
+# %% tags=[]
 plot_stats = (
     plot_stats.groupby("subset")
     .apply(lambda grp: grp.nlargest(N_TOP_TISSUES))
@@ -270,39 +270,39 @@ plot_stats = (
 # by percentage
 # plot_stats = plot_stats.groupby("subset").apply(lambda x: x / x.sum())
 
-# %%
+# %% tags=[]
 plot_stats
 
-# %%
+# %% tags=[]
 # sum gene pairs, it should be less than 100 (100 is the total number of gene pairs taken)
 tmp = plot_stats.groupby("subset").sum()
 display(tmp)
 assert (tmp < N_TOP_GENE_PAIRS).all()
 
-# %%
+# %% tags=[]
 plot_stats.index.get_level_values("tissue").unique().shape
 
-# %%
+# %% tags=[]
 plot_stats = plot_stats.reset_index()
 display(plot_stats.head())
 
-# %%
+# %% tags=[]
 plot_stats["subset"].unique()
 
-# %%
+# %% tags=[]
 plot_stats["tissue"].unique()
 
 # %% [markdown] tags=[]
 # # Plots
 
-# %%
+# %% tags=[]
 PREDICTED_TISSUE_LABEL = "Predicted tissue/cell type\nin GIANT"
 N_GENE_PAIRS_LABEL = "Number of gene pairs"
 AVG_PROB_INTERACTION_LABEL = (
     "Average probability of interaction\nin tissue-specific networks"
 )
 
-# %%
+# %% tags=[]
 subset_renames = {
     "clustermatch_vs_rest": "CCC vs others",
     # "clustermatch_vs_pearson_spearman": "CCC vs Pearson/Spearman",
@@ -323,14 +323,14 @@ tissue_renames = {
     "placenta": "Placenta",
 }
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## First plot version
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # These first plot versions are drafts, just to see how the pattern are.
 # The final plots are generated in the `Second plot version` below.
 
-# %%
+# %% tags=[]
 count_data = plot_stats.replace(
     {
         "subset": subset_renames,
@@ -338,10 +338,10 @@ count_data = plot_stats.replace(
     }
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Tissues order
 
-# %%
+# %% tags=[]
 blood_related_tissues = set(
     [
         "Blood",
@@ -352,7 +352,7 @@ blood_related_tissues = set(
     ]
 )
 
-# %%
+# %% tags=[]
 tissues_order = [
     "Blood",
     "Mononuclear phagocyte",
@@ -364,27 +364,27 @@ tissues_order = [
     "Placenta",
 ]
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Tissues colors
 
-# %%
+# %% tags=[]
 deep_colors = sns.color_palette("tab10")
 display(deep_colors)
 
-# %%
+# %% tags=[]
 blood_color = deep_colors[3]
 others_color = deep_colors[0]
 
-# %%
+# %% tags=[]
 tissue_colors = {
     t: blood_color if t in blood_related_tissues else others_color
     for t in tissues_order
 }
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Plot: number of gene pairs by tissue and method
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.0):
     g = sns.FacetGrid(
         count_data,
@@ -406,10 +406,10 @@ with sns.plotting_context("paper", font_scale=1.0):
 
     g.fig.text(0, 0.30, N_GENE_PAIRS_LABEL, rotation=90)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Plot: gene networks connectivity by tissue and method
 
-# %%
+# %% tags=[]
 conn_data = pd.merge(
     top_df,
     plot_stats,
@@ -418,7 +418,7 @@ conn_data = pd.merge(
     how="inner",
 )
 
-# %%
+# %% tags=[]
 conn_data = conn_data.replace(
     {
         "subset": subset_renames,
@@ -426,30 +426,30 @@ conn_data = conn_data.replace(
     }
 )
 
-# %%
+# %% tags=[]
 conn_data.shape
 
-# %%
+# %% tags=[]
 conn_data.head()
 
-# %%
+# %% tags=[]
 # # only keep connections with query genes
 # conn_data = conn_data.assign(query_genes=conn_data["gene_pair"].apply(lambda x: set(x.split("_"))))
 
-# %%
+# %% tags=[]
 # conn_data = conn_data[conn_data.apply(
 #     lambda x:
 #         (x["gene1"] in x["query_genes"]) | (x["gene2"] in x["query_genes"]),
 #     axis=1
 # )]
 
-# %%
+# %% tags=[]
 # conn_data.shape
 
-# %%
+# %% tags=[]
 # conn_data.head()
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.0):
     g = sns.FacetGrid(
         conn_data,
@@ -471,13 +471,13 @@ with sns.plotting_context("paper", font_scale=1.0):
 
     g.fig.text(1.10, 0.25, AVG_PROB_INTERACTION_LABEL, rotation=90, ha="center")
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Second plot version
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Tissues order
 
-# %%
+# %% tags=[]
 ccc_tissues = {
     "Natural killer cell",
     "Leukocyte",
@@ -512,19 +512,19 @@ tissues_order = [
 
 assert set(tissues_order) == (ccc_tissues | pcc_tissues | shared_tissues)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Tissues colors
 
-# %%
+# %% tags=[]
 display(deep_colors)
 
-# %%
+# %% tags=[]
 # by specific or shared
 ccc_color = deep_colors[3]
 shared_color = deep_colors[4]
 pcc_color = deep_colors[0]
 
-# %%
+# %% tags=[]
 tissue_colors = {
     t: ccc_color
     if t in ccc_tissues
@@ -534,10 +534,10 @@ tissue_colors = {
     for t in tissues_order
 }
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Plot: number of gene pairs by tissue and method
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.0):
     g = sns.FacetGrid(
         count_data,
@@ -569,10 +569,10 @@ with sns.plotting_context("paper", font_scale=1.0):
         transparent=True,
     )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Plot: gene networks connectivity by tissue and method
 
-# %%
+# %% tags=[]
 with sns.plotting_context("paper", font_scale=1.0):
     g = sns.FacetGrid(
         conn_data,
@@ -608,25 +608,25 @@ with sns.plotting_context("paper", font_scale=1.0):
 # %% [markdown] tags=[]
 # # Raw numbers
 
-# %%
+# %% tags=[]
 count_data.sort_values(["subset", "n_gene_pairs"], ascending=[True, False])
 
-# %%
+# %% tags=[]
 conn_data.groupby(["subset", "tissue"])["weight"].describe()
 
 # %% [markdown] tags=[]
 # # Create final figure
 
-# %%
+# %% tags=[]
 from svgutils.compose import Figure, SVG, Panel, Text
 
-# %%
+# %% tags=[]
 BLOOD_NETWORKS_DIR = OUTPUT_FIGURE_DIR / "blood_tissues" / "gene_pair_networks"
 AUTO_SELECTED_NETWORKS_DIR = (
     OUTPUT_FIGURE_DIR / "auto_selected_tissues" / "gene_pair_networks"
 )
 
-# %%
+# %% tags=[]
 Figure(
     "30.50629cm",
     "24.44741cm",
@@ -681,7 +681,7 @@ Figure(
     .move(0, 8),
 ).save(OUTPUT_FIGURE_DIR / "top_gene_pairs-main.svg")
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Compile the manuscript with manubot and make sure the image has a white background and displays properly.
 
-# %%
+# %% tags=[]
