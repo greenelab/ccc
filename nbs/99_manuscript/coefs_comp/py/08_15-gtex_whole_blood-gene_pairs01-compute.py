@@ -106,7 +106,7 @@ res_all = pd.DataFrame(
         if (data := pd.read_pickle(f).T[[gene0_id, gene1_id]].dropna()) is not None
         and data.shape[0] > 10
     }
-).T.abs()
+).T
 
 # %% tags=[]
 res_all.shape
@@ -143,7 +143,7 @@ res_pval_all = pd.DataFrame(
         if (data := pd.read_pickle(f).T[[gene0_id, gene1_id]].dropna()) is not None
         and data.shape[0] > 10
     }
-).T.abs()
+).T
 
 # %% tags=[]
 res_pval_all.shape
