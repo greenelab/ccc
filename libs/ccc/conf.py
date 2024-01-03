@@ -110,6 +110,21 @@ GIANT = {}
 GIANT["RESULTS_DIR"] = Path(RESULTS_DIR, "giant").resolve()
 
 
+#
+# Understudied genes
+#
+UNDERSTUDIED_GENES_ARTICLE = {}
+
+# Input data
+UNDERSTUDIED_GENES_ARTICLE["DATA_DIR"] = Path(DATA_DIR, "understudied_genes").resolve()
+UNDERSTUDIED_GENES_ARTICLE["S1_DATA_FILE"] = (
+    UNDERSTUDIED_GENES_ARTICLE["DATA_DIR"] / "s1_data.xlsx"
+)
+UNDERSTUDIED_GENES_ARTICLE["S3_TABLE_FILE"] = (
+    UNDERSTUDIED_GENES_ARTICLE["DATA_DIR"] / "s3_table.xlsx"
+)
+
+
 if __name__ == "__main__":
     # if this script is run, then it exports the configuration as environment
     # variables (for bash/R, etc)
