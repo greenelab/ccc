@@ -23,6 +23,7 @@
 # # Modules loading
 
 # %% tags=[]
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -126,6 +127,32 @@ display(run_numbers)
 # this is necessary to make sure we did not mix results when running the time test notebooks
 # that could happen if the notebooks are run separately without running them all together
 assert run_numbers["count"].unique().shape[0] == 2
+
+# %% [markdown] tags=[]
+# # Run numbers (log10) and order of magnitude
+
+# %% tags=[]
+plot_data.head()
+
+# %% tags=[]
+plot_data_log = plot_data.assign(time=np.log10(plot_data["time"]))
+plot_data_log = plot_data_log.assign(
+    time_order_magnitude=plot_data_log["time"].astype(int)
+)
+
+# %% tags=[]
+plot_data_log.head()
+
+# %% tags=[]
+run_numbers_log = (
+    plot_data_log[
+        plot_data_log["method"].str.contains("1 core", regex=False)
+        | plot_data_log["method"].str.contains("CCC (3 cores)", regex=False)
+    ]
+    .groupby(["data_size", "method"])[["time"]]
+    .describe()
+)
+display(run_numbers_log)
 
 # %% [markdown] tags=[]
 # # Plot
@@ -289,7 +316,7 @@ Figure(
     "19.79335cm",
     "17.09335cm",
     # white background
-    SVG(COEF_COMP_DIR / "white_background.svg").scale(0.5).move(0, 0),
+    # SVG(COEF_COMP_DIR / "white_background.svg").scale(0.5).move(0, 0),
     # SVG(OUTPUT_FIGURE_DIR / "time_test.svg").scale(0.05),
     SVG(OUTPUT_FIGURE_DIR / "time_test-log.svg").scale(0.05),
 ).save(OUTPUT_FIGURE_DIR / "time_test-main.svg")
