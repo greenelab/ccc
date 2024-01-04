@@ -70,7 +70,7 @@ def get_file_from_zip(
 def download_gtex_v8_sample_attributes(**kwargs):
     output_file = conf.GTEX["SAMPLE_ATTRS_FILE"]
     curl(
-        "https://storage.googleapis.com/gtex_analysis_v8/annotations/GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt",
+        "https://storage.googleapis.com/adult-gtex/annotations/v8/metadata-files/GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt",
         output_file,
         "3a863b00db00a0a08a5c7900d44ea119",
         logger=logger,
@@ -80,7 +80,7 @@ def download_gtex_v8_sample_attributes(**kwargs):
 def download_gtex_v8_subjects_phenotypes(**kwargs):
     output_file = conf.GTEX["SUBJECTS_ATTRS_FILE"]
     curl(
-        "https://storage.googleapis.com/gtex_analysis_v8/annotations/GTEx_Analysis_v8_Annotations_SubjectPhenotypesDS.txt",
+        "https://storage.googleapis.com/adult-gtex/annotations/v8/metadata-files/GTEx_Analysis_v8_Annotations_SubjectPhenotypesDS.txt",
         output_file,
         "90297fc31512902f4459c757180fe575",
         logger=logger,
@@ -90,7 +90,7 @@ def download_gtex_v8_subjects_phenotypes(**kwargs):
 def download_gtex_v8_data(**kwargs):
     output_file = conf.GTEX["DATA_TPM_GCT_FILE"]
     curl(
-        "https://storage.googleapis.com/gtex_analysis_v8/rna_seq_data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz",
+        "https://storage.googleapis.com/adult-gtex/bulk-gex/v8/rna-seq/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz",
         output_file,
         "ff6aade0ef5b55e38af9fef98bad760b",
         logger=logger,
