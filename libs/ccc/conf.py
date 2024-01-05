@@ -64,6 +64,9 @@ if MANUSCRIPT["BASE_DIR"] is not None:
     # these paths are specific to manubot
     MANUSCRIPT["CONTENT_DIR"] = MANUSCRIPT["BASE_DIR"] / "content"
     MANUSCRIPT["FIGURES_DIR"] = MANUSCRIPT["CONTENT_DIR"] / "images"
+    MANUSCRIPT["SUPPLEMENTARY_MATERIAL_DIR"] = Path(
+        ROOT_DIR, "supplementary_material"
+    ).resolve()
 
 
 #
