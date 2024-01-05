@@ -642,7 +642,9 @@ Figure(
             SVG(
                 AUTO_SELECTED_NETWORKS_DIR / "GIANT-RASSF2_vs_CYTIP-leukocyte.svg"
             ).move(420, 0),
-            SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(7.00).move(20, 350),
+            SVG(COEF_COMP_DIR / "triangles-c_vs_s-RASSF2_CYTIP.svg")
+            .scale(7.00)
+            .move(20, 350),
             Text("a)", 0, 30, size=28, weight="bold"),
             SVG(BLOOD_NETWORKS_DIR / "color_bar.svg").scale(3.50).move(270, 410),
         )
@@ -654,7 +656,9 @@ Figure(
                 AUTO_SELECTED_NETWORKS_DIR / "GIANT-MYOZ1_vs_TNNI2-skeletal_muscle.svg"
             ).move(420, 0),
             Text("b)", 0, 30, size=28, weight="bold"),
-            SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(7.00).move(20, 350),
+            SVG(COEF_COMP_DIR / "triangles-p_vs_c-MYOZ1_TNNI2.svg")
+            .scale(7.00)
+            .move(20, 350),
         )
         .scale(0.0175)
         .move(16, 0),
@@ -662,15 +666,15 @@ Figure(
     Panel(
         SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_count.svg").scale(0.5),
         # cm vs rest
-        SVG(COEF_COMP_DIR / "triangles-c_vs_p.svg").scale(1.50).move(30, 4),
+        SVG(COEF_COMP_DIR / "triangles-c_vs_p-c_signif.svg").scale(1.50).move(30, 2),
         Text("+", 52, 10, size=6),
-        SVG(COEF_COMP_DIR / "triangles-c_vs_ps.svg").scale(1.50).move(60, 4),
+        SVG(COEF_COMP_DIR / "triangles-c_vs_ps-c_signif.svg").scale(1.50).move(60, 2),
         Text("+", 83, 10, size=6),
-        SVG(COEF_COMP_DIR / "triangles-c_vs_s.svg").scale(1.50).move(90, 4),
+        SVG(COEF_COMP_DIR / "triangles-c_vs_s-c_signif.svg").scale(1.50).move(90, 2),
         # p vs rest
-        SVG(COEF_COMP_DIR / "triangles-p_vs_c.svg").scale(1.50).move(30, 65),
+        SVG(COEF_COMP_DIR / "triangles-p_vs_c-p_signif.svg").scale(1.50).move(30, 63),
         Text("+", 52, 71, size=6),
-        SVG(COEF_COMP_DIR / "triangles-p_vs_cs.svg").scale(1.50).move(60, 65),
+        SVG(COEF_COMP_DIR / "triangles-p_vs_cs-p_signif.svg").scale(1.50).move(60, 63),
         # another
         SVG(OUTPUT_FIGURE_DIR / "top_gene_pairs-tissue_avg_weight.svg")
         .scale(0.5)
