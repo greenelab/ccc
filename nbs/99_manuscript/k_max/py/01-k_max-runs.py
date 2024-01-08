@@ -17,7 +17,7 @@
 # # Description
 
 # %% [markdown] tags=[]
-# TODO
+# Runs CCC with different values for parameter $k_{\mathrm{max}}$ to assess the constant baseline property empirically.
 
 # %% [markdown] tags=[]
 # # Modules loading
