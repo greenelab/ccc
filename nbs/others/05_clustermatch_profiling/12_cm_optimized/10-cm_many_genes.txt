@@ -1,0 +1,56 @@
+         112301721 function calls (111553221 primitive calls) in 352.048 seconds
+
+   Ordered by: cumulative time
+   List reduced from 167 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000  352.048  352.048 {built-in method builtins.exec}
+        1    0.000    0.000  352.048  352.048 <string>:1(<module>)
+        1    0.654    0.654  352.048  352.048 1514735963.py:1(func)
+   124750    6.215    0.000  351.394    0.003 impl.py:511(ccc)
+   124750    7.821    0.000  170.020    0.001 impl.py:154(get_feature_parts)
+  2245500  160.294    0.000  160.294    0.000 impl.py:110(get_parts)
+   124750    1.763    0.000  103.566    0.001 impl.py:405(compute_coef)
+   124750    0.425    0.000  100.718    0.001 impl.py:344(compute_ccc)
+   124750   25.311    0.000   99.942    0.001 impl.py:191(cdist_parts_basic)
+ 10104750   46.177    0.000   74.586    0.000 metrics.py:107(adjusted_rand_index)
+   124750    0.695    0.000   33.415    0.000 process.py:573(__init__)
+ 10104750   28.408    0.000   28.408    0.000 metrics.py:72(get_pair_confusion_matrix)
+   623750   13.866    0.000   24.804    0.000 synchronize.py:50(__init__)
+   499000    1.129    0.000   22.087    0.000 context.py:65(Lock)
+   499000    0.266    0.000   20.593    0.000 synchronize.py:161(__init__)
+   124750    0.142    0.000   18.827    0.000 process.py:160(__init__)
+   124750    0.426    0.000   18.685    0.000 queues.py:37(__init__)
+   124750    5.411    0.000   15.799    0.000 {method 'seed' of 'numpy.random.mtrand.RandomState' objects}
+   124750    0.287    0.000   11.254    0.000 context.py:110(SimpleQueue)
+   124750    0.209    0.000   10.872    0.000 queues.py:340(__init__)
+   124750    0.225    0.000    9.412    0.000 contextlib.py:76(inner)
+  1122750    2.045    0.000    8.885    0.000 typedlist.py:341(append)
+   623750    0.623    0.000    8.523    0.000 synchronize.py:114(_make_name)
+   124750    8.135    0.000    8.135    0.000 {function SeedSequence.generate_state at 0x7f7a5005c9d0}
+  1372250    0.439    0.000    7.940    0.000 {built-in method builtins.next}
+   623750    0.742    0.000    7.500    0.000 tempfile.py:149(__next__)
+   249500    0.200    0.000    6.827    0.000 _base.py:636(__exit__)
+   124750    3.425    0.000    6.409    0.000 process.py:731(shutdown)
+   623750    0.885    0.000    6.026    0.000 tempfile.py:152(<listcomp>)
+   124750    0.315    0.000    5.477    0.000 typedlist.py:298(_initialise_list)
+  4990000    1.663    0.000    5.141    0.000 random.py:343(choice)
+   124750    0.310    0.000    4.944    0.000 context.py:85(BoundedSemaphore)
+   124750    0.063    0.000    4.540    0.000 synchronize.py:144(__init__)
+  4990000    2.152    0.000    3.123    0.000 random.py:237(_randbelow_with_getrandbits)
+   249500    0.326    0.000    2.823    0.000 abstract.py:60(__call__)
+   124750    0.585    0.000    2.515    0.000 typedlist.py:270(_parse_arg)
+   623751    0.545    0.000    2.311    0.000 numeric.py:289(full)
+   249500    0.215    0.000    2.311    0.000 typeof.py:25(typeof)
+   748500    0.571    0.000    2.223    0.000 util.py:171(register_after_fork)
+   249500    0.189    0.000    1.957    0.000 functools.py:883(wrapper)
+   374250    0.446    0.000    1.936    0.000 connection.py:521(Pipe)
+   249500    1.207    0.000    1.845    0.000 impl.py:279(get_chunks)
+   124750    0.194    0.000    1.807    0.000 dispatcher.py:677(typeof_pyval)
+  2245500    1.675    0.000    1.675    0.000 {built-in method numpy.array}
+   748500    0.629    0.000    1.441    0.000 weakref.py:165(__setitem__)
+   249500    0.188    0.000    1.435    0.000 abstract.py:48(_intern)
+   124750    0.102    0.000    1.355    0.000 process.py:67(__init__)
+   124750    0.289    0.000    1.253    0.000 context.py:60(Pipe)
+   249500    0.357    0.000    1.247    0.000 {method 'get' of 'dict' objects}
+   124750    0.152    0.000    1.227    0.000 typeof.py:257(_typeof_nb_type)

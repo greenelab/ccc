@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -29,6 +29,7 @@
 from time import time
 
 import pandas as pd
+from tqdm import tqdm
 
 from ccc import conf
 from ccc.utils import simplify_string
@@ -51,7 +52,11 @@ TISSUES = [
 ]
 
 # %% tags=[]
-CORRELATION_METHOD = ccc
+conf.GENERAL["N_JOBS"]
+
+# %% tags=[]
+CORRELATION_METHOD = lambda x: ccc(x, n_jobs=conf.GENERAL["N_JOBS"])
+CORRELATION_METHOD.__name__ = "ccc"
 
 method_name = CORRELATION_METHOD.__name__
 display(method_name)
@@ -121,8 +126,10 @@ display(_tmp)
 # ## Run
 
 # %% tags=[]
-for tissue_data_file in input_files:
-    display(tissue_data_file.stem)
+pbar = tqdm(input_files, ncols=100)
+
+for tissue_data_file in pbar:
+    pbar.set_description(tissue_data_file.stem)
 
     # read
     data = pd.read_pickle(tissue_data_file)

@@ -90,7 +90,7 @@ conda run -n ccc --no-capture-output bash scripts/install_other_packages.sh
 1. Export the entire configuration into environment variables (this is useful for bash scripts and R notebooks so they can also read the configuration):
 
 ```bash
-eval `python .../libs/ccc/conf.py`
+eval `python ../libs/ccc/conf.py`
 ```
 
 ## Downloading the data

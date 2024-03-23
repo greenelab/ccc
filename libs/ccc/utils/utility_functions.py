@@ -148,3 +148,21 @@ def get_upper_triag(similarity_matrix, k: int = 1):
     """
     mask = np.triu(np.ones(similarity_matrix.shape), k=k).astype(bool)
     return similarity_matrix.where(mask)
+
+
+class DummyExecutor:
+    """
+    A dummy executor runs tasks sequentially without parallelization.
+    """
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def map(self, func, iterable):
+        return map(func, iterable)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass

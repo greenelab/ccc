@@ -64,6 +64,9 @@ if MANUSCRIPT["BASE_DIR"] is not None:
     # these paths are specific to manubot
     MANUSCRIPT["CONTENT_DIR"] = MANUSCRIPT["BASE_DIR"] / "content"
     MANUSCRIPT["FIGURES_DIR"] = MANUSCRIPT["CONTENT_DIR"] / "images"
+    MANUSCRIPT["SUPPLEMENTARY_MATERIAL_DIR"] = Path(
+        ROOT_DIR, "supplementary_material"
+    ).resolve()
 
 
 #
@@ -108,6 +111,21 @@ GIANT = {}
 
 # Results
 GIANT["RESULTS_DIR"] = Path(RESULTS_DIR, "giant").resolve()
+
+
+#
+# Understudied genes
+#
+UNDERSTUDIED_GENES_ARTICLE = {}
+
+# Input data
+UNDERSTUDIED_GENES_ARTICLE["DATA_DIR"] = Path(DATA_DIR, "understudied_genes").resolve()
+UNDERSTUDIED_GENES_ARTICLE["S1_DATA_FILE"] = (
+    UNDERSTUDIED_GENES_ARTICLE["DATA_DIR"] / "s1_data.xlsx"
+)
+UNDERSTUDIED_GENES_ARTICLE["S3_TABLE_FILE"] = (
+    UNDERSTUDIED_GENES_ARTICLE["DATA_DIR"] / "s3_table.xlsx"
+)
 
 
 if __name__ == "__main__":

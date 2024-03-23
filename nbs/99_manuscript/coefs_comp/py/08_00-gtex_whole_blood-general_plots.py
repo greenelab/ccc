@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -44,7 +44,7 @@ GENE_SEL_STRATEGY = "var_pc_log2"
 # this is used for the cumulative histogram
 GENE_PAIRS_PERCENT = 0.70
 
-# %%
+# %% tags=[]
 CLUSTERMATCH_LABEL = "CCC"
 PEARSON_LABEL = "Pearson"
 SPEARMAN_LABEL = "Spearman"
@@ -179,10 +179,10 @@ with sns.plotting_context("talk", font_scale=1.0):
 # %% [markdown] tags=[]
 # # Create final figure
 
-# %%
+# %% tags=[]
 from svgutils.compose import Figure, SVG, Panel, Text
 
-# %%
+# %% tags=[]
 Figure(
     "643.71cm",
     "427.66cm",
@@ -210,7 +210,7 @@ Figure(
     ).move(0, 220),
 ).save(OUTPUT_FIGURE_DIR / "dist-main.svg")
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Now open `dist-main.svg`, reside to fit drawing to page, and add a white rectangle to the background.
 
-# %%
+# %% tags=[]

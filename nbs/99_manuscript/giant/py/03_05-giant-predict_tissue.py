@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -52,7 +52,7 @@ OUTPUT_DIR = conf.GIANT["RESULTS_DIR"] / "intersection_genes"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 display(OUTPUT_DIR)
 
-# %%
+# %% tags=[]
 TISSUE_SPECIFIC_URLS = {
     "blood": ("blood", "http://hb.flatironinstitute.org/api/integrations/blood/"),
 }
@@ -60,32 +60,32 @@ TISSUE_SPECIFIC_URLS = {
 # %% [markdown] tags=[]
 # # Load gene maps
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # These gene mappings include only query genes (gene pairs).
 
-# %%
+# %% tags=[]
 gene_id_mappings = pd.read_pickle(OUTPUT_DIR / "gene_map-symbol_to_entrezid.pkl")
 
-# %%
+# %% tags=[]
 gene_id_mappings.shape
 
-# %%
+# %% tags=[]
 gene_id_mappings.head()
 
-# %%
+# %% tags=[]
 gene_symbol_to_entrezid = gene_id_mappings.set_index("SYMBOL").squeeze().to_dict()
 
-# %%
+# %% tags=[]
 gene_entrezid_to_symbol = gene_id_mappings.set_index("ENTREZID").squeeze().to_dict()
 
-# %%
+# %% tags=[]
 gene_id_mappings.set_index("SYMBOL").loc["ZDHHC12"]
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Functions
 
-# %%
+# %% tags=[]
 def convert_gene_pairs(gene_pairs, convert_to_entrezid=False):
     """
     Converts gene pair information (as dataframe) into a suitable format for the function process_tissue_networks.
@@ -105,7 +105,7 @@ def convert_gene_pairs(gene_pairs, convert_to_entrezid=False):
     return list(gene_pairs)
 
 
-# %%
+# %% tags=[]
 def process_tissue_networks(gene_pairs, output_directory, force_tissue=None):
     """
     Given a list of tuples with gene pairs, it uses the GIANT web services to predict a
@@ -134,6 +134,8 @@ def process_tissue_networks(gene_pairs, output_directory, force_tissue=None):
                 / f"{gp_idx:03d}-{gp[0].lower()}_{gp[1].lower()}{suffix}.h5"
             )
             if output_filepath.exists():
+                output_filepath.touch()
+
                 gp_idx += 1
                 pbar.update(1)
                 continue
@@ -172,186 +174,223 @@ def process_tissue_networks(gene_pairs, output_directory, force_tissue=None):
             pbar.update(1)
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # # Predict tissue for each gene pair
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Custom gene pairs from Figure 3
 
-# %%
+# %% tags=[]
 gene_pairs = [
     ("IFNG", "SDS"),
-    ("JUN", "APOC1"),
+    ("PRSS36", "CCL18"),
+    ("UTY", "KDM6A"),
+    # ("DDX3Y", "KDM6A"),
+    ("RASSF2", "CYTIP"),
+    ("MYOZ1", "TNNI2"),
+    ("SCGB3A1", "C19orf33"),
 ]
 
 display(len(gene_pairs))
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Autodetected cell type
 
-# %%
+# %% tags=[]
 output_dir = OUTPUT_DIR / "custom" / "autopredicted_cell_type"
 
-# %%
+# %% tags=[]
 process_tissue_networks(gene_pairs, output_dir)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ### Blood
 
-# %%
+# %% tags=[]
 output_dir = OUTPUT_DIR / "custom" / "blood"
 
-# %%
+# %% tags=[]
 process_tissue_networks(
     gene_pairs
     + [
-        ("ZDHHC12", "CCL18"),
-        ("RASSF2", "CYTIP"),
-        ("MYOZ1", "TNNI2"),
-        ("PYGM", "TPM2"),
+        ("DDX3Y", "KDM6A"),
     ],
     output_dir,
     force_tissue="blood",
 )
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## CCC vs Pearson
 
-# %%
+# %% tags=[]
 output_dir = OUTPUT_DIR / "clustermatch_vs_pearson"
 
-# %%
+# %% tags=[]
 # read gene pairs
 data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_pearson.pkl").sort_values(
     "ccc", ascending=False
 )
 
-# %%
+# %% tags=[]
 data.shape
 
-# %%
+# %% tags=[]
 data.head()
 
-# %% [markdown]
+# %% tags=[]
+# make sure gene pairs are statistically significant
+data = data[data["ccc_fdr"] < 0.05]
+
+# %% tags=[]
+data.shape
+
+# %% [markdown] tags=[]
 # From the `data` dataframe, only gene pairs (index) are used.
 # The other numbers are correlation values and their rankings.
 
-# %%
+# %% tags=[]
 gene_pairs = convert_gene_pairs(data)
 display(len(gene_pairs))
 
-# %%
+# %% tags=[]
 gene_pairs[:10]
 
-# %%
+# %% tags=[]
 process_tissue_networks(gene_pairs, output_dir)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## CCC vs Pearson/Spearman
 
-# %%
+# %% tags=[]
 output_dir = OUTPUT_DIR / "clustermatch_vs_pearson_spearman"
 
-# %%
+# %% tags=[]
 data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_pearson_spearman.pkl").sort_values(
     "ccc", ascending=False
 )
 
-# %%
+# %% tags=[]
 data.shape
 
-# %%
+# %% tags=[]
 data.head()
 
-# %%
+# %% tags=[]
+# make sure gene pairs are statistically significant
+data = data[data["ccc_fdr"] < 0.05]
+
+# %% tags=[]
+data.shape
+
+# %% tags=[]
 gene_pairs = convert_gene_pairs(data)
 display(len(gene_pairs))
 
-# %%
+# %% tags=[]
 gene_pairs[:10]
 
-# %%
+# %% tags=[]
 process_tissue_networks(gene_pairs, output_dir)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## CCC vs Spearman
 
-# %%
+# %% tags=[]
 output_dir = OUTPUT_DIR / "clustermatch_vs_spearman"
 
-# %%
+# %% tags=[]
 data = pd.read_pickle(INPUT_DIR / "clustermatch_vs_spearman.pkl").sort_values(
     "ccc", ascending=False
 )
 
-# %%
+# %% tags=[]
 data.shape
 
-# %%
+# %% tags=[]
 data.head()
 
-# %%
+# %% tags=[]
+# make sure gene pairs are statistically significant
+data = data[data["ccc_fdr"] < 0.05]
+
+# %% tags=[]
+data.shape
+
+# %% tags=[]
 gene_pairs = convert_gene_pairs(data)
 display(len(gene_pairs))
 
-# %%
+# %% tags=[]
 gene_pairs[:10]
 
-# %%
+# %% tags=[]
 process_tissue_networks(gene_pairs, output_dir)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Pearson vs CCC
 
-# %%
+# %% tags=[]
 output_dir = OUTPUT_DIR / "pearson_vs_clustermatch"
 
-# %%
+# %% tags=[]
 data = pd.read_pickle(INPUT_DIR / "pearson_vs_clustermatch.pkl").sort_values(
     "pearson", ascending=False
 )
 
-# %%
+# %% tags=[]
 data.shape
 
-# %%
+# %% tags=[]
 data.head()
 
-# %%
+# %% tags=[]
+# make sure gene pairs are statistically significant
+data = data[data["pearson_fdr"] < 0.05]
+
+# %% tags=[]
+data.shape
+
+# %% tags=[]
 gene_pairs = convert_gene_pairs(data)
 display(len(gene_pairs))
 
-# %%
+# %% tags=[]
 gene_pairs[:10]
 
-# %%
+# %% tags=[]
 process_tissue_networks(gene_pairs, output_dir)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ## Pearson vs CCC/Spearman
 
-# %%
+# %% tags=[]
 output_dir = OUTPUT_DIR / "pearson_vs_clustermatch_spearman"
 
-# %%
+# %% tags=[]
 data = pd.read_pickle(INPUT_DIR / "pearson_vs_clustermatch_spearman.pkl").sort_values(
     "pearson", ascending=False
 )
 
-# %%
+# %% tags=[]
 data.shape
 
-# %%
+# %% tags=[]
 data.head()
 
-# %%
+# %% tags=[]
+# make sure gene pairs are statistically significant
+data = data[data["pearson_fdr"] < 0.05]
+
+# %% tags=[]
+data.shape
+
+# %% tags=[]
 gene_pairs = convert_gene_pairs(data)
 display(len(gene_pairs))
 
-# %%
+# %% tags=[]
 gene_pairs[:10]
 
-# %%
+# %% tags=[]
 process_tissue_networks(gene_pairs, output_dir)
 
-# %%
+# %% tags=[]

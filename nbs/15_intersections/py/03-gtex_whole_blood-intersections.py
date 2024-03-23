@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -318,10 +318,10 @@ gene_pairs_by_cats = gene_pairs_by_cats.loc[
     ]
 ]
 
-# %%
+# %% tags=[]
 gene_pairs_by_cats.head()
 
-# %%
+# %% tags=[]
 gene_pairs_by_cats = gene_pairs_by_cats.rename(
     columns={
         "Clustermatch (high)": "CCC (high)",
@@ -368,7 +368,7 @@ plt.savefig(
 # %% [markdown] tags=[]
 # This plot has the sets that represent agreements on the left, and disagreements on the right.
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # The plot shown here is **not the final one for the manuscript**:
 #
 # 1. Open the main output svg file (`upsetplot-main.svg`)

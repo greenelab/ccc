@@ -7,7 +7,7 @@
 # Your settings here
 # BASE_DIR is the parent directory where the code and manuscript repos are
 # located.
-BASE_DIR=/home/miltondp/projects/ccc
+BASE_DIR=/home/miltondp/projects/ccc/greenelab/
 export CM_N_JOBS=20
 
 export CM_ROOT_DIR=${BASE_DIR}/ccc/base

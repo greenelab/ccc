@@ -48,8 +48,10 @@ def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     but the code is not based on their implementation.
 
     Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
+        part0: a 1d array with cluster assignments for n objects. It assumes that
+            the cluster assignments are integers from 0 to k0-1.
+        part1: a 1d array with cluster assignments for n objects. It assumes that
+            the cluster assignments are integers from 0 to k1-1.
 
     Returns:
         A contingency matrix with k0 (number of clusters in part0) rows and k1
@@ -57,21 +59,12 @@ def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
         number of objects grouped in cluster i (in part0) and cluster j (in
         part1).
     """
-    part0_unique = np.unique(part0)
-    part1_unique = np.unique(part1)
+    k0, k1 = np.max(part0) + 1, np.max(part1) + 1
 
-    cont_mat = np.zeros((len(part0_unique), len(part1_unique)))
+    cont_mat = np.zeros((k0, k1))
 
-    for i in range(len(part0_unique)):
-        part0_k = part0_unique[i]
-
-        for j in range(len(part1_unique)):
-            part1_k = part1_unique[j]
-
-            part0_i = part0 == part0_k
-            part1_j = part1 == part1_k
-
-            cont_mat[i, j] = np.sum(part0_i & part1_j)
+    for i in range(len(part0)):
+        cont_mat[part0[i], part1[i]] += 1
 
     return cont_mat
 

@@ -2,11 +2,11 @@
 # jupyter:
 #   jupytext:
 #     cell_metadata_filter: all,-execution,-papermill,-trusted
+#     notebook_metadata_filter: -jupytext.text_representation.jupytext_version
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.5
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -143,25 +143,25 @@ display(mic_higher.sum())
 mic_lower = df["mic"] <= mic_lq
 display(mic_lower.sum())
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # **Question:** Why the number of top/bottom gene pairs in CCC does not match the rest? Maybe it's because there are repeated values. Let's see:
 
-# %%
+# %% tags=[]
 df.shape
 
-# %%
+# %% tags=[]
 df["pearson"].unique().shape
 
-# %%
+# %% tags=[]
 df["spearman"].unique().shape
 
-# %%
+# %% tags=[]
 df["ccc"].unique().shape
 
-# %%
+# %% tags=[]
 df["mic"].unique().shape
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # Yes, many CCC values are the same!
 
 # %% [markdown] tags=[]
@@ -281,4 +281,4 @@ g = plot(
     fig=fig,
 )
 
-# %%
+# %% tags=[]
