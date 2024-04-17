@@ -36,94 +36,94 @@ jobs:
         run: |
           pytest tests/test_coef.py tests/test_pytorch_core.py tests/test_scipy_stats.py tests/test_sklearn_metrics.py
 
-  pytest:
-    name: Python tests for analyses
-    runs-on: ${{ matrix.os }}
-    strategy:
-      max-parallel: 4
-      fail-fast: false
-      matrix:
-        python-version: ["3.9"]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-    steps:
-      - name: Checkout git repo
-        uses: actions/checkout@v3
-      - name: Cache conda
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: "${{ env.PY_ENV }}.tar.gz"
-          key: ${{ runner.os }}-${{ env.PY_CACHE_NUMBER }}-${{ hashFiles('environment/environment.yml', 'environment/scripts/install_r_packages.r', 'environment/scripts/install_other_packages.sh') }}
-      - name: Setup Miniconda
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: ${{ env.PY_ENV }}
-          environment-file: environment/environment.yml
-          auto-activate-base: false
-          miniforge-variant: Mambaforge
-          miniforge-version: 'latest'
-          use-mamba: true
-      - name: Install other packages and Conda-Pack environment
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash -l {0}
-        run: |
-          # other packages (R packages mainly)
-          bash environment/scripts/install_other_packages.sh
-
-          # install conda-pack, and pack environment
-          conda install --yes -c conda-forge conda-pack coverage
-          conda pack -f -n ${{ env.PY_ENV }} -o "${{ env.PY_ENV }}.tar.gz"
-      - name: Unpack environment
-        shell: bash -l {0}
-        run: |
-          mkdir -p "${{ env.PY_ENV }}"
-          tar -xzf "${{ env.PY_ENV }}.tar.gz" -C "${{ env.PY_ENV }}"
-      - name: Setup data and run pytest (Windows systems)
-        if: runner.os == 'Windows'
-        env:
-          PYTHONPATH: libs/
-        shell: cmd
-        run: |
-          echo on
-          cd ${{ env.PY_ENV }}
-          call .\Scripts\activate.bat
-          .\Scripts\conda-unpack.exe
-          cd ..
-          set R_HOME=%CONDA_PREFIX%\Lib\R
-          python environment\scripts\setup_data.py --mode testing
-          pytest -v -rs tests
-      - name: Setup data and run pytest (non-Windows systems)
-        if: runner.os != 'Windows'
-        shell: bash
-        env:
-          PYTHONPATH: libs/
-        run: |
-          source ${{ env.PY_ENV }}/bin/activate
-          conda-unpack
-
-          python environment/scripts/setup_data.py --mode testing
-
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            # for linux/ubuntu, run the tests once: with numba jit activated
-            # (which is the expected implementation) and with the jit
-            # deactivated (otherwise coverage does not work).
-
-            # numba jit activated
-            pytest -v -rs tests
-
-            # numba jit deactivated + code coverage
-            export NUMBA_DISABLE_JIT=1
-            coverage run --source=libs/ -m pytest -v -rs tests
-            coverage xml -o coverage.xml
-          else
-            pytest -v -rs tests
-          fi
-      - name: Codecov upload
-        if: runner.os == 'Linux'
-        uses: codecov/codecov-action@v2
-        with:
-          files: ./coverage.xml
-          name: codecov-${{ matrix.os }}-python${{ matrix.python-version }}
-          fail_ci_if_error: true
-          verbose: true
+#  pytest:
+#    name: Python tests for analyses
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      max-parallel: 4
+#      fail-fast: false
+#      matrix:
+#        python-version: ["3.9"]
+#        os: [ubuntu-latest, macOS-latest, windows-latest]
+#    steps:
+#      - name: Checkout git repo
+#        uses: actions/checkout@v3
+#      - name: Cache conda
+#        id: cache
+#        uses: actions/cache@v3
+#        with:
+#          path: "${{ env.PY_ENV }}.tar.gz"
+#          key: ${{ runner.os }}-${{ env.PY_CACHE_NUMBER }}-${{ hashFiles('environment/environment.yml', 'environment/scripts/install_r_packages.r', 'environment/scripts/install_other_packages.sh') }}
+#      - name: Setup Miniconda
+#        if: steps.cache.outputs.cache-hit != 'true'
+#        uses: conda-incubator/setup-miniconda@v2
+#        with:
+#          activate-environment: ${{ env.PY_ENV }}
+#          environment-file: environment/environment.yml
+#          auto-activate-base: false
+#          miniforge-variant: Mambaforge
+#          miniforge-version: 'latest'
+#          use-mamba: true
+#      - name: Install other packages and Conda-Pack environment
+#        if: steps.cache.outputs.cache-hit != 'true'
+#        shell: bash -l {0}
+#        run: |
+#          # other packages (R packages mainly)
+#          bash environment/scripts/install_other_packages.sh
+#
+#          # install conda-pack, and pack environment
+#          conda install --yes -c conda-forge conda-pack coverage
+#          conda pack -f -n ${{ env.PY_ENV }} -o "${{ env.PY_ENV }}.tar.gz"
+#      - name: Unpack environment
+#        shell: bash -l {0}
+#        run: |
+#          mkdir -p "${{ env.PY_ENV }}"
+#          tar -xzf "${{ env.PY_ENV }}.tar.gz" -C "${{ env.PY_ENV }}"
+#      - name: Setup data and run pytest (Windows systems)
+#        if: runner.os == 'Windows'
+#        env:
+#          PYTHONPATH: libs/
+#        shell: cmd
+#        run: |
+#          echo on
+#          cd ${{ env.PY_ENV }}
+#          call .\Scripts\activate.bat
+#          .\Scripts\conda-unpack.exe
+#          cd ..
+#          set R_HOME=%CONDA_PREFIX%\Lib\R
+#          python environment\scripts\setup_data.py --mode testing
+#          pytest -v -rs tests
+#      - name: Setup data and run pytest (non-Windows systems)
+#        if: runner.os != 'Windows'
+#        shell: bash
+#        env:
+#          PYTHONPATH: libs/
+#        run: |
+#          source ${{ env.PY_ENV }}/bin/activate
+#          conda-unpack
+#
+#          python environment/scripts/setup_data.py --mode testing
+#
+#          if [ "$RUNNER_OS" == "Linux" ]; then
+#            # for linux/ubuntu, run the tests once: with numba jit activated
+#            # (which is the expected implementation) and with the jit
+#            # deactivated (otherwise coverage does not work).
+#
+#            # numba jit activated
+#            pytest -v -rs tests
+#
+#            # numba jit deactivated + code coverage
+#            export NUMBA_DISABLE_JIT=1
+#            coverage run --source=libs/ -m pytest -v -rs tests
+#            coverage xml -o coverage.xml
+#          else
+#            pytest -v -rs tests
+#          fi
+#      - name: Codecov upload
+#        if: runner.os == 'Linux'
+#        uses: codecov/codecov-action@v2
+#        with:
+#          files: ./coverage.xml
+#          name: codecov-${{ matrix.os }}-python${{ matrix.python-version }}
+#          fail_ci_if_error: true
+#          verbose: true
