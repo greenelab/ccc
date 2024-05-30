@@ -40,38 +40,60 @@ from numba import njit
 from numba import cuda
 
 
-@njit(cache=True, nogil=True)
-def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
+@cuda.jit
+def compute_sum_squares(contingency, result):
     """
-    Returns the pair confusion matrix from two clustering partitions. It is an
-    implemenetation of
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.pair_confusion_matrix.html
-    The code is based on the sklearn implementation. See copyright notice at the
-    top of this file.
+    CUDA kernel to compute the sum of squares of the contingency matrix elements.
 
     Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
+        contingency: The contingency matrix.
+        result: The output array to store the sum of squares.
+    """
+    i, j = cuda.grid(2)
+
+    if i < contingency.shape[0] and j < contingency.shape[1]:
+        cuda.atomic.add(result, 0, contingency[i, j] ** 2)
+
+
+def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
+    """
+    Returns the pair confusion matrix from two clustering partitions using CUDA.
+
+    Args:
+        part0: A 1D array with cluster assignments for n objects.
+        part1: A 1D array with cluster assignments for n objects.
 
     Returns:
-        A pair confusion matrix with 2 rows and 2 columns. From sklearn's
-        pair_confusion_matrix docstring: considering a pair of objects that is
-        clustered together a positive pair, then as in binary classification the
-        count of true negatives is in position 00, false negatives in 10, true
-        positives in 11, and false positives in 01.
+        A pair confusion matrix with 2 rows and 2 columns.
     """
     n_samples = np.int64(part0.shape[0])
 
-    # Computation using the contingency data
+    # Compute the contingency matrix
     contingency = get_contingency_matrix(part0, part1)
+
     n_c = np.ravel(contingency.sum(axis=1))
     n_k = np.ravel(contingency.sum(axis=0))
-    sum_squares = (contingency**2).sum()
+
+    # Allocate space for the sum of squares result
+    sum_squares = np.zeros(1, dtype=np.int64)
+
+    # Define the number of threads per block and the number of blocks per grid
+    threadsperblock = (16, 16)
+    blockspergrid_x = int(np.ceil(contingency.shape[0] / threadsperblock[0]))
+    blockspergrid_y = int(np.ceil(contingency.shape[1] / threadsperblock[1]))
+    blockspergrid = (blockspergrid_x, blockspergrid_y)
+
+    # Launch the CUDA kernel to compute the sum of squares
+    compute_sum_squares[blockspergrid, threadsperblock](contingency, sum_squares)
+
+    sum_squares = sum_squares[0]
+
     C = np.empty((2, 2), dtype=np.int64)
     C[1, 1] = sum_squares - n_samples
-    C[0, 1] = contingency.dot(n_k).sum() - sum_squares
-    C[1, 0] = contingency.transpose().dot(n_c).sum() - sum_squares
-    C[0, 0] = n_samples**2 - C[0, 1] - C[1, 0] - sum_squares
+    C[0, 1] = np.dot(contingency, n_k).sum() - sum_squares
+    C[1, 0] = np.dot(contingency.T, n_c).sum() - sum_squares
+    C[0, 0] = n_samples ** 2 - C[0, 1] - C[1, 0] - sum_squares
+
     return C
 
 
@@ -237,3 +259,5 @@ if __name__ == '__main__':
     part1 = np.array([1, 0, 2, 1, 0, 2])
     cont_matrix = get_contingency_matrix(part0, part1)
     print(cont_matrix)
+
+    _test_ari()
