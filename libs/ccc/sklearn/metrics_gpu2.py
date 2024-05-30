@@ -39,42 +39,6 @@ import numpy as np
 from numba import njit
 from numba import cuda
 
-@njit(cache=True, nogil=True)
-def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
-    """
-    Given two clustering partitions with k0 and k1 number of clusters each, it
-    returns a contingency matrix with k0 rows and k1 columns. It's an implementation of
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.contingency_matrix.html,
-    but the code is not based on their implementation.
-
-    Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
-
-    Returns:
-        A contingency matrix with k0 (number of clusters in part0) rows and k1
-        (number of clusters in part1) columns. Each cell ij represents the
-        number of objects grouped in cluster i (in part0) and cluster j (in
-        part1).
-    """
-    part0_unique = np.unique(part0)
-    part1_unique = np.unique(part1)
-
-    cont_mat = np.zeros((len(part0_unique), len(part1_unique)))
-
-    for i in range(len(part0_unique)):
-        part0_k = part0_unique[i]
-
-        for j in range(len(part1_unique)):
-            part1_k = part1_unique[j]
-
-            part0_i = part0 == part0_k
-            part1_j = part1 == part1_k
-
-            cont_mat[i, j] = np.sum(part0_i & part1_j)
-
-    return cont_mat
-
 
 @njit(cache=True, nogil=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
@@ -143,6 +107,65 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
 
 
 @cuda.jit
+def compute_contingency_matrix(part0, part1, part0_unique, part1_unique, cont_mat):
+    """
+    CUDA kernel to compute the contingency matrix.
+
+    Args:
+        part0: 1D array with cluster assignments for n objects.
+        part1: 1D array with cluster assignments for n objects.
+        part0_unique: Unique cluster labels in part0.
+        part1_unique: Unique cluster labels in part1.
+        cont_mat: The output contingency matrix.
+
+    Each thread computes a single element of the contingency matrix.
+    """
+    i, j = cuda.grid(2)  # Get the thread indices in the grid
+
+    # Check if the thread indices are within the bounds of the unique clusters
+    if i < len(part0_unique) and j < len(part1_unique):
+        part0_k = part0_unique[i]  # Cluster label in part0
+        part1_k = part1_unique[j]  # Cluster label in part1
+
+        count = 0  # Initialize the count for this element
+        for idx in range(len(part0)):
+            # Count the number of objects in both clusters i and j
+            if part0[idx] == part0_k and part1[idx] == part1_k:
+                count += 1
+        cont_mat[i, j] = count  # Store the result in the contingency matrix
+
+
+def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
+    """
+    Compute the contingency matrix for two clustering partitions using CUDA.
+
+    Args:
+        part0: 1D array with cluster assignments for n objects.
+        part1: 1D array with cluster assignments for n objects.
+
+    Returns:
+        A contingency matrix with k0 rows and k1 columns, where k0 is the number
+        of clusters in part0 and k1 is the number of clusters in part1. Each cell
+        (i, j) represents the number of objects in cluster i (part0) and cluster j (part1).
+    """
+    part0_unique = np.unique(part0)  # Find unique clusters in part0
+    part1_unique = np.unique(part1)  # Find unique clusters in part1
+
+    cont_mat = np.zeros((len(part0_unique), len(part1_unique)), dtype=np.int32)  # Initialize the contingency matrix
+
+    # Define the number of threads per block and the number of blocks per grid
+    threadsperblock = (16, 16)
+    blockspergrid_x = int(np.ceil(len(part0_unique) / threadsperblock[0]))
+    blockspergrid_y = int(np.ceil(len(part1_unique) / threadsperblock[1]))
+    blockspergrid = (blockspergrid_x, blockspergrid_y)
+
+    # Launch the CUDA kernel to compute the contingency matrix
+    compute_contingency_matrix[blockspergrid, threadsperblock](part0, part1, part0_unique, part1_unique, cont_mat)
+
+    return cont_mat
+
+
+@cuda.jit
 def increment_by_one(an_array):
     # Thread id in a 1D block
     tx = cuda.threadIdx.x
@@ -208,3 +231,9 @@ def print_device_info():
     print(f"PCI Device ID: {device.PCI_DEVICE_ID}")
     print(f"PCI Domain ID: {device.PCI_DOMAIN_ID}")
 
+
+if __name__ == '__main__':
+    part0 = np.array([0, 0, 1, 1, 2, 2])
+    part1 = np.array([1, 0, 2, 1, 0, 2])
+    cont_matrix = get_contingency_matrix(part0, part1)
+    print(cont_matrix)
