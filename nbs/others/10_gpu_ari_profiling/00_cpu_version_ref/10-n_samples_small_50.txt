@@ -1,0 +1,26 @@
+         6320 function calls (6310 primitive calls) in 0.044 seconds
+
+   Ordered by: cumulative time
+   List reduced from 125 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.044    0.044 {built-in method builtins.exec}
+        1    0.000    0.000    0.044    0.044 <string>:1(<module>)
+        1    0.000    0.000    0.044    0.044 454136789.py:1(func)
+       10    0.000    0.000    0.044    0.004 impl.py:307(ccc)
+      139    0.000    0.000    0.040    0.000 threading.py:280(wait)
+      546    0.040    0.000    0.040    0.000 {method 'acquire' of '_thread.lock' objects}
+       10    0.000    0.000    0.036    0.004 impl.py:492(compute_coef)
+       10    0.000    0.000    0.035    0.004 impl.py:485(cdist_func)
+       10    0.000    0.000    0.035    0.004 impl.py:192(cdist_parts_parallel)
+       69    0.000    0.000    0.035    0.001 threading.py:563(wait)
+       70    0.000    0.000    0.034    0.000 _base.py:201(as_completed)
+       70    0.000    0.000    0.005    0.000 _base.py:418(result)
+       20    0.000    0.000    0.005    0.000 _base.py:602(result_iterator)
+       70    0.000    0.000    0.003    0.000 thread.py:161(submit)
+       70    0.000    0.000    0.002    0.000 thread.py:180(_adjust_thread_count)
+       10    0.000    0.000    0.002    0.000 _base.py:573(map)
+       10    0.000    0.000    0.002    0.000 _base.py:598(<listcomp>)
+       10    0.000    0.000    0.002    0.000 threading.py:880(start)
+       10    0.000    0.000    0.001    0.000 impl.py:210(<dictcomp>)
+       10    0.000    0.000    0.000    0.000 _base.py:636(__exit__)

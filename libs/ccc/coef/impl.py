@@ -13,7 +13,7 @@ from numba import njit
 from numba.typed import List
 
 from ccc.pytorch.core import unravel_index_2d
-from ccc.sklearn.metrics_gpu import adjusted_rand_index as ari
+from ccc.sklearn.metrics import adjusted_rand_index as ari
 from ccc.scipy.stats import rank
 from ccc.utils import chunker, DummyExecutor
 
