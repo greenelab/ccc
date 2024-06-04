@@ -1,7 +1,3 @@
-import numpy as np
-import pandas as pd
-from numba import cuda
-
 """
 Contains implementations of different metrics in sklearn but optimized for numba.
 
@@ -43,84 +39,61 @@ import numpy as np
 from numba import njit
 from numba import cuda
 
+
 @cuda.jit
-def get_contingency_matrix(random_feature1_device , random_feature2_device, part0_unique_device, part1_unique_device, cont_mat_device, part1_k_device, part1_j_device, part0_i_device):
+def compute_sum_squares(contingency, result):
     """
-    Given two clustering partitions with k0 and k1 number of clusters each, it
-    returns a contingency matrix with k0 rows and k1 columns. It's an implementation of
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.contingency_matrix.html,
-    but the code is not based on their implementation.
+    CUDA kernel to compute the sum of squares of the contingency matrix elements.
+
     Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
-    Returns:
-        A contingency matrix with k0 (number of clusters in part0) rows and k1
-        (number of clusters in part1) columns. Each cell ij represents the
-        number of objects grouped in cluster i (in part0) and cluster j (in
-        part1).
+        contingency: The contingency matrix.
+        result: The output array to store the sum of squares.
     """
-    
-    #Creating the grid
-    #x, y = cuda.grid(2)
-    tx = cuda.threadIdx.x
-    ty = cuda.threadIdx.y
-    bx = cuda.blockIdx.x
-    by = cuda.blockIdx.y
-    bw = cuda.blockDim.x
-    bh = cuda.blockDim.y
-    i = tx + bx * bw
-    j = ty + by * bh
+    i, j = cuda.grid(2)
+
+    if i < contingency.shape[0] and j < contingency.shape[1]:
+        cuda.atomic.add(result, 0, contingency[i, j] ** 2)
 
 
-
-
-    #part0_unique = np.unique(array1)
-    #part1_unique = np.unique(array2)
-    #cont_mat = np.zeros((len(part0_unique), len(part1_unique)))
-    
-    if i < M:
-        part0_k_device = part0_unique_device[i]
-        if j < N:
-            part1_k_device = part1_unique_device[j]
-            #cuda.atomic.compare_and_swap_element(part0_i_device , 
-            part0_i_device = random_feature1_device == part0_k_device
-            part1_j_device = random_feature2_device == part1_k_device
-            cont_mat_device[i, j] = np.sum(part0_i_device & part1_j_device)
-    
-    return cont_mat_device
-
-@njit(cache=True, nogil=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
-    Returns the pair confusion matrix from two clustering partitions. It is an
-    implemenetation of
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.pair_confusion_matrix.html
-    The code is based on the sklearn implementation. See copyright notice at the
-    top of this file.
+    Returns the pair confusion matrix from two clustering partitions using CUDA.
 
     Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
+        part0: A 1D array with cluster assignments for n objects.
+        part1: A 1D array with cluster assignments for n objects.
 
     Returns:
-        A pair confusion matrix with 2 rows and 2 columns. From sklearn's
-        pair_confusion_matrix docstring: considering a pair of objects that is
-        clustered together a positive pair, then as in binary classification the
-        count of true negatives is in position 00, false negatives in 10, true
-        positives in 11, and false positives in 01.
+        A pair confusion matrix with 2 rows and 2 columns.
     """
     n_samples = np.int64(part0.shape[0])
 
-    # Computation using the contingency data
+    # Compute the contingency matrix
     contingency = get_contingency_matrix(part0, part1)
+
     n_c = np.ravel(contingency.sum(axis=1))
     n_k = np.ravel(contingency.sum(axis=0))
-    sum_squares = (contingency**2).sum()
+
+    # Allocate space for the sum of squares result
+    sum_squares = np.zeros(1, dtype=np.int64)
+
+    # Define the number of threads per block and the number of blocks per grid
+    threadsperblock = (16, 16)
+    blockspergrid_x = int(np.ceil(contingency.shape[0] / threadsperblock[0]))
+    blockspergrid_y = int(np.ceil(contingency.shape[1] / threadsperblock[1]))
+    blockspergrid = (blockspergrid_x, blockspergrid_y)
+
+    # Launch the CUDA kernel to compute the sum of squares
+    compute_sum_squares[blockspergrid, threadsperblock](contingency, sum_squares)
+
+    sum_squares = sum_squares[0]
+
     C = np.empty((2, 2), dtype=np.int64)
     C[1, 1] = sum_squares - n_samples
-    C[0, 1] = contingency.dot(n_k).sum() - sum_squares
-    C[1, 0] = contingency.transpose().dot(n_c).sum() - sum_squares
-    C[0, 0] = n_samples**2 - C[0, 1] - C[1, 0] - sum_squares
+    C[0, 1] = np.dot(contingency, n_k).sum() - sum_squares
+    C[1, 0] = np.dot(contingency.T, n_c).sum() - sum_squares
+    C[0, 0] = n_samples ** 2 - C[0, 1] - C[1, 0] - sum_squares
+
     return C
 
 
@@ -152,43 +125,93 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
     if fn == 0 and fp == 0:
         return 1.0
 
-       
     return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
 
 
-if __name__ == '__main__':
-   
-    # Arrays
-    random_feature1 = np.random.rand(1000).astype('f')
-    random_feature2 = np.random.rand(1000).astype('f')
-    
-    # Processing the unique arrays:
-    part0_unique = np.unique(random_feature1)
-    part1_unique = np.unique(random_feature2)
-    cont_mat = np.zeros((len(part0_unique), len(part1_unique)))
-    part1_k = np.ones(1, dtype=np.float64) 
-    part1_j =  np.ones(1, dtype=np.float64)
-    part0_i =  np.ones(1, dtype=np.float64)
-    # Getting other important parts of for the GPU setting:
-    threadsperblock = (128, 128)
-    M = part0_unique.shape[0]
-    N = part1_unique.shape[0]
-    blockspergrid_x = M + (threadsperblock[0] - 1) // threadsperblock[0]
-    blockspergrid_y = N + (threadsperblock[1] - 1) // threadsperblock[1]
+@cuda.jit
+def compute_contingency_matrix(part0, part1, part0_unique, part1_unique, cont_mat):
+    """
+    CUDA kernel to compute the contingency matrix.
+
+    Args:
+        part0: 1D array with cluster assignments for n objects.
+        part1: 1D array with cluster assignments for n objects.
+        part0_unique: Unique cluster labels in part0.
+        part1_unique: Unique cluster labels in part1.
+        cont_mat: The output contingency matrix.
+
+    Each thread computes a single element of the contingency matrix.
+    """
+    i, j = cuda.grid(2)  # Get the thread indices in the grid
+
+    # Check if the thread indices are within the bounds of the unique clusters
+    if i < len(part0_unique) and j < len(part1_unique):
+        part0_k = part0_unique[i]  # Cluster label in part0
+        part1_k = part1_unique[j]  # Cluster label in part1
+
+        count = 0  # Initialize the count for this element
+        for idx in range(len(part0)):
+            # Count the number of objects in both clusters i and j
+            if part0[idx] == part0_k and part1[idx] == part1_k:
+                count += 1
+        cont_mat[i, j] = count  # Store the result in the contingency matrix
+
+
+def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
+    """
+    Compute the contingency matrix for two clustering partitions using CUDA.
+
+    Args:
+        part0: 1D array with cluster assignments for n objects.
+        part1: 1D array with cluster assignments for n objects.
+
+    Returns:
+        A contingency matrix with k0 rows and k1 columns, where k0 is the number
+        of clusters in part0 and k1 is the number of clusters in part1. Each cell
+        (i, j) represents the number of objects in cluster i (part0) and cluster j (part1).
+    """
+    part0_unique = np.unique(part0)  # Find unique clusters in part0
+    part1_unique = np.unique(part1)  # Find unique clusters in part1
+
+    cont_mat = np.zeros((len(part0_unique), len(part1_unique)), dtype=np.int32)  # Initialize the contingency matrix
+
+    # Define the number of threads per block and the number of blocks per grid
+    threadsperblock = (16, 16)
+    blockspergrid_x = int(np.ceil(len(part0_unique) / threadsperblock[0]))
+    blockspergrid_y = int(np.ceil(len(part1_unique) / threadsperblock[1]))
     blockspergrid = (blockspergrid_x, blockspergrid_y)
 
-    #Senign them to the GPU:
-    random_feature1_device = cuda.to_device(random_feature1)
-    random_feature2_device = cuda.to_device(random_feature2)
-    part0_unique_device = cuda.to_device(part0_unique)
-    part1_unique_device = cuda.to_device(part1_unique)
-    cont_mat_device = cuda.to_device(cont_mat)
-    part1_k_device = cuda.to_device(part1_k)
-    part1_j_device = cuda.to_device(part1_j)
-    part0_i_device = cuda.to_device(part0_i)
-    print("checkpoint")
-    # Calling the get_contingency
-    out_device = get_contingency_matrix[blockspergrid, threadsperblock](random_feature1_device , random_feature2_device, part0_unique_device, part1_unique_device, cont_mat_device, part1_k_device, part1_j_device, part0_i_device)
-    print(out_device)
+    # Launch the CUDA kernel to compute the contingency matrix
+    compute_contingency_matrix[blockspergrid, threadsperblock](part0, part1, part0_unique, part1_unique, cont_mat)
+
+    return cont_mat
 
 
+def print_device_info():
+    # Get the current device
+    device = cuda.get_current_device()
+    print(dir(device))
+    # Print device information
+    print("Device Information:")
+    print(f"Device ID: {device.id}")
+    print(f"Name: {device.name}")
+    # print(f"Total Memory: {device.total_memory / (1024 ** 3):.2f} GB")
+    print(f"Multiprocessor Count: {device.MULTIPROCESSOR_COUNT}")
+    print(f"Max Threads per Block: {device.MAX_THREADS_PER_BLOCK}")
+    # print(f"Max Threads per Multiprocessor: {device.MAX_THREADS_PER_MULTIPROCESSOR}")
+    print(f"Max Block Dim X: {device.MAX_BLOCK_DIM_X}")
+    print(f"Max Block Dim Y: {device.MAX_BLOCK_DIM_Y}")
+    print(f"Max Block Dim Z: {device.MAX_BLOCK_DIM_Z}")
+    print(f"Max Grid Dim X: {device.MAX_GRID_DIM_X}")
+    print(f"Max Grid Dim Y: {device.MAX_GRID_DIM_Y}")
+    print(f"Max Grid Dim Z: {device.MAX_GRID_DIM_Z}")
+    print(f"Warp Size: {device.WARP_SIZE}")
+    print(f"Compute Capability: {device.compute_capability}")
+    print(f"Concurrent Kernels: {device.CONCURRENT_KERNELS}")
+    print(f"PCI Bus ID: {device.PCI_BUS_ID}")
+    print(f"PCI Device ID: {device.PCI_DEVICE_ID}")
+    print(f"PCI Domain ID: {device.PCI_DOMAIN_ID}")
+
+
+if __name__ == '__main__':
+    print_device_info()
