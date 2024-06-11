@@ -1,0 +1,26 @@
+         8334 function calls in 0.812 seconds
+
+   Ordered by: cumulative time
+   List reduced from 114 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.812    0.812 {built-in method builtins.exec}
+        1    0.000    0.000    0.812    0.812 <string>:1(<module>)
+        1    0.000    0.000    0.812    0.812 2661685993.py:1(func)
+       10    0.001    0.000    0.812    0.081 impl.py:307(ccc)
+      200    0.001    0.000    0.801    0.004 threading.py:280(wait)
+      790    0.801    0.001    0.801    0.001 {method 'acquire' of '_thread.lock' objects}
+       10    0.000    0.000    0.796    0.080 impl.py:492(compute_coef)
+       10    0.000    0.000    0.796    0.080 impl.py:485(cdist_func)
+       10    0.002    0.000    0.795    0.080 impl.py:192(cdist_parts_parallel)
+      100    0.001    0.000    0.792    0.008 _base.py:201(as_completed)
+      100    0.000    0.000    0.791    0.008 threading.py:563(wait)
+      100    0.000    0.000    0.011    0.000 _base.py:418(result)
+       20    0.000    0.000    0.011    0.001 _base.py:602(result_iterator)
+      100    0.000    0.000    0.003    0.000 thread.py:161(submit)
+      100    0.000    0.000    0.003    0.000 thread.py:180(_adjust_thread_count)
+       10    0.000    0.000    0.002    0.000 _base.py:573(map)
+       10    0.000    0.000    0.002    0.000 _base.py:598(<listcomp>)
+       10    0.000    0.000    0.002    0.000 threading.py:880(start)
+       10    0.000    0.000    0.001    0.000 impl.py:210(<dictcomp>)
+      190    0.001    0.000    0.001    0.000 _base.py:179(_yield_finished_futures)
