@@ -1,0 +1,31 @@
+         8334 function calls in 39.213 seconds
+
+   Ordered by: cumulative time
+   List reduced from 113 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   39.213   39.213 {built-in method builtins.exec}
+        1    0.000    0.000   39.213   39.213 <string>:1(<module>)
+        1    0.007    0.007   39.213   39.213 1858089180.py:4(func)
+       10    0.047    0.005   39.206    3.921 impl.py:307(ccc)
+      200    0.002    0.000   39.130    0.196 threading.py:280(wait)
+      790   39.128    0.050   39.128    0.050 {method 'acquire' of '_thread.lock' objects}
+       10    0.001    0.000   28.402    2.840 impl.py:492(compute_coef)
+       10    0.000    0.000   28.401    2.840 impl.py:485(cdist_func)
+       10    0.002    0.000   28.400    2.840 impl.py:192(cdist_parts_parallel)
+      100    0.001    0.000   28.390    0.284 threading.py:563(wait)
+      100    0.002    0.000   28.388    0.284 _base.py:201(as_completed)
+      100    0.001    0.000   10.742    0.107 _base.py:418(result)
+       20    0.000    0.000   10.742    0.537 _base.py:602(result_iterator)
+       10    0.007    0.001    0.009    0.001 impl.py:210(<dictcomp>)
+      100    0.000    0.000    0.008    0.000 thread.py:161(submit)
+      100    0.000    0.000    0.007    0.000 thread.py:180(_adjust_thread_count)
+       10    0.000    0.000    0.007    0.001 _base.py:573(map)
+       10    0.000    0.000    0.007    0.001 _base.py:598(<listcomp>)
+       10    0.000    0.000    0.006    0.001 threading.py:880(start)
+       50    0.005    0.000    0.005    0.000 {built-in method numpy.zeros}
+      190    0.001    0.000    0.001    0.000 _base.py:179(_yield_finished_futures)
+       20    0.001    0.000    0.001    0.000 impl.py:242(get_chunks)
+       10    0.000    0.000    0.001    0.000 _base.py:636(__exit__)
+       10    0.000    0.000    0.001    0.000 thread.py:216(shutdown)
+      100    0.000    0.000    0.001    0.000 threading.py:411(acquire)
