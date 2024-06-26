@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest numpy scipy numba pandas scikit-learn
+          pip install pytest "numpy<2.0" scipy numba pandas scikit-learn
       - name: Test CCC with pytest
         env:
           PYTHONPATH: libs/
