@@ -1,8 +1,8 @@
-from ccc.coef.impl_gpu import ccc
+import cupy as cp
 import numpy as np
 
 
-def main():
+def test_percentile():
     # random_feature1 = np.random.rand(100)
     # random_feature2 = np.random.rand(100)
     #
@@ -10,13 +10,4 @@ def main():
     # print(res)
 
     data = np.random.rand(10, 100)
-    c = ccc(data, n_jobs=5)
-    print(c)
-
-
-if __name__ == "__main__":
-    main()
-
-
-
 

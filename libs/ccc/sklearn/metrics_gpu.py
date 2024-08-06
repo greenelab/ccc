@@ -128,6 +128,7 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
     return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
 
 
+# Todo: __device__ ?
 @cuda.jit
 def compute_contingency_matrix(part0, part1, part0_unique, part1_unique, cont_mat):
     """
