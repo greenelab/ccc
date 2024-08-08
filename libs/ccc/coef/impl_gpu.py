@@ -3,7 +3,7 @@ This module contains the CUDA implementation of the CCC
 """
 import os
 import math
-from typing import Iterable, Union, List, Tuple
+from typing import Optional, Iterable, Union, List, Tuple
 
 import numpy as np
 import cupy
@@ -16,7 +16,7 @@ from ccc.scipy.stats import rank
 
 
 @njit(cache=True, nogil=True)
-def get_perc_from_k(k: int) -> np.ndarray:
+def get_perc_from_k(k: int) -> NDArray[np.float32]:
     """
     It returns the percentiles (from 0.0 to 1.0) that separate the data into k
     clusters. For example, if k=2, it returns [0.5]; if k=4, it returns [0.25,
@@ -34,22 +34,29 @@ def get_perc_from_k(k: int) -> np.ndarray:
     return np.array([(1.0 / k) * i for i in range(1, k)], dtype=np.float32)
 
 
-# @njit(cache=True, nogil=True)
-def get_range_n_percs(ks: List[int]) -> List[List[float]]:
+@njit(cache=True, nogil=True)
+def get_range_n_percs(ks: NDArray[np.int8]) -> NDArray[np.float32]:
     """
     It returns lists of the percentiles (from 0.0 to 1.0) that separate the data into k[i] clusters
     
     Args:
-        ks: list of numbers of clusters.
+        ks: an array of numbers of clusters.
     
     Returns:
-        A list of lists of percentiles (from 0.0 to 1.0).
+        A 2D sparse matrix of percentiles (from 0.0 to 1.0).
     """
     # Todo: research on if numba can optimize this
-    percentiles: List[List[float]] = []
-    for k in ks:
+    # Emtpy & null check
+    if ks.size == 0:
+        return np.empty((0, 0), dtype=np.float32)
+    # Number of rows of the returning matrix
+    n_rows = len(ks)
+    # Number of columns of the returning matrix, dominated by the largest k, which specifies the # of clusters
+    n_cols = np.max(ks) - 1
+    percentiles = np.full((n_rows, n_cols), np.nan, dtype=np.float32)
+    for idx, k in enumerate(ks):
         perc = get_perc_from_k(k)
-        percentiles.append(perc)
+        percentiles[idx, :len(perc)] = perc
     return percentiles
 
 
@@ -252,6 +259,16 @@ def bin_objects(objs: NDArray[np.uint16], n_clusters: int) -> NDArray[np.uint16]
     raise NotImplementedError
 
 
+def convert_n_clusters(internal_n_clusters: Optional[Union[int, List[int]]]) -> List[int]:
+    if internal_n_clusters is None:
+        return []
+
+    if isinstance(internal_n_clusters, int):
+        return list(range(2, internal_n_clusters + 1))
+
+    return list(internal_n_clusters)
+
+
 def ccc(
         x: NDArray,
         y: NDArray = None,
@@ -371,16 +388,7 @@ def ccc(
         raise ValueError("Wrong combination of parameters x and y")
 
     # Converts internal_n_clusters to a list of integers if it's provided.
-    if internal_n_clusters is not None:
-        _tmp_list = List[int]
-
-        if isinstance(internal_n_clusters, int):
-            # this interprets internal_n_clusters as the maximum k
-            internal_n_clusters = range(2, internal_n_clusters + 1)
-
-        for x in internal_n_clusters:
-            _tmp_list.append(x)
-        internal_n_clusters = _tmp_list
+    internal_n_clusters = convert_n_clusters(internal_n_clusters)
 
     # Get matrix of partitions for each object pair
     range_n_clusters = get_range_n_clusters(n_objects, internal_n_clusters)
