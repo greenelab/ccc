@@ -121,7 +121,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     return part
 
 
-@njit(cache=True, nogil=True)
+# @njit(cache=True, nogil=True)
 def get_range_n_clusters(
         n_items: int, internal_n_clusters: Iterable[int] = None
 ) -> NDArray[np.uint8]:
@@ -129,7 +129,7 @@ def get_range_n_clusters(
     Given the number of features it returns a tuple of k values to cluster those
     features into. By default, it generates a tuple of k values from 2 to
     int(np.round(np.sqrt(n_items))) (inclusive). For example, for 25 features,
-    it will generate this tuple: (2, 3, 4, 5).
+    it will generate this array: (2, 3, 4, 5).
 
     Args:
         n_items: a positive number representing the number of features that
