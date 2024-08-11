@@ -142,7 +142,7 @@ def get_range_n_clusters(
         A numpy array with integer values representing numbers of clusters.
     """
 
-    if internal_n_clusters is not None:
+    if internal_n_clusters:
         # remove k values that are invalid
         clusters_range_list = list(
             set([int(x) for x in internal_n_clusters if 1 < x < n_items])
@@ -236,10 +236,16 @@ def get_parts(
 
 # store result to device global memory
 @cuda.jit
-def compute_parts(X: np.ndarray, parts: np.ndarray, n_range_cluster: NDArray[np.uint8]):
-    x, y, z = cuda.grid(3)
-    if x < parts.shape[0] and y < parts.shape[1] and z < parts.shape[2]:
-        parts[x, y, z] += 1
+def compute_parts(parts: np.ndarray, X: np.ndarray, cluster_id: np.int8, feature_id: np.int64):
+    feature_row = X[feature_id, :]
+    size = feature_row.shape[0]
+    # Use 1D Grid-Stride Loops Pattern to handle large # of features that can't be processed using all threads
+    i = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    # i = cuda.grid(1)
+    while i < size:
+        parts[cluster_id, feature_id, i] = -1
+        i += cuda.gridDim.x * cuda.blockDim.x
+
     return
 
 
@@ -400,10 +406,7 @@ def ccc(
     # number of partitions per object.
     # The value at parts[i, j, k] will represent the cluster assignment for the k-th object, using the j-th cluster
     # configuration, for the i-th feature.
-    # Allocate this directly on the GPU
-    parts = (
-            np.zeros((n_features, range_n_clusters.shape[0], n_objects), dtype=np.int16) - 1
-    )
+
 
     # cm_values stores the CCC coefficients
     n_features_comp = (n_features * (n_features - 1)) // 2
@@ -418,25 +421,39 @@ def ccc(
     # Notes for CUDA dim: for genetic data, number of features is usually small, so we can use a 1D grid?
     # but number of objects is usually large.
 
+
     # cuda.synchronize()
     # For this iteration, we use 1D block and 2D grid
     # grid[i] stands for partitions for feature i
     # grid[i][j] stands for partitions for feature i with k=j clusters
 
-    threads_per_block = (32, 16, 16)
-    nx = n_features
-    ny = range_n_clusters.shape[0]
+    # 1D kernel
+    threads_per_block = 36
+    nx = range_n_clusters.shape[0]
+    ny = n_features
     nz = n_objects
     # equivalent to blocks_per_grid_x = math.ceil(nx / threads_per_block[0])
-    blocks_per_grid_x = (nx + threads_per_block[0] - 1) // threads_per_block[0]
-    blocks_per_grid_y = (ny + threads_per_block[1] - 1) // threads_per_block[1]
-    blocks_per_grid_z = (nz + threads_per_block[2] - 1) // threads_per_block[2]
-    blocks_per_grid = (blocks_per_grid_x, blocks_per_grid_y, blocks_per_grid_z)
+    blocks_per_grid_x = (nx + threads_per_block - 1) // threads_per_block
+    # blocks_per_grid_y = (ny + threads_per_block[1] - 1) // threads_per_block[1]
+    # blocks_per_grid_z = (nz + threads_per_block[2] - 1) // threads_per_block[2]
+    blocks_per_grid = blocks_per_grid_x
 
+    # Allocate arrays on device global memory
+    # parts' shape is different from the original implementation
+    d_parts = cuda.device_array((nx, ny, nz), dtype=np.int16)
     # Transfer data to device
     h_X = X
     d_X = cuda.to_device(h_X)
-    d_parts = cuda.to_device(parts)
+
+    # Debug
+    print(f"prev parts: {d_parts}")
+    for i in range(nz):
+        for j in range(ny):
+            compute_parts[blocks_per_grid, threads_per_block](d_parts, d_X, i, j)
+    # Move data back to host
+    h_parts = d_parts.copy_to_host()
+    print(f"after parts: {h_parts}")
+    return(2)
 
     # For this iteration, use CPU multi-threading to compute quantile lists using range_n_clusters
     # Refer to https://docs.cupy.dev/en/stable/reference/generated/cupy.quantile.html for the GPU implementation
@@ -449,15 +466,6 @@ def ccc(
     # print(parts)
 
     # can also try compute_parts.forall()
-    an_array = np.zeros((n_features, n_objects), dtype=np.int16)
-    print(f"prev array: {an_array}")
-    threadsperblock = (16, 16)
-    blockspergrid_x = math.ceil(an_array.shape[0] / threadsperblock[0])
-    blockspergrid_y = math.ceil(an_array.shape[1] / threadsperblock[1])
-    blockspergrid = (blockspergrid_x, blockspergrid_y)
-    compute_parts2[blockspergrid, threadsperblock](an_array)
-    cuda.synchronize()
-    print(f"after array: {an_array}")
 
     # compute coefficients
     # def compute_coef(idx_list: List[int]) -> Tuple[np.ndarray, np.ndarray]:
