@@ -3,14 +3,16 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - cudatoolkit=11.2.*
+  - cupy=13.2.*
   - ipython=7.*
   - ipywidgets
   - jupyterlab=3.3.*
   - jupytext=1.11.*
   - matplotlib=3.4.*
   - minepy=1.2.*
-  - numba=0.53.*
-  - numpy=1.21.*
+  - numba=0.60.*
+  - numpy=1.26.*
   - openpyxl=3.0.*
   - pandas=1.3.*
   - papermill=2.3.*
