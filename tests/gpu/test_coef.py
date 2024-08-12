@@ -77,6 +77,64 @@ def test_get_range_n_percs(ks, expected):
 
 
 @pytest.mark.parametrize(
+    "ks, expected_frac, expected_perc",
+    [
+        (
+            np.array([], dtype=np.int8),
+            np.empty((0, 0), dtype=np.float32),
+            np.empty((0, 0), dtype=np.float32)
+        ),
+        (
+            np.array([2, 3, 4], dtype=np.int8),
+            np.array([
+                [0.5, np.nan, np.nan],
+                [0.33333334, 0.6666667, np.nan],
+                [0.25, 0.5, 0.75]
+            ], dtype=np.float32),
+            np.array([
+                [50, np.nan, np.nan],
+                [33, 67, np.nan],
+                [25, 50, 75]
+            ], dtype=np.float32)
+        ),
+        (
+            np.array([2], dtype=np.int8),
+            np.array([[0.5]], dtype=np.float32),
+            np.array([[50]], dtype=np.float32)
+        ),
+        (
+            np.array([10], dtype=np.int8),
+            np.array([[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]], dtype=np.float32),
+            np.array([[10, 20, 30, 40, 50, 60, 70, 80, 90]], dtype=np.float32)
+        ),
+        (
+            np.array([2, 4, 6, 8], dtype=np.int8),
+            np.array([
+                [0.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                [0.25, 0.5, 0.75, np.nan, np.nan, np.nan, np.nan],
+                [0.16666667, 0.33333334, 0.5, 0.6666667, 0.8333333, np.nan, np.nan],
+                [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875]
+            ], dtype=np.float32),
+            np.array([
+                [50, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                [25, 50, 75, np.nan, np.nan, np.nan, np.nan],
+                [17, 33, 50, 67, 83, np.nan, np.nan],
+                [12, 25, 38, 50, 62, 75, 88]
+            ], dtype=np.float32)
+        ),
+    ]
+)
+def test_get_range_n_percs_as_percentage(ks, expected_frac, expected_perc):
+    # Test fractional percentiles (original behavior)
+    result_frac = get_range_n_percs(ks, as_percentage=False)
+    np.testing.assert_array_almost_equal(result_frac, expected_frac)
+
+    # Test percentage numbers
+    result_perc = get_range_n_percs(ks, as_percentage=True)
+    np.testing.assert_array_almost_equal(result_perc, expected_perc)
+
+
+@pytest.mark.parametrize(
     "input_value, expected_output",
     [
         (None, []),

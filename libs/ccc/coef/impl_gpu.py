@@ -35,7 +35,7 @@ def get_perc_from_k(k: int) -> NDArray[np.float32]:
 
 
 @njit(cache=True, nogil=True)
-def get_range_n_percs(ks: NDArray[np.int8]) -> NDArray[np.float32]:
+def get_range_n_percs(ks: NDArray[np.int8], as_percentage: bool = False) -> NDArray[np.float32]:
     """
     It returns lists of the percentiles (from 0.0 to 1.0) that separate the data into k[i] clusters
     
@@ -56,6 +56,8 @@ def get_range_n_percs(ks: NDArray[np.int8]) -> NDArray[np.float32]:
     percentiles = np.full((n_rows, n_cols), np.nan, dtype=np.float32)
     for idx, k in enumerate(ks):
         perc = get_perc_from_k(k)
+        if as_percentage:
+            perc = np.round(perc * 100).astype(np.float32)  # Convert to percentage and round
         percentiles[idx, :len(perc)] = perc
     return percentiles
 
@@ -246,14 +248,6 @@ def compute_parts(parts: np.ndarray, X: np.ndarray, cluster_id: np.int8, feature
         parts[cluster_id, feature_id, i] = -1
         i += cuda.gridDim.x * cuda.blockDim.x
 
-    return
-
-
-@cuda.jit
-def compute_parts2(parts: np.ndarray):
-    x, y = cuda.grid(2)
-    if x < parts.shape[0] and y < parts.shape[1]:
-       parts[x, y] += 1
     return
 
 
