@@ -264,7 +264,7 @@ def convert_n_clusters(internal_n_clusters: Optional[Union[int, List[int]]]) -> 
 def get_parts(X: NDArray,
               range_n_clusters: NDArray[np.uint8],
               data_is_numerical: bool = True
-              ) -> NDArray:
+              ) -> cp.ndarray:
     """
     Compute parts using CuPy for GPU acceleration.
 
@@ -274,7 +274,7 @@ def get_parts(X: NDArray,
     range_n_percentages: Array of percentages for each cluster number
 
     Returns:
-    Computed parts array
+    Reference to the computed partitions on the device global memory
     """
     nx = range_n_clusters.shape[0]
     ny, nz = X.shape  # n_features, n_objects
@@ -307,10 +307,10 @@ def get_parts(X: NDArray,
         d_parts[0] = cp.asarray(X.astype(np.int16))
 
     # Move data back to host
-    h_parts = cp.asnumpy(d_parts)
-    print(f"after parts: {h_parts}")
+    # h_parts = cp.asnumpy(d_parts)
+    print(f"after parts: {d_parts}")
 
-    return h_parts
+    return d_parts
 
 
 def ccc(
