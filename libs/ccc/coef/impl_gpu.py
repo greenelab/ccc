@@ -228,12 +228,6 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     return int(x), int(y)
 
 
-@cuda.jit(device=True)
-def get_parts(
-        data: NDArray, res: NDArray[np.int16], ange_n_clusters: tuple[int], data_is_numerical: bool = True):
-    return
-
-
 # store result to device global memory
 @cuda.jit
 def compute_parts(parts: np.ndarray, X: np.ndarray, cluster_id: np.int8, feature_id: np.int64):
@@ -265,6 +259,58 @@ def convert_n_clusters(internal_n_clusters: Optional[Union[int, List[int]]]) -> 
         return list(range(2, internal_n_clusters + 1))
 
     return list(internal_n_clusters)
+
+
+def get_parts(X: NDArray,
+              range_n_clusters: NDArray[np.uint8],
+              data_is_numerical: bool = True
+              ) -> NDArray:
+    """
+    Compute parts using CuPy for GPU acceleration.
+
+    Parameters:
+    X: Input data array of shape (n_features, n_objects)
+    range_n_clusters: Array of cluster numbers
+    range_n_percentages: Array of percentages for each cluster number
+
+    Returns:
+    Computed parts array
+    """
+    nx = range_n_clusters.shape[0]
+    ny, nz = X.shape  # n_features, n_objects
+
+    # Allocate arrays on device global memory
+    d_parts = cp.empty((nx, ny, nz), dtype=np.int16) - 1
+    print(f"prev parts: {d_parts}")
+
+    if data_is_numerical:
+        # Transfer data to device
+        d_X = cp.asarray(X)
+        # Get cutting percentages for each cluster
+        range_n_percentages = get_range_n_percentages(range_n_clusters)
+        d_range_n_percentages = cp.asarray(range_n_percentages)
+
+        for i in range(nx):
+            for j in range(ny):
+                feature_row = d_X[j, :]
+                percentages = d_range_n_percentages[i, :]
+                bins = cp.quantile(feature_row, percentages)
+                partition = cp.digitize(feature_row, bins)
+                d_parts[i, j, :] = partition
+
+        # Remove singletons by putting -2 as values
+        partitions_ks = cp.array([len(cp.unique(d_parts[i, j, :])) for i in range(nx) for j in range(ny)]).reshape(nx, ny)
+        d_parts[partitions_ks == 1] = -2
+    else:
+        # If the data is categorical, then the encoded feature is already the partition
+        # Only the first partition is filled, the rest will be -1 (missing)
+        d_parts[0] = cp.asarray(X.astype(np.int16))
+
+    # Move data back to host
+    h_parts = cp.asnumpy(d_parts)
+    print(f"after parts: {h_parts}")
+
+    return h_parts
 
 
 def ccc(
@@ -394,9 +440,6 @@ def ccc(
     if range_n_clusters.shape[0] == 0:
         raise ValueError(f"Data has too few objects: {n_objects}")
 
-    # Get cutting percentages for each cluster
-    range_n_percentages = get_range_n_percentages(range_n_clusters)
-
 
     # Store a set of partitions per row (object) in X as a multidimensional array, where the second dimension is the
     # number of partitions per object.
@@ -414,42 +457,7 @@ def ccc(
 
     # X here (and following) is a numpy array features are in rows, objects are in columns
 
-    # 1D kernel
-    threads_per_block = 36
-    nx = range_n_clusters.shape[0]
-    ny = n_features
-    nz = n_objects
-    # equivalent to blocks_per_grid_x = math.ceil(nx / threads_per_block[0])
-    blocks_per_grid_x = (nx + threads_per_block - 1) // threads_per_block
-    # blocks_per_grid_y = (ny + threads_per_block[1] - 1) // threads_per_block[1]
-    # blocks_per_grid_z = (nz + threads_per_block[2] - 1) // threads_per_block[2]
-    blocks_per_grid = blocks_per_grid_x
-
-    # Allocate arrays on device global memory
-    # parts' shape is different from the original implementation
-    d_parts = cp.empty((nx, ny, nz), dtype=np.int16)
-
-    # Transfer data to device
-    # Original dataframe
-    h_X = X
-    d_X = cp.asarray(h_X)
-    # Percentages
-    h_range_n_percentages = range_n_percentages
-    d_range_n_percentages = cp.asarray(h_range_n_percentages)
-
-    # Debug
-    print(f"prev parts: {d_parts}")
-    for i in range(nx):
-        for j in range(ny):
-            feature_row = d_X[j, :]
-            percentages = d_range_n_percentages[i, :]
-            bins = cp.quantile(feature_row, percentages)
-            partition = cp.digitize(feature_row, bins)
-            d_parts[i, j, :] = partition
-    # Move data back to host
-    h_parts = cp.asnumpy(d_parts)
-    print(f"after parts: {h_parts}")
-    return(2)
+    parts = get_parts(X, range_n_clusters)
 
     # For this iteration, use CPU multi-threading to compute quantile lists using range_n_clusters
     # Refer to https://docs.cupy.dev/en/stable/reference/generated/cupy.quantile.html for the GPU implementation
