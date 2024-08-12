@@ -62,5 +62,45 @@ def test_digitize():
     print("Results match:", cp.allclose(indices, cp.asarray(np_indices)))
 
 
+def test_quantile():
+    # Create a sample CuPy array
+    a = cp.array([[10, 7, 4], [3, 2, 1]])
 
+    # Simple usage: compute the median (50th percentile) of the entire array
+    median = cp.quantile(a, 0.5)
+    print("Median of the entire array:", median)
 
+    # Compute multiple quantiles
+    quantiles = cp.quantile(a, [0.25, 0.5, 0.75])
+    print("25th, 50th, and 75th percentiles:", quantiles)
+
+    # Compute quantiles along a specific axis
+    axis_quantiles = cp.quantile(a, 0.5, axis=0)
+    print("Median along axis 0:", axis_quantiles)
+
+    # Compute quantiles for a larger array
+    large_array = cp.random.randn(1000000)
+    large_quantiles = cp.quantile(large_array, [0.1, 0.5, 0.9])
+    print("Quantiles of large array:", large_quantiles)
+
+    # Use an output array
+    out_array = cp.zeros(3)
+    cp.quantile(large_array, [0.1, 0.5, 0.9], out=out_array)
+    print("Output array:", out_array)
+
+    # Compare with NumPy (CPU) results
+    np_array = cp.asnumpy(large_array)
+    np_quantiles = np.quantile(np_array, [0.1, 0.5, 0.9])
+    print("NumPy quantiles:", np_quantiles)
+    print("CuPy and NumPy results are close:", cp.allclose(large_quantiles, np_quantiles))
+
+    # NANs in array
+    nan_array = cp.array([1, 2, cp.nan, 4, 5])
+    nan_quantiles = cp.quantile(nan_array, 0.5)
+    print("Quantile with NaNs:", nan_quantiles)
+
+    # NANs in q
+    array_with_q = cp.array([1, 2, 3, 4, 5])
+    q_with_nan = cp.array([0.5, cp.nan])
+    quantiles_with_nan = cp.quantile(array_with_q, q_with_nan)
+    print("Quantiles with NaN in q:", quantiles_with_nan)

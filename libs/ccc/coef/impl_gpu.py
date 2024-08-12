@@ -1,12 +1,10 @@
 """
 This module contains the CUDA implementation of the CCC
 """
-import os
-import math
 from typing import Optional, Iterable, Union, List, Tuple
 
 import numpy as np
-import cupy
+import cupy as cp
 from numpy.typing import NDArray
 from numba import njit
 from numba import cuda
@@ -35,7 +33,7 @@ def get_perc_from_k(k: int) -> NDArray[np.float32]:
 
 
 @njit(cache=True, nogil=True)
-def get_range_n_percs(ks: NDArray[np.int8], as_percentage: bool = False) -> NDArray[np.float32]:
+def get_range_n_percentages(ks: NDArray[np.uint8], as_percentage: bool = False) -> NDArray[np.float32]:
     """
     It returns lists of the percentiles (from 0.0 to 1.0) that separate the data into k[i] clusters
     
@@ -396,6 +394,10 @@ def ccc(
     if range_n_clusters.shape[0] == 0:
         raise ValueError(f"Data has too few objects: {n_objects}")
 
+    # Get cutting percentages for each cluster
+    range_n_percentages = get_range_n_percentages(range_n_clusters)
+
+
     # Store a set of partitions per row (object) in X as a multidimensional array, where the second dimension is the
     # number of partitions per object.
     # The value at parts[i, j, k] will represent the cluster assignment for the k-th object, using the j-th cluster
@@ -412,15 +414,6 @@ def ccc(
 
     # X here (and following) is a numpy array features are in rows, objects are in columns
 
-    # Notes for CUDA dim: for genetic data, number of features is usually small, so we can use a 1D grid?
-    # but number of objects is usually large.
-
-
-    # cuda.synchronize()
-    # For this iteration, we use 1D block and 2D grid
-    # grid[i] stands for partitions for feature i
-    # grid[i][j] stands for partitions for feature i with k=j clusters
-
     # 1D kernel
     threads_per_block = 36
     nx = range_n_clusters.shape[0]
@@ -434,18 +427,27 @@ def ccc(
 
     # Allocate arrays on device global memory
     # parts' shape is different from the original implementation
-    d_parts = cuda.device_array((nx, ny, nz), dtype=np.int16)
+    d_parts = cp.empty((nx, ny, nz), dtype=np.int16)
+
     # Transfer data to device
+    # Original dataframe
     h_X = X
-    d_X = cuda.to_device(h_X)
+    d_X = cp.asarray(h_X)
+    # Percentages
+    h_range_n_percentages = range_n_percentages
+    d_range_n_percentages = cp.asarray(h_range_n_percentages)
 
     # Debug
     print(f"prev parts: {d_parts}")
-    for i in range(nz):
+    for i in range(nx):
         for j in range(ny):
-            compute_parts[blocks_per_grid, threads_per_block](d_parts, d_X, i, j)
+            feature_row = d_X[j, :]
+            percentages = d_range_n_percentages[i, :]
+            bins = cp.quantile(feature_row, percentages)
+            partition = cp.digitize(feature_row, bins)
+            d_parts[i, j, :] = partition
     # Move data back to host
-    h_parts = d_parts.copy_to_host()
+    h_parts = cp.asnumpy(d_parts)
     print(f"after parts: {h_parts}")
     return(2)
 

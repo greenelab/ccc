@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 from ccc.coef.impl_gpu import (
     get_perc_from_k,
-    get_range_n_percs,
+    get_range_n_percentages,
     convert_n_clusters,
     get_range_n_clusters,
 )
@@ -72,7 +72,7 @@ def test_get_perc_from_k(k, expected):
     ]
 )
 def test_get_range_n_percs(ks, expected):
-    result = get_range_n_percs(ks)
+    result = get_range_n_percentages(ks)
     np.testing.assert_array_almost_equal(result, expected)
 
 
@@ -126,11 +126,11 @@ def test_get_range_n_percs(ks, expected):
 )
 def test_get_range_n_percs_as_percentage(ks, expected_frac, expected_perc):
     # Test fractional percentiles (original behavior)
-    result_frac = get_range_n_percs(ks, as_percentage=False)
+    result_frac = get_range_n_percentages(ks, as_percentage=False)
     np.testing.assert_array_almost_equal(result_frac, expected_frac)
 
     # Test percentage numbers
-    result_perc = get_range_n_percs(ks, as_percentage=True)
+    result_perc = get_range_n_percentages(ks, as_percentage=True)
     np.testing.assert_array_almost_equal(result_perc, expected_perc)
 
 

@@ -8,9 +8,8 @@ def test_compute_parts():
     #
     # res = ccc(random_feature1, random_feature2, n_jobs=2)
     # print(res)
-    import os
-    print(os.environ['CUDA_HOME'])
-    data = np.random.rand(5, 10)
+    data = np.random.rand(5, 30) * 100
+    print(f"data: {data}")
     c = ccc(data)
     print(c)
 
