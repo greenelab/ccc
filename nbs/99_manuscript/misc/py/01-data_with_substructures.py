@@ -256,7 +256,7 @@ with sns.plotting_context("paper", font_scale=1.8):
         )
 
     plt.savefig(
-        OUTPUT_FIGURE_DIR / "clusters.png",
+        OUTPUT_FIGURE_DIR / "clusters.svg",
         # rasterized=True,
         dpi=300,
         bbox_inches="tight",
