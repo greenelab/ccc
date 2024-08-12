@@ -336,6 +336,7 @@ def plot_gene_pair(
     bins="log",
     samples=None,
     filename_suffix="",
+    tissue_name_in_title=None,
 ):
     """
     It plots (joint plot) a gene pair from the given tissue. It saves the plot
@@ -368,7 +369,9 @@ def plot_gene_pair(
     _pearson = pearsonr(tissue_data[gene0], tissue_data[gene1])[0]
     _spearman = spearmanr(tissue_data[gene0], tissue_data[gene1])[0]
 
-    _title = f"{simplify_tissue_name(tissue_name)}\n$c={_clustermatch:.2f}$  $p={_pearson:.2f}$  $s={_spearman:.2f}$"
+    if tissue_name_in_title is None:
+        tissue_name_in_title = simplify_tissue_name(tissue_name)
+    _title = f"{tissue_name_in_title}\n$c={_clustermatch:.2f}$  $p={_pearson:.2f}$  $s={_spearman:.2f}$"
 
     other_args = {
         "kind": kind,  # if hue is None else "scatter",
@@ -377,7 +380,8 @@ def plot_gene_pair(
     if hue is None:
         other_args["hue_order"] = None
     else:
-        other_args["hue_order"] = ["Male", "Female"]
+        if tissue_data[hue].unique().shape[0] == 2:
+            other_args["hue_order"] = ["Male", "Female"]
 
     with sns.plotting_context("paper", font_scale=1.5):
         p = sns.jointplot(
@@ -473,39 +477,6 @@ _tissue_data = plot_gene_pair(
 )
 
 # %% [markdown] tags=[]
-# # Create final figure
-
-# %% tags=[]
-from svgutils.compose import Figure, SVG, Panel
-
-# %% tags=[]
-Figure(
-    "6.0767480cm",
-    "8.7045984cm",
-    # Panel(
-    #     SVG(OUTPUT_FIGURE_DIR / "gtex_brain_cerebellum-KDM6A_vs_UTY-all.svg").scale(0.005),
-    #     SVG(OUTPUT_FIGURE_DIR / "gtex_small_intestine-KDM6A_vs_UTY-all.svg").scale(0.005).move(2, 0),
-    # ),
-    Panel(
-        SVG(OUTPUT_FIGURE_DIR / "gtex_brain_cerebellum-KDM6A_vs_UTY-males.svg").scale(
-            0.005
-        ),
-        SVG(
-            OUTPUT_FIGURE_DIR
-            / "gtex_small_intestine_terminal_ileum-KDM6A_vs_UTY-males.svg"
-        )
-        .scale(0.005)
-        .move(2, 0),
-    ).move(0, 2.20),
-).save(
-    OUTPUT_FIGURE_DIR
-    / "gtex-KDM6A_vs_UTY-brain_cerebellum_and_small_intestine_terminal_ileum-males.svg"
-)
-
-# %% [markdown] tags=[]
-# Now open the file, reside to fit drawing to page, and add a white rectangle to the background.
-
-# %% [markdown] tags=[]
 # # Understand how CCC divides samples
 
 # %% [markdown] tags=[]
@@ -514,18 +485,18 @@ Figure(
 # %% tags=[]
 datasets_df = pd.DataFrame(
     {
-        "dataset": "Brain cerebellum (all)",
-        "x": brain_cerebellum.iloc[:, 0],
-        "y": brain_cerebellum.iloc[:, 1],
+        "dataset": "Brain cerebellum\n(males + females)",
+        gene0_symbol: brain_cerebellum.iloc[:, 0],
+        gene1_symbol: brain_cerebellum.iloc[:, 1],
     }
 )
 
 datasets_df = datasets_df.append(
     pd.DataFrame(
         {
-            "dataset": "Small intestine (terminal ileum) (all)",
-            "x": small_intestine.iloc[:, 0],
-            "y": small_intestine.iloc[:, 1],
+            "dataset": "Small intestine (terminal ileum)\n(males + females)",
+            gene0_symbol: small_intestine.iloc[:, 0],
+            gene1_symbol: small_intestine.iloc[:, 1],
         }
     ),
     ignore_index=True,
@@ -534,9 +505,9 @@ datasets_df = datasets_df.append(
 datasets_df = datasets_df.append(
     pd.DataFrame(
         {
-            "dataset": "Brain cerebellum (males)",
-            "x": brain_cerebellum_males.iloc[:, 0],
-            "y": brain_cerebellum_males.iloc[:, 1],
+            "dataset": "Brain cerebellum\n(males)",
+            gene0_symbol: brain_cerebellum_males.iloc[:, 0],
+            gene1_symbol: brain_cerebellum_males.iloc[:, 1],
         }
     ),
     ignore_index=True,
@@ -545,9 +516,9 @@ datasets_df = datasets_df.append(
 datasets_df = datasets_df.append(
     pd.DataFrame(
         {
-            "dataset": "Small intestine (terminal ileum) (males)",
-            "x": small_intestine_males.iloc[:, 0],
-            "y": small_intestine_males.iloc[:, 1],
+            "dataset": "Small intestine (terminal ileum)\n(males)",
+            gene0_symbol: small_intestine_males.iloc[:, 0],
+            gene1_symbol: small_intestine_males.iloc[:, 1],
         }
     ),
     ignore_index=True,
@@ -558,9 +529,6 @@ datasets = {
     idx: df.drop(columns="dataset") for idx, df in datasets_df.groupby("dataset")
 }
 
-
-# %% [markdown] tags=[]
-# ## Plot
 
 # %% tags=[]
 def get_cm_line_points(x, y, max_parts, parts):
@@ -601,6 +569,9 @@ def get_cm_line_points(x, y, max_parts, parts):
     return x_line_points, y_line_points
 
 
+# %% [markdown] tags=[]
+# ## Brain cerebellum and Small intestine (males)
+
 # %% tags=[]
 with sns.plotting_context("paper", font_scale=1.8):
     g = sns.FacetGrid(
@@ -609,13 +580,83 @@ with sns.plotting_context("paper", font_scale=1.8):
         col_order=[
             # "Brain cerebellum (all)",
             # "Small intestine (terminal ileum) (all)",
-            "Brain cerebellum (males)",
-            "Small intestine (terminal ileum) (males)",
+            "Brain cerebellum\n(males)",
+            "Small intestine (terminal ileum)\n(males)",
         ],
         col_wrap=2,
         height=5,
     )
-    g.map(sns.scatterplot, "x", "y", s=50, alpha=1)
+    g.map(sns.scatterplot, gene0_symbol, gene1_symbol, s=50, alpha=1)
+    g.set_titles(row_template="{row_name}", col_template="{col_name}")
+
+    for ds, ax in g.axes_dict.items():
+        df = datasets[ds].to_numpy()
+        x, y = df[:, 0], df[:, 1]
+
+        # pearson and spearman
+        r = pearsonr(x, y)[0]
+        rs = spearmanr(x, y)[0]
+
+        # ccc
+        c, max_parts, parts = ccc(x, y, return_parts=True)
+        c = ccc(x, y)
+
+        x_line_points, y_line_points = get_cm_line_points(x, y, max_parts, parts)
+        for yp in y_line_points:
+            ax.hlines(y=yp, xmin=-0.5, xmax=30, color="r", alpha=0.5)
+
+        for xp in x_line_points:
+            ax.vlines(x=xp, ymin=-0.5, ymax=18, color="r", alpha=0.5)
+
+        # add text box for the statistics
+        stats = (
+            f"$\it{{p}}$ ={r: .2f}\n"
+            f"$\it{{s}}$ ={rs: .2f}\n"
+            f"$\it{{c}}$ ={c: .2f}"
+        )
+        # stats = f"$c$ = {c:.2f}"
+        bbox = dict(boxstyle="round", fc="white", ec="black", alpha=0.75)
+        ax.text(
+            0.95,
+            0.75,
+            stats,
+            fontsize=14,
+            bbox=bbox,
+            transform=ax.transAxes,
+            horizontalalignment="right",
+        )
+        ax.set_xlabel(f"{gene0_symbol}", fontstyle="italic")
+        ax.set_ylabel(f"{gene1_symbol}", fontstyle="italic")
+        ax.set(xticklabels=[], yticklabels=[])
+        ax.tick_params(left=False, bottom=False)
+
+    plt.savefig(
+        OUTPUT_FIGURE_DIR
+        / "gtex_brain_cerebellum_and_small_intestine_terminal_ileum-KDM6A_vs_UTY-males.svg",
+        # rasterized=True,
+        dpi=300,
+        bbox_inches="tight",
+        facecolor="white",
+    )
+
+# %% [markdown] tags=[]
+# ## Plot
+
+# %% tags=[]
+with sns.plotting_context("paper", font_scale=1.8):
+    g = sns.FacetGrid(
+        data=datasets_df,
+        col="dataset",
+        col_order=[
+            # "Brain cerebellum (all)",
+            # "Small intestine (terminal ileum) (all)",
+            "Brain cerebellum\n(males)",
+            "Small intestine (terminal ileum)\n(males)",
+        ],
+        col_wrap=2,
+        height=5,
+    )
+    g.map(sns.scatterplot, gene0_symbol, gene1_symbol, s=50, alpha=1)
     g.set_titles(row_template="{row_name}", col_template="{col_name}")
 
     for ds, ax in g.axes_dict.items():
@@ -649,10 +690,14 @@ with sns.plotting_context("paper", font_scale=1.8):
             transform=ax.transAxes,
             horizontalalignment="right",
         )
+        ax.set_xlabel(f"{gene0_symbol}", fontstyle="italic")
+        ax.set_ylabel(f"{gene1_symbol}", fontstyle="italic")
+        ax.set(xticklabels=[], yticklabels=[])
+        ax.tick_params(left=False, bottom=False)
 
     plt.savefig(
         OUTPUT_FIGURE_DIR
-        / "gtex-KDM6A_vs_UTY-brain_cerebellum_and_small_intestine_terminal_ileum-clusters-males.png",
+        / "gtex-KDM6A_vs_UTY-brain_cerebellum_and_small_intestine_terminal_ileum-clusters-males.svg",
         # rasterized=True,
         dpi=300,
         bbox_inches="tight",
@@ -665,15 +710,15 @@ with sns.plotting_context("paper", font_scale=1.8):
         data=datasets_df,
         col="dataset",
         col_order=[
-            "Brain cerebellum (all)",
-            "Small intestine (terminal ileum) (all)",
+            "Brain cerebellum\n(males + females)",
+            "Small intestine (terminal ileum)\n(males + females)",
             # "Brain cerebellum (males)",
             # "Small intestine (terminal ileum) (males)",
         ],
         col_wrap=2,
         height=5,
     )
-    g.map(sns.scatterplot, "x", "y", s=50, alpha=1)
+    g.map(sns.scatterplot, gene0_symbol, gene1_symbol, s=50, alpha=1)
     g.set_titles(row_template="{row_name}", col_template="{col_name}")
 
     for ds, ax in g.axes_dict.items():
@@ -707,14 +752,45 @@ with sns.plotting_context("paper", font_scale=1.8):
             transform=ax.transAxes,
             horizontalalignment="right",
         )
+        ax.set_xlabel(f"{gene0_symbol}", fontstyle="italic")
+        ax.set_ylabel(f"{gene1_symbol}", fontstyle="italic")
+        ax.set(xticklabels=[], yticklabels=[])
+        ax.tick_params(left=False, bottom=False)
 
     plt.savefig(
         OUTPUT_FIGURE_DIR
-        / "gtex-KDM6A_vs_UTY-brain_cerebellum_and_small_intestine_terminal_ileum-clusters-all.png",
+        / "gtex-KDM6A_vs_UTY-brain_cerebellum_and_small_intestine_terminal_ileum-clusters-all.svg",
         # rasterized=True,
         dpi=300,
         bbox_inches="tight",
         facecolor="white",
     )
+
+# %% [markdown] tags=[]
+# # Create final figure
+
+# %% tags=[]
+from svgutils.compose import Figure, SVG, Panel, Text
+
+# %% tags=[]
+Figure(
+    f"{60.0767480 * 6}cm",
+    f"{60.0767480 * 6}cm",
+    # Panel(
+    #     SVG(OUTPUT_FIGURE_DIR / "gtex_brain_cerebellum_and_small_intestine_terminal_ileum-KDM6A_vs_UTY-males.svg").scale(0.5),
+    #     Text("a)", 2, 10, size=9, weight="bold"),
+    # ),
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "gtex_brain_cerebellum_and_small_intestine_terminal_ileum-KDM6A_vs_UTY-males.svg").scale(0.5),
+        Text("a)", 2, 10, size=9, weight="bold"),
+    ),#.move(0, 180),
+    Panel(
+        SVG(OUTPUT_FIGURE_DIR / "gtex-KDM6A_vs_UTY-brain_cerebellum_and_small_intestine_terminal_ileum-clusters-all.svg").scale(0.5),
+        Text("b)", 2, 10, size=9, weight="bold"),
+    ).move(0, 170),#.move(0, 180+170),
+).save(OUTPUT_FIGURE_DIR / "gtex-KDM6A_vs_UTY-nonlinear_and_linear.svg")
+
+# %% [markdown] tags=[]
+# Now open the final file, reside to fit drawing to page, and add a white rectangle to the background.
 
 # %% tags=[]
