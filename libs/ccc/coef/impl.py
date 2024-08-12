@@ -113,10 +113,8 @@ def get_parts(
 ) -> NDArray[np.int16]:
     """
     Given a 1d data array, it computes a partition for each k value in the given
-    range of clusters. This function only supports numerical data, and it
-    always runs run_run_quantile_clustering with the different k values.
-    If partitions with only one cluster are returned (singletons), then the
-    returned array will have negative values.
+    range of clusters. If partitions with only one cluster are returned (singletons),
+    then the returned array will have negative values.
 
     Args:
         data: a 1d data vector. It is assumed that there are no nans.
