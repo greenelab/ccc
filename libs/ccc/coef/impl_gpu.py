@@ -11,7 +11,7 @@ from numba import cuda
 
 from ccc.pytorch.core import unravel_index_2d
 from ccc.scipy.stats import rank
-
+from ccc.sklearn.metrics_gpu import adjusted_rand_index as ari
 
 @njit(cache=True, nogil=True)
 def get_perc_from_k(k: int) -> NDArray[np.float32]:
@@ -83,44 +83,6 @@ def get_feature_type_and_encode(feature_data: NDArray) -> tuple[NDArray, bool]:
     return np.unique(feature_data, return_inverse=True)[1], data_type_is_numerical
 
 
-@njit(cache=True, nogil=True)
-def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
-    """
-    Performs a simple quantile clustering on one dimensional data (1d). Quantile
-    clustering is defined as the procedure that forms clusters in 1d data by
-    separating objects using quantiles (for instance, if the median is used, two
-    clusters are generated with objects separated by the median). In the case
-    data contains all the same values (zero variance), this implementation can
-    return less clusters than specified with k.
-
-    Args:
-        data: a 1d numpy array with numerical values.
-        k: the number of clusters to split the data into.
-
-    Returns:
-        A 1d array with the data partition.
-    """
-    data_sorted = np.argsort(data, kind="quicksort")
-    data_rank = rank(data, data_sorted)
-    data_perc = data_rank / len(data)
-
-    percentiles = [0.0] + get_perc_from_k(k) + [1.0]
-
-    cut_points = np.searchsorted(data_perc[data_sorted], percentiles, side="right")
-
-    current_cluster = 0
-    part = np.zeros(data.shape, dtype=np.int16) - 1
-
-    for i in range(len(cut_points) - 1):
-        lim1 = cut_points[i]
-        lim2 = cut_points[i + 1]
-
-        part[data_sorted[lim1:lim2]] = current_cluster
-        current_cluster += 1
-
-    return part
-
-
 # @njit(cache=True, nogil=True)
 def get_range_n_clusters(
         n_items: int, internal_n_clusters: Iterable[int] = None
@@ -155,53 +117,6 @@ def get_range_n_clusters(
         clusters_range_list = list(range(2, n_sqrt + 1))
 
     return np.array(clusters_range_list, dtype=np.uint16)
-
-
-@njit(cache=True, nogil=True)
-def get_parts(
-        data: NDArray, range_n_clusters: tuple[int], data_is_numerical: bool = True
-) -> NDArray[np.int16]:
-    """
-    Given a 1d data array, it computes a partition for each k value in the given
-    range of clusters. This function only supports numerical data, and it
-    always runs run_run_quantile_clustering with the different k values.
-    If partitions with only one cluster are returned (singletons), then the
-    returned array will have negative values.
-
-    Args:
-        data: a 1d data vector. It is assumed that there are no nans.
-        range_n_clusters: a tuple with the number of clusters.
-        data_is_numerical: indicates whether data is numerical (True) or categorical (False)
-
-    Returns:
-        A numpy array with shape (number of clusters, data rows) with
-        partitions of data.
-
-        Partitions could have negative values in some scenarios, with different
-        meanings: -1 is used for categorical data, where only one partition is generated
-        and the rest (-1) are marked as "empty". -2 is used when singletons have been
-        detected (partitions with one cluster), usually because of problems with the
-        input data (it has all the same values, for example).
-    """
-    # parts[i] represents the partition for cluster i
-    # parts[i][j] represents the cluster assignment for element j, using i-th cluster's configuration
-    parts = np.zeros((len(range_n_clusters), data.shape[0]), dtype=np.int16) - 1
-
-    # can use cupy.digitize here
-    if data_is_numerical:
-        for idx in range(len(range_n_clusters)):
-            k = range_n_clusters[idx]
-            parts[idx] = run_quantile_clustering(data, k)
-
-        # remove singletons by putting a -2 as values
-        partitions_ks = np.array([len(np.unique(p)) for p in parts])
-        parts[partitions_ks == 1, :] = -2
-    else:
-        # if the data is categorical, then the encoded feature is already the partition
-        # only the first partition is filled, the rest will be -1 (missing)
-        parts[0] = data.astype(np.int16)
-
-    return parts
 
 
 @njit(cache=True, nogil=True)
@@ -311,6 +226,95 @@ def get_parts(X: NDArray,
     print(f"after parts: {d_parts}")
 
     return d_parts
+
+
+def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
+    """
+    It implements the same functionality in scipy.spatial.distance.cdist but
+    for clustering partitions, and instead of a distance it returns the adjusted
+    Rand index (ARI). In other words, it mimics this function call:
+
+        cdist(x, y, metric=ari)
+
+    Only partitions with positive labels (> 0) are compared. This means that
+    partitions marked as "singleton" or "empty" (categorical data) are not
+    compared. This has the effect of leaving an ARI of 0.0 (zero).
+
+    Args:
+        x: a 2d array with m_x clustering partitions in rows and n objects in
+          columns.
+        y: a 2d array with m_y clustering partitions in rows and n objects in
+          columns.
+
+    Returns:
+        A 2d array with m_x rows and m_y columns and the ARI between each
+        partition pair. Each ij entry is equal to ari(x[i], y[j]) for each i
+        and j.
+    """
+    res = np.zeros((x.shape[0], y.shape[0]))
+
+    for i in range(res.shape[0]):
+        if x[i, 0] < 0:
+            continue
+
+        for j in range(res.shape[1]):
+            if y[j, 0] < 0:
+                continue
+
+            res[i, j] = ari(x[i], y[j])
+
+    return res
+
+
+@cuda.jit(device=True)
+def compute_coef(
+                 parts: cuda.cudadrv.devicearray,
+                 compare_pair_id: int,
+                 n_features: Optional[int],
+):
+    """
+    Given an index representing each a pair of
+    objects/rows/genes, it computes the CCC coefficient for
+    each of them.
+
+    Args:
+        compare_pair_id: An id representing a pair of partitions to be compared.
+
+    Returns:
+        Returns a tuple with two arrays. These two arrays are the same
+          arrays returned by the main cm function (cm_values and
+          max_parts) but for a subset of the data.
+    """
+    n_idxs = len(compare_pair_id)
+    max_ari_list = np.full(n_idxs, np.nan, dtype=float)
+    max_part_idx_list = np.zeros((n_idxs, 2), dtype=np.uint64)
+
+    # for idx, data_idx in enumerate(compare_pair_id):
+    i, j = get_coords_from_index(n_features, compare_pair_id)
+
+    # get partitions for the pair of objects
+    obji_parts, objj_parts = parts[i], parts[j]
+
+    # compute ari only if partitions are not marked as "missing"
+    # (negative values), which is assigned when partitions have
+    # one cluster (usually when all data in the feature has the same
+    # value).
+    if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
+        return
+
+    # compare all partitions of one object to the all the partitions
+    # of the other object, and get the maximium ARI
+    # comp_values = cdist_func(
+    #     obji_parts,
+    #     objj_parts,
+    # )
+    # max_flat_idx = comp_values.argmax()
+    #
+    # max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+    # max_part_idx_list[idx] = max_idx
+    # max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
+    #
+    # return max_ari_list, max_part_idx_list
 
 
 def ccc(
@@ -457,67 +461,18 @@ def ccc(
 
     # X here (and following) is a numpy array features are in rows, objects are in columns
 
-    parts = get_parts(X, range_n_clusters)
+    # Compute partitions for each feature using CuPy
+    d_parts = get_parts(X, range_n_clusters)
+    # Directly pass CuPy arrays to kernels JITed with Numba
+    threads_per_block = 1
+    blocks_per_grid = n_features_comp
+    for i in range(n_features_comp):
+        compute_coef[blocks_per_grid, threads_per_block](d_parts, i, n_features)
+    # Wait for all comparisons to finish
+    cuda.synchronize()
 
-    # For this iteration, use CPU multi-threading to compute quantile lists using range_n_clusters
-    # Refer to https://docs.cupy.dev/en/stable/reference/generated/cupy.quantile.html for the GPU implementation
 
-    # Call the compute_parts kernel, results are stored in d_parts Passing an array that resides in host memory will
-    # implicitly cause a copy back to the host, which will be synchronous.
-    # compute_parts[blocks_per_grid, threads_per_block](d_X, d_parts, range_n_clusters)
-    # # Wait for all previous kernels
-    # cuda.synchronize()
-    # print(parts)
 
-    # can also try compute_parts.forall()
-
-    # compute coefficients
-    # def compute_coef(idx_list: List[int]) -> Tuple[np.ndarray, np.ndarray]:
-    #     """
-    #     Given a list of indexes representing each a pair of
-    #     objects/rows/genes, it computes the CCC coefficient for
-    #     each of them. This function is supposed to be used to parallelize
-    #     processing.
-    #
-    #     Args:
-    #         idx_list: a list of indexes (integers), each of them
-    #           representing a pair of objects.
-    #
-    #     Returns:
-    #         Returns a tuple with two arrays. These two arrays are the same
-    #           arrays returned by the main cm function (cm_values and
-    #           max_parts) but for a subset of the data.
-    #     """
-    #     n_idxs = len(idx_list)
-    #     max_ari_list = np.full(n_idxs, np.nan, dtype=float)
-    #     max_part_idx_list = np.zeros((n_idxs, 2), dtype=np.uint64)
-    #
-    #     for idx, data_idx in enumerate(idx_list):
-    #         i, j = get_coords_from_index(n_features, data_idx)
-    #
-    #         # obji_parts and objj_parts are the partitions for the objects i and j.
-    #         obji_parts, objj_parts = parts[i], parts[j]
-    #
-    #         # compute ari only if partitions are not marked as "missing"
-    #         # (negative values), which is assigned when partitions have
-    #         # one cluster (usually when all data in the feature has the same
-    #         # value).
-    #         if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
-    #             continue
-    #
-    #         # compare all partitions of one object to the all the partitions
-    #         # of the other object, and get the maximium ARI
-    #         comp_values = cdist_func(
-    #             obji_parts,
-    #             objj_parts,
-    #         )
-    #         max_flat_idx = comp_values.argmax()
-    #
-    #         max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
-    #         max_part_idx_list[idx] = max_idx
-    #         max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
-    #
-    #     return max_ari_list, max_part_idx_list
 
 
 # Dev notes
