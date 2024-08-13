@@ -191,8 +191,16 @@ def get_parts(X: NDArray,
     Returns:
     Reference to the computed partitions on the device global memory
     """
-    nx = range_n_clusters.shape[0]
-    ny, nz = X.shape  # n_features, n_objects
+
+    # Handle case when X is a 1D array
+    if X.ndim == 1:
+        nx = 1 # n_features
+        ny = range_n_clusters.shape[0]
+        nz = X.shape[0] # n_objects
+    else:
+        nx = X.shape[0] # n_features
+        ny = range_n_clusters.shape[0]
+        nz = X.shape[1] # n_objects
 
     # Allocate arrays on device global memory
     d_parts = cp.empty((nx, ny, nz), dtype=np.int16) - 1
@@ -205,13 +213,13 @@ def get_parts(X: NDArray,
         range_n_percentages = get_range_n_percentages(range_n_clusters)
         d_range_n_percentages = cp.asarray(range_n_percentages)
 
-        for i in range(nx):
-            for j in range(ny):
-                feature_row = d_X[j, :]
-                percentages = d_range_n_percentages[i, :]
-                bins = cp.quantile(feature_row, percentages)
-                partition = cp.digitize(feature_row, bins)
-                d_parts[i, j, :] = partition
+        for x in range(nx):
+            for y in range(ny):
+                objects = d_X if X.ndim == 1 else d_X[y, :] # feature row
+                percentages = d_range_n_percentages[y, :]
+                bins = cp.quantile(objects, percentages)
+                partition = cp.digitize(objects, bins)
+                d_parts[x, y, :] = partition
 
         # Remove singletons by putting -2 as values
         partitions_ks = cp.array([len(cp.unique(d_parts[i, j, :])) for i in range(nx) for j in range(ny)]).reshape(nx, ny)
@@ -219,7 +227,7 @@ def get_parts(X: NDArray,
     else:
         # If the data is categorical, then the encoded feature is already the partition
         # Only the first partition is filled, the rest will be -1 (missing)
-        d_parts[0] = cp.asarray(X.astype(np.int16))
+        d_parts[:, 0] = cp.asarray(X.astype(np.int16))
 
     # Move data back to host
     # h_parts = cp.asnumpy(d_parts)

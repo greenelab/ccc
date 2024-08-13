@@ -308,58 +308,60 @@ def test_get_parts_simple():
     np.random.seed(0)
 
     # Test with 2 clusters
-    features_2 = np.random.rand(2, 100) * 100
-    parts = get_parts(features_2, np.array([2], dtype=np.uint8)).get()
+    features0 = np.random.rand(100)
+    parts = get_parts(features0, np.array([2], dtype=np.uint8)).get()
     assert parts is not None
-    # only one cluster configuration
-    assert len(parts) == 1
-    # only two clusters should be created
-    assert len(np.unique(parts[0])) == 2
+    assert len(parts) == 1, "should have only one feature"
+    assert len(parts[0]) == 1, "should have only one partition"
+    assert len(np.unique(parts[0])) == 2, "should have 2 cluster indexes"
 
     # Test with [2, 3] clusters
-    parts = get_parts(features_2,  np.array([2, 3], dtype=np.uint8)).get()
+    parts = get_parts(features0,  np.array([2, 3], dtype=np.uint8)).get()
     assert parts is not None
-    assert len(parts) == 2
-    assert len(np.unique(parts[0])) == 2
-    assert len(np.unique(parts[1])) == 3
+    assert len(parts) == 1
+    assert len(parts[0]) == 2, "feature should have 2 clusters"
+    assert len(np.unique(parts[0][0])) == 2
+    assert len(np.unique(parts[0][1])) == 3
 
 
 def test_get_parts_with_singletons():
     np.random.seed(0)
 
-    features_2 = np.array([[1.3] * 10, [2.1] * 10])
+    feature0 = np.array([1.3] * 10)
 
     # run
-    parts = get_parts(features_2, np.array([2], dtype=np.uint8)).get()
+    parts = get_parts(feature0, np.array([2], dtype=np.uint8)).get()
     assert parts is not None
     assert len(parts) == 1
+    assert len(parts[0]) == 1
     # all the elements (2D) should be -2
     np.testing.assert_array_equal(np.unique(parts[0]), np.array([-2]))
 
-    parts = get_parts(features_2, np.array([2, 3], dtype=np.uint8)).get()
+    parts = get_parts(feature0, np.array([2, 3], dtype=np.uint8)).get()
     assert parts is not None
-    assert len(parts) == 2
-    np.testing.assert_array_equal(np.unique(parts[0]), np.array([-2]))
-    np.testing.assert_array_equal(np.unique(parts[1]), np.array([-2]))
+    assert len(parts) == 1
+    assert len(parts[0]) == 2, "feature should have 2 clusters"
+    np.testing.assert_array_equal(np.unique(parts[0][0]), np.array([-2]))
+    np.testing.assert_array_equal(np.unique(parts[0][1]), np.array([-2]))
 
 
 def test_get_parts_with_categorical_feature():
     np.random.seed(0)
 
-    features_2 = np.array([[4] * 10, [4] * 10])
+    feature0 = np.array([4] * 10)
 
     # run
     # only one partition is requested
-    parts = get_parts(features_2, np.array([2], dtype=np.uint8), data_is_numerical=False).get()
+    parts = get_parts(feature0, np.array([2], dtype=np.uint8), data_is_numerical=False).get()
     assert parts is not None
     assert len(parts) == 1
+    assert len(parts[0]) == 1
     np.testing.assert_array_equal(np.unique(parts[0]), np.array([4]))
 
-    # Todo: think about whether this is a valid test
     # more partitions are requested; only the first two has valid information
-    # parts = get_parts(features_2, np.array([2, 3, 4], dtype=np.uint8), data_is_numerical=False)
-    # assert parts is not None
-    # assert len(parts) == 3
-    # np.testing.assert_array_equal(np.unique(parts[0]), np.array([4]))
-    # np.testing.assert_array_equal(np.unique(parts[1]), np.array([-1]))
-    # np.testing.assert_array_equal(np.unique(parts[2]), np.array([-1]))
+    parts = get_parts(feature0, np.array([2, 3], dtype=np.uint8), data_is_numerical=False).get()
+    assert parts is not None
+    assert len(parts) == 1
+    assert len(parts[0]) == 2
+    np.testing.assert_array_equal(np.unique(parts[0][0]), np.array([4]))
+    np.testing.assert_array_equal(np.unique(parts[0][1]), np.array([-1]))
