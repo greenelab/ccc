@@ -263,7 +263,7 @@ def cdist_parts_basic(x: NDArray, y: NDArray, out: NDArray, compare_pair_id: int
                 continue
 
             # res[i, j] = ari(x[i], y[j])
-            out[compare_pair_id, i, j] = 1.0
+            ari(x[i], y[j], out, compare_pair_id, i, j)
 
     return
 
@@ -475,6 +475,7 @@ def ccc(
     d_max_part_idx_list = cp.zeros((n_features_comp, 2), dtype=np.uint64)
     # allocate temporary arrays on device global memory
     d_outs = cp.empty((n_features_comp, range_n_clusters.shape[0], range_n_clusters.shape[0]), dtype=cp.float32)
+    print(f"before d_outs: {d_outs}")
     # use 1D gird to parallelize the computation of CCC coefficients
     # Todo: optimize this using updated c_dist function that only compare one partition at a time
     threads_per_block = 1
@@ -484,7 +485,7 @@ def ccc(
         compute_coef[blocks_per_grid, threads_per_block](d_parts, d_max_ari_list, d_max_part_idx_list, d_outs, i)
     # Wait for all comparisons to finish
     cuda.synchronize()
-
+    print(f"after d_outs: {d_outs}")
     # Transfer data back to host
     max_ari_list = cp.asnumpy(d_max_ari_list)
     max_part_idx_list = cp.asnumpy(d_max_part_idx_list)

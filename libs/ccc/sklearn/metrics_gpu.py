@@ -55,6 +55,7 @@ def compute_sum_squares(contingency, result):
         cuda.atomic.add(result, 0, contingency[i, j] ** 2)
 
 
+@cuda.jit(device=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Returns the pair confusion matrix from two clustering partitions using CUDA.
@@ -96,8 +97,8 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
 
     return C
 
-
-def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
+@cuda.jit(device=True)
+def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray, out: np.ndarray, compare_pair_id: int, i: int, j: int) -> float:
     """
     Computes the adjusted Rand index (ARI) between two clustering partitions.
     The code is based on the sklearn implementation here:
@@ -123,13 +124,12 @@ def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
 
     # Special cases: empty data or full agreement
     if fn == 0 and fp == 0:
-        return 1.0
+       res = 1.0
 
-    return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
+    res = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
+    out[compare_pair_id, i, j] = res
 
-
-# Todo: __device__ ?
-@cuda.jit
+@cuda.jit(device=True)
 def compute_contingency_matrix(part0, part1, part0_unique, part1_unique, cont_mat):
     """
     CUDA kernel to compute the contingency matrix.
@@ -158,6 +158,7 @@ def compute_contingency_matrix(part0, part1, part0_unique, part1_unique, cont_ma
         cont_mat[i, j] = count  # Store the result in the contingency matrix
 
 
+@cuda.jit(device=True)
 def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Compute the contingency matrix for two clustering partitions using CUDA.
