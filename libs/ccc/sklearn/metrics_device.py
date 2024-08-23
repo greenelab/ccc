@@ -36,114 +36,115 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import numpy as np
-import cupy as cp
-from numba import njit, cuda
-
-
-@cuda.jit(device=True)
-def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray, out):
-    """
-    Given two clustering partitions with k0 and k1 number of clusters each, it
-    returns a contingency matrix with k0 rows and k1 columns. It's an implementation of
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.contingency_matrix.html,
-    but the code is not based on their implementation.
-
-    Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
-
-    Returns:
-        A contingency matrix with k0 (number of clusters in part0) rows and k1
-        (number of clusters in part1) columns. Each cell ij represents the
-        number of objects grouped in cluster i (in part0) and cluster j (in
-        part1).
-    """
-    part0_unique = 2#np.unique(part0)
-    part1_unique = 2#np.unique(part1)
-
-    cont_mat = out
-
-    for i in range(2):
-        # part0_k = part0_unique[i]
-
-        for j in range(2):
-            # part1_k = part1_unique[j]
-
-            # part0_i = part0 == part0_k
-            # part1_j = part1 == part1_k
-
-            cont_mat[i, j] = 4
-
-    return
-
+from numba import cuda
+import math
 
 @cuda.jit(device=True)
-def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray, out) -> np.ndarray:
-    """
-    Returns the pair confusion matrix from two clustering partitions. It is an
-    implemenetation of
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.pair_confusion_matrix.html
-    The code is based on the sklearn implementation. See copyright notice at the
-    top of this file.
+def find_unique(arr, max_unique):
+    """Find unique elements in an array using shared memory."""
+    unique = cuda.local.array(max_unique, dtype=np.int32)
+    counts = cuda.local.array(max_unique, dtype=np.int32)
+    num_unique = 0
 
-    Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
+    for i in range(len(arr)):
+        found = False
+        for j in range(num_unique):
+            if arr[i] == unique[j]:
+                counts[j] += 1
+                found = True
+                break
+        if not found and num_unique < max_unique:
+            unique[num_unique] = arr[i]
+            counts[num_unique] = 1
+            num_unique += 1
 
-    Returns:
-        A pair confusion matrix with 2 rows and 2 columns. From sklearn's
-        pair_confusion_matrix docstring: considering a pair of objects that is
-        clustered together a positive pair, then as in binary classification the
-        count of true negatives is in position 00, false negatives in 10, true
-        positives in 11, and false positives in 01.
-    """
-    n_samples = np.int64(part0.shape[0])
-
-    # Computation using the contingency data
-    part0_unique = 2#np.unique(part0)
-    part1_unique = 2#np.unique(part1)
-    contingency = cuda.shared.array((part0_unique, part1_unique), np.int64)
-    get_contingency_matrix(part0, part1, contingency)
-
-    n_c = cp.ravel(contingency.sum(axis=1))
-    n_k = cp.ravel(contingency.sum(axis=0))
-    sum_squares = (contingency**2).sum()
-    # C = np.empty((2, 2), dtype=np.int64)
-    out[1, 1] = sum_squares - n_samples
-    out[0, 1] = contingency.dot(n_k).sum() - sum_squares
-    out[1, 0] = contingency.transpose().dot(n_c).sum() - sum_squares
-    out[0, 0] = n_samples**2 - out[0, 1] - out[1, 0] - sum_squares
-
+    return unique[:num_unique], counts[:num_unique], num_unique
 
 @cuda.jit(device=True)
-def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
+def compute_contingency_matrix(part0, part1, cont_mat, max_clusters):
+    """Compute the contingency matrix using shared memory."""
+    unique0, counts0, num_unique0 = find_unique(part0, max_clusters)
+    unique1, counts1, num_unique1 = find_unique(part1, max_clusters)
+
+    for i in range(num_unique0):
+        for j in range(num_unique1):
+            count = 0
+            for k in range(len(part0)):
+                if part0[k] == unique0[i] and part1[k] == unique1[j]:
+                    count += 1
+            cont_mat[i, j] = count
+
+    return num_unique0, num_unique1
+
+@cuda.jit(device=True)
+def sum_2d_array(arr, rows, cols):
+    """Sum elements in a 2D array."""
+    total = 0
+    for i in range(rows):
+        for j in range(cols):
+            total += arr[i, j]
+    return total
+
+@cuda.jit(device=True)
+def sum_squares_2d_array(arr, rows, cols):
+    """Sum squares of elements in a 2D array."""
+    total = 0
+    for i in range(rows):
+        for j in range(cols):
+            total += arr[i, j] * arr[i, j]
+    return total
+
+@cuda.jit(device=True)
+def get_pair_confusion_matrix(part0, part1, max_clusters):
+    """Compute the pair confusion matrix."""
+    cont_mat = cuda.local.array((max_clusters, max_clusters), dtype=np.int32)
+    num_clusters0, num_clusters1 = compute_contingency_matrix(part0, part1, cont_mat, max_clusters)
+
+    n_samples = len(part0)
+    sum_squares = sum_squares_2d_array(cont_mat, num_clusters0, num_clusters1)
+
+    n_c = cuda.local.array(max_clusters, dtype=np.int32)
+    n_k = cuda.local.array(max_clusters, dtype=np.int32)
+
+    for i in range(num_clusters0):
+        n_c[i] = sum(cont_mat[i, :num_clusters1])
+    for j in range(num_clusters1):
+        n_k[j] = sum(cont_mat[:num_clusters0, j])
+
+    C = cuda.local.array((2, 2), dtype=np.int64)
+    C[1, 1] = sum_squares - n_samples
+    C[0, 1] = sum([cont_mat[i, j] * n_k[j] for i in range(num_clusters0) for j in range(num_clusters1)]) - sum_squares
+    C[1, 0] = sum([cont_mat[i, j] * n_c[i] for i in range(num_clusters0) for j in range(num_clusters1)]) - sum_squares
+    C[0, 0] = n_samples * n_samples - C[0, 1] - C[1, 0] - sum_squares
+
+    return C
+
+@cuda.jit(device=True)
+def adjusted_rand_index(part0, part1, out, compare_pair_id, i, j, max_clusters):
     """
-    Computes the adjusted Rand index (ARI) between two clustering partitions.
-    The code is based on the sklearn implementation here:
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_rand_score.html
-    See copyright notice at the top of this file.
-
-    This function should not be compiled with numba, since it depends on
-    arbitrarily large interger variable (supported by Python) to correctly
-    compute the ARI in large partitions.
-
-    Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
-
-    Returns:
-        A number representing the adjusted Rand index between two clustering
-        partitions. This number is between something around 0 (partitions do not
-        match; it could be negative in some cases) and 1.0 (perfect match).
+    Compute the adjusted Rand index (ARI) between two clustering partitions.
     """
-    shr = cuda.shared.array((2, 2), np.int64)
-    get_pair_confusion_matrix(part0, part1, shr)
-    (tn, fp), (fn, tp) = shr
-    # convert to Python integer types, to avoid overflow or underflow
-    tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
+    C = get_pair_confusion_matrix(part0, part1, max_clusters)
+    tn, fp, fn, tp = C[0, 0], C[0, 1], C[1, 0], C[1, 1]
 
     # Special cases: empty data or full agreement
     if fn == 0 and fp == 0:
-        return 1.0
+        res = 1.0
+    else:
+        res = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
 
-    return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
+    out[compare_pair_id, i, j] = res
+
+
+# Main kernel function
+# 1st iteration: try assign parts[i] (2D) to each block
+@cuda.jit
+def compute_ari(partitions, out, max_clusters):
+    """
+    CUDA kernel to compute ARI for multiple partition pairs.
+    """
+    compare_pair_id, i, j = cuda.grid(3)
+    if compare_pair_id < partitions.shape[0] and i < partitions.shape[1] and j < partitions.shape[1]:
+        part0 = partitions[compare_pair_id, i]
+        part1 = partitions[compare_pair_id, j]
+        adjusted_rand_index(part0, part1, out, compare_pair_id, i, j, max_clusters)
