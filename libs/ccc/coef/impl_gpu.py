@@ -199,12 +199,13 @@ def get_parts(X: NDArray,
     # Handle case when X is a 1D array
     if X.ndim == 1:
         nx = 1 # n_features
-        ny = range_n_clusters.shape[0]
+        ny = range_n_clusters.shape[0] # n_clusters
         nz = X.shape[0] # n_objects
     else:
         nx = X.shape[0] # n_features
-        ny = range_n_clusters.shape[0]
+        ny = range_n_clusters.shape[0] # n_clusters
         nz = X.shape[1] # n_objects
+    print(f"{nx}, {ny}, {nz}")
 
     # Allocate arrays on device global memory
     d_parts = cp.empty((nx, ny, nz), dtype=np.int16) - 1
@@ -219,7 +220,7 @@ def get_parts(X: NDArray,
 
         for x in range(nx):
             for y in range(ny):
-                objects = d_X if X.ndim == 1 else d_X[y, :] # feature row
+                objects = d_X[x, :] if d_X.ndim == 2 else d_X # objects in a feature row
                 percentages = d_range_n_percentages[y, :]
                 bins = cp.quantile(objects, percentages)
                 partition = cp.digitize(objects, bins)
@@ -231,12 +232,12 @@ def get_parts(X: NDArray,
     else:
         # If the data is categorical, then the encoded feature is already the partition
         # Only the first partition is filled, the rest will be -1 (missing)
-        d_parts[:, 0] = cp.asarray(X.astype(np.int16))
+        d_parts[:, 0] = cp.asarray(X.astype(cp.int16))
 
     # Move data back to host
     # h_parts = cp.asnumpy(d_parts)
     # print(f"after parts: {d_parts}")
-
+    cp.cuda.runtime.deviceSynchronize()
     return d_parts
 
 
@@ -587,6 +588,8 @@ def ccc(
 
     # Compute partitions for each feature using CuPy
     d_parts = get_parts(X, range_n_clusters)
+    print("GPU parts:")
+    print(d_parts)
 
     # 2. CCC coefficient computation
 
