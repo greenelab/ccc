@@ -36,7 +36,7 @@ def get_perc_from_k(k: int) -> list[float]:
     return [(1.0 / k) * i for i in range(1, k)]
 
 
-@njit(cache=True, nogil=True)
+# @njit(cache=True, nogil=True)
 def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     """
     Performs a simple quantile clustering on one dimensional data (1d). Quantile
@@ -57,24 +57,27 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     data_rank = rank(data, data_sorted)
     data_perc = data_rank / len(data)
 
-    percentiles = [0.0] + get_perc_from_k(k) + [1.0]
+    # percentiles = [0.0] + get_perc_from_k(k) + [1.0]
+    percentiles = get_perc_from_k(k)
+    # print(f"CPU percentages: {str(percentiles)}")
 
-    cut_points = np.searchsorted(data_perc[data_sorted], percentiles, side="right")
-
-    current_cluster = 0
-    part = np.zeros(data.shape, dtype=np.int16) - 1
-
-    for i in range(len(cut_points) - 1):
-        lim1 = cut_points[i]
-        lim2 = cut_points[i + 1]
-
-        part[data_sorted[lim1:lim2]] = current_cluster
-        current_cluster += 1
-
+    # cut_points = np.searchsorted(data_perc[data_sorted], percentiles, side="right")
+    #
+    # current_cluster = 0
+    # part = np.zeros(data.shape, dtype=np.int16) - 1
+    #
+    # for i in range(len(cut_points) - 1):
+    #     lim1 = cut_points[i]
+    #     lim2 = cut_points[i + 1]
+    #
+    #     part[data_sorted[lim1:lim2]] = current_cluster
+    #     current_cluster += 1
+    bins = np.quantile(data, percentiles)
+    part = np.digitize(data, bins)
     return part
 
 
-@njit(cache=True, nogil=True)
+# @njit(cache=True, nogil=True)
 def get_range_n_clusters(
     n_features: int, internal_n_clusters: Iterable[int] = None
 ) -> NDArray[np.uint8]:
@@ -110,7 +113,7 @@ def get_range_n_clusters(
     return np.array(clusters_range_list, dtype=np.uint16)
 
 
-@njit(cache=True, nogil=True)
+# @njit(cache=True, nogil=True)
 def get_parts(
     data: NDArray, range_n_clusters: tuple[int], data_is_numerical: bool = True
 ) -> NDArray[np.int16]:

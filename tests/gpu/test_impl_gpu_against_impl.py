@@ -76,7 +76,7 @@ def test_ccc_gpu_1d_edge_cases(case):
 
 def test_ccc_gpu_2d_simple():
     np.random.seed(0)
-    shape = (2, 20)  # 200 features, 1,000 samples
+    shape = (20       , 200)  # 200 features, 1,000 samples
     print(f"Testing with {shape[0]} features and {shape[1]} samples")
     df = np.random.rand(*shape)
 

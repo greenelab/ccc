@@ -11,14 +11,15 @@ import cupy as cp
 from numpy.typing import NDArray
 from numba import njit
 from numba import cuda
+from fractions import Fraction
 
 from ccc.pytorch.core import unravel_index_2d
 from ccc.scipy.stats import rank
 from ccc.sklearn.metrics import adjusted_rand_index as ari
 from ccc.utils import chunker
 
-@njit(cache=True, nogil=True)
-def get_perc_from_k(k: int) -> NDArray[np.float32]:
+# @njit(cache=True, nogil=True)
+def get_perc_from_k(k: int) -> NDArray[np.float64]:
     """
     It returns the percentiles (from 0.0 to 1.0) that separate the data into k
     clusters. For example, if k=2, it returns [0.5]; if k=4, it returns [0.25,
@@ -31,13 +32,14 @@ def get_perc_from_k(k: int) -> NDArray[np.float32]:
     Returns:
         A numpy array of percentiles (from 0.0 to 1.0).
     """
+    np.set_printoptions(precision=17)
     if k < 2:
-        return np.empty(0, dtype=np.float32)
-    return np.array([(1.0 / k) * i for i in range(1, k)], dtype=np.float32)
+        return np.array([], dtype='float64')
+    return np.linspace(1/k, 1-1/k, k-1, dtype='float64')
 
 
-@njit(cache=True, nogil=True)
-def get_range_n_percentages(ks: NDArray[np.uint8], as_percentage: bool = False) -> NDArray[np.float32]:
+# @njit(cache=True, nogil=True)
+def get_range_n_percentages(ks: NDArray[np.uint8], as_percentage: bool = False) -> NDArray[float]:
     """
     It returns lists of the percentiles (from 0.0 to 1.0) that separate the data into k[i] clusters
     
@@ -50,16 +52,16 @@ def get_range_n_percentages(ks: NDArray[np.uint8], as_percentage: bool = False) 
     # Todo: research on if numba can optimize this
     # Emtpy & null check
     if ks.size == 0:
-        return np.empty((0, 0), dtype=np.float32)
+        return np.empty((0, 0), dtype=float)
     # Number of rows of the returning matrix
     n_rows = len(ks)
     # Number of columns of the returning matrix, dominated by the largest k, which specifies the # of clusters
     n_cols = np.max(ks) - 1
-    percentiles = np.full((n_rows, n_cols), np.nan, dtype=np.float32)
+    percentiles = np.full((n_rows, n_cols), np.nan, dtype=float)
     for idx, k in enumerate(ks):
         perc = get_perc_from_k(k)
         if as_percentage:
-            perc = np.round(perc * 100).astype(np.float32)  # Convert to percentage and round
+            perc = np.round(perc * 100).astype(float)  # Convert to percentage and round
         percentiles[idx, :len(perc)] = perc
     return percentiles
 
@@ -205,7 +207,7 @@ def get_parts(X: NDArray,
         nx = X.shape[0] # n_features
         ny = range_n_clusters.shape[0] # n_clusters
         nz = X.shape[1] # n_objects
-    print(f"{nx}, {ny}, {nz}")
+    # print(f"{nx}, {ny}, {nz}")
 
     # Allocate arrays on device global memory
     d_parts = cp.empty((nx, ny, nz), dtype=np.int16) - 1
@@ -216,12 +218,13 @@ def get_parts(X: NDArray,
         d_X = cp.asarray(X)
         # Get cutting percentages for each cluster
         range_n_percentages = get_range_n_percentages(range_n_clusters)
-        d_range_n_percentages = cp.asarray(range_n_percentages)
+        d_range_n_percentages = cp.asarray(range_n_percentages, dtype=float)
 
         for x in range(nx):
             for y in range(ny):
                 objects = d_X[x, :] if d_X.ndim == 2 else d_X # objects in a feature row
                 percentages = d_range_n_percentages[y, :]
+                print(f"GPU percentiles: {percentages}")
                 bins = cp.quantile(objects, percentages)
                 partition = cp.digitize(objects, bins)
                 d_parts[x, y, :] = partition
