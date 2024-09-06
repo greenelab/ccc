@@ -1,22 +1,25 @@
 import pytest
-from typing import List
 
 import numpy as np
-from numba import cuda
-from numpy.testing import assert_array_equal, assert_allclose
-from numpy.typing import NDArray
+import cupy as cp
 
 from ccc.coef.impl_gpu import (
-    get_perc_from_k,
-    get_range_n_percentages,
-    convert_n_clusters,
-    get_range_n_clusters,
     get_parts,
 )
 
 from ccc.coef import get_parts as get_parts_cpu
 from ccc.coef import get_perc_from_k as get_perc_from_k_cpu
+import functools
 
+def clean_gpu_memory(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        finally:
+            mempool = cp.get_default_memory_pool()
+            mempool.free_all_blocks()
+    return wrapper
 
 def find_partition(value, quantiles):
     for i in range(len(quantiles)):
@@ -54,6 +57,8 @@ def verify_partition(feature, index, n_clusters):
     assert partition == parts_cpu[0][index], f"Mismatch in partition for feature[{index}]"
     return partition
 
+
+@clean_gpu_memory
 @pytest.mark.parametrize("feature_size", [100])#, 1000, 10000])
 @pytest.mark.parametrize("cluster_settings", [
     # ([2], (2,)),
@@ -64,6 +69,7 @@ def verify_partition(feature, index, n_clusters):
     # ([2, 3, 4, 5, 6, 7, 8, 9, 10], (2, 3, 4, 5, 6, 7, 8, 9, 10)),
 ])
 def test_get_parts(feature_size, cluster_settings):
+
     np.random.seed(0)
     
     gpu_clusters, cpu_clusters = cluster_settings
@@ -123,6 +129,9 @@ def test_get_parts(feature_size, cluster_settings):
 
 
 def test_specific_elements():
+    mempool = cp.get_default_memory_pool()
+    mempool.free_all_blocks()
+
     np.random.seed(0)
     feature = np.random.rand(100)
     assert feature[77] == 0.1201965612131689
@@ -132,7 +141,9 @@ def test_specific_elements():
     verify_partition(feature, 78, 6)
 
 
+@clean_gpu_memory
 def test_potential_buggy_cpu_impl():
+
     np.random.seed(0)
     feature = np.random.rand(100)
     assert feature[77] == 0.1201965612131689
@@ -167,7 +178,9 @@ def test_potential_buggy_cpu_impl():
     assert partition_78 == parts_cpu[0][78]
 
 
+@clean_gpu_memory
 def test_get_parts_with_singletons():
+
     np.random.seed(0)
 
     feature0 = np.array([1.3] * 100)
@@ -193,7 +206,7 @@ def test_get_parts_with_singletons():
     assert np.array_equal(parts[0][1], parts_cpu[1])
 
 
-
+@clean_gpu_memory
 def test_get_parts_with_categorical_feature():
     np.random.seed(0)
 
@@ -225,6 +238,8 @@ def test_get_parts_with_categorical_feature():
     assert np.array_equal(parts[0][0], parts_cpu[0])
     assert np.array_equal(parts[0][1], parts_cpu[1])
 
+
+@clean_gpu_memory
 def test_get_parts_2d_simple():
     np.random.seed(0)
     array = np.random.rand(5, 1000)

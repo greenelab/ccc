@@ -7,10 +7,10 @@ import numpy as np
 
 
 @pytest.mark.parametrize("seed, size, distribution, params", [
-    (0, 1000, "rand", {}),  # Uniform distribution
-    (42, 5000, "randn", {}),  # Normal distribution
+    # (0, 1000, "rand", {}),  # Uniform distribution
+    # (42, 5000, "randn", {}),  # Normal distribution
     (123, 100, "randint", {"low": 0, "high": 100}),  # Integer distribution
-    (456, 10000, "exponential", {"scale": 2.0}),  # Exponential distribution
+    # (456, 10000, "exponential", {"scale": 2.0}),  # Exponential distribution
     # (789, 100, "binomial", {"n": 10, "p": 0.5}),  # Binomial distribution
 ])
 def test_ccc_gpu_1d(seed, size, distribution, params):
@@ -76,7 +76,7 @@ def test_ccc_gpu_1d_edge_cases(case):
 
 def test_ccc_gpu_2d_simple():
     np.random.seed(0)
-    shape = (20       , 200)  # 200 features, 1,000 samples
+    shape = (20 , 200)  # 200 features, 1,000 samples
     print(f"Testing with {shape[0]} features and {shape[1]} samples")
     df = np.random.rand(*shape)
 

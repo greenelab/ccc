@@ -226,7 +226,8 @@ def get_parts(X: NDArray,
                 percentages = d_range_n_percentages[y, :]
                 print(f"GPU percentiles: {percentages}")
                 bins = cp.quantile(objects, percentages)
-                partition = cp.digitize(objects, bins)
+                print(f"GPU quantiles: {bins}")
+                partition = cp.digitize(objects, bins, right=True)
                 d_parts[x, y, :] = partition
 
         # Remove singletons by putting -2 as values

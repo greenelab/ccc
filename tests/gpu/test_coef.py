@@ -1,9 +1,8 @@
 import pytest
-from typing import List
 
 import numpy as np
+import cupy as cp
 from numpy.testing import assert_array_equal, assert_allclose
-from numpy.typing import NDArray
 
 from ccc.coef.impl_gpu import (
     get_perc_from_k,
@@ -346,6 +345,9 @@ def test_get_parts_with_singletons():
 
 
 def test_get_parts_with_categorical_feature():
+    mempool = cp.get_default_memory_pool()
+    mempool.free_all_blocks()
+
     np.random.seed(0)
 
     feature0 = np.array([4] * 10)

@@ -73,7 +73,7 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     #     part[data_sorted[lim1:lim2]] = current_cluster
     #     current_cluster += 1
     bins = np.quantile(data, percentiles)
-    part = np.digitize(data, bins)
+    part = np.digitize(data, bins, right=True)
     return part
 
 
