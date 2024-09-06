@@ -7,11 +7,11 @@ import numpy as np
 
 
 @pytest.mark.parametrize("seed, size, distribution, params", [
-    # (0, 1000, "rand", {}),  # Uniform distribution
-    # (42, 5000, "randn", {}),  # Normal distribution
-    (123, 100, "randint", {"low": 0, "high": 100}),  # Integer distribution
-    # (456, 10000, "exponential", {"scale": 2.0}),  # Exponential distribution
-    # (789, 100, "binomial", {"n": 10, "p": 0.5}),  # Binomial distribution
+    (0, 1000, "rand", {}),  # Uniform distribution
+    (42, 5000, "randn", {}),  # Normal distribution
+    (123, 100, "randint", {"low": 0, "high": 100}),  # Integer distribution, expect to have the largest difference
+    (456, 10000, "exponential", {"scale": 2.0}),  # Exponential distribution
+    (789, 100, "binomial", {"n": 10, "p": 0.5}),  # Binomial distribution
 ])
 def test_ccc_gpu_1d(seed, size, distribution, params):
     np.random.seed(seed)
