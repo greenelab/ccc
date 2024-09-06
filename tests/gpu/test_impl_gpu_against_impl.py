@@ -4,7 +4,7 @@ from ccc.coef.impl_gpu import ccc as ccc_gpu
 from ccc.coef.impl import ccc
 import numpy as np
 
-
+# This test needs to be improved
 
 @pytest.mark.parametrize("seed, size, distribution, params", [
     (0, 1000, "rand", {}),  # Uniform distribution
