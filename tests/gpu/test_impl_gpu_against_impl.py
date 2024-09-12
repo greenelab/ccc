@@ -1,19 +1,22 @@
 import pytest
 import time
-from ccc.coef.impl_gpu import ccc as ccc_gpu
-from ccc.coef.impl import ccc
+
 import numpy as np
 
+from ccc.coef.impl_gpu import ccc as ccc_gpu
+from ccc.coef.impl import ccc
+from utils import clean_gpu_memory
 # This test needs to be improved
 
-@pytest.mark.parametrize("seed, size, distribution, params", [
-    (0, 1000, "rand", {}),  # Uniform distribution
-    (42, 5000, "randn", {}),  # Normal distribution
-    (123, 100, "randint", {"low": 0, "high": 100}),  # Integer distribution, expect to have the largest difference
-    (456, 10000, "exponential", {"scale": 2.0}),  # Exponential distribution
-    (789, 100, "binomial", {"n": 10, "p": 0.5}),  # Binomial distribution
+@clean_gpu_memory
+@pytest.mark.parametrize("size", [100, 1000, 10000, 100000, 100000])
+@pytest.mark.parametrize("seed, distribution, params", [
+    (0, "rand", {}),  # Uniform distribution
+    (42, "randn", {}),  # Normal distribution
+    (123, "randint", {"low": 0, "high": 100}),  # Integer distribution, expect to have the largest difference due to partition errors
+    (456, "exponential", {"scale": 2.0}),  # Exponential distribution
 ])
-def test_ccc_gpu_1d(seed, size, distribution, params):
+def test_ccc_gpu_1d(size, seed, distribution, params):
     np.random.seed(seed)
 
     # Generate random features based on the specified distribution
