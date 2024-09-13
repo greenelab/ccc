@@ -148,7 +148,7 @@ def get_range_n_clusters(
 #     return int(x), int(y)
 
 
-@njit(cache=True, nogil=True)
+@cuda.jit(device=True)
 def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
     """
     Given the number of objects and and index, it returns the row/column
@@ -167,7 +167,7 @@ def get_coords_from_index(n_obj: int, idx: int) -> tuple[int]:
         equivalent to the condensed array.
     """
     b = 1 - 2 * n_obj
-    x = np.floor((-b - np.sqrt(b**2 - 8 * idx)) / 2)
+    x = math.floor((-b - math.sqrt(b**2 - 8 * idx)) / 2)
     y = idx + x * (b + x + 2) / 2 + 1
     return int(x), int(y)
 
@@ -244,105 +244,62 @@ def get_parts(X: NDArray,
     cp.cuda.runtime.deviceSynchronize()
     return d_parts
 
+@cuda.jit
+def compute_coef(
+                parts: cuda.cudadrv.devicearray,
+                max_ari_list: cuda.cudadrv.devicearray,
+                max_part_idx_list: cuda.cudadrv.devicearray,
+                temp_outs: cuda.cudadrv.devicearray,
+                compare_pair_id: int,
+):
+    """
+    Given an index representing each a pair of
+    objects/rows/genes, it computes the CCC coefficient for
+    each of them.
 
-# # Todo: kernel on partition paris (1D, 1D) instead of paris of matrices (2D, 2D)
-# @cuda.jit(device=True)
-# def cdist_parts_basic(x: NDArray, y: NDArray, out: NDArray, compare_pair_id: int) -> None:
-#     """
-#     It implements the same functionality in scipy.spatial.distance.cdist but
-#     for clustering partitions, and instead of a distance it returns the adjusted
-#     Rand index (ARI). In other words, it mimics this function call:
-#
-#         cdist(x, y, metric=ari)
-#
-#     Only partitions with positive labels (> 0) are compared. This means that
-#     partitions marked as "singleton" or "empty" (categorical data) are not
-#     compared. This has the effect of leaving an ARI of 0.0 (zero).
-#
-#     Args:
-#         x: a 2d array with m_x clustering partitions in rows and n objects in
-#           columns.
-#         y: a 2d array with m_y clustering partitions in rows and n objects in
-#           columns.
-#
-#     Returns:
-#         A 2d array with m_x rows and m_y columns and the ARI between each
-#         partition pair. Each ij entry is equal to ari(x[i], y[j]) for each i
-#         and j.
-#     """
-#
-#     for i in range(out.shape[0]):
-#         if x[i, 0] < 0:
-#             continue
-#
-#         for j in range(out.shape[1]):
-#             if y[j, 0] < 0:
-#                 continue
-#
-#             # res[i, j] = ari(x[i], y[j])
-#             # ari(x[i], y[j], out, compare_pair_id, i, j)
-#             res = ari(x[i], y[j])
-#             print(res)
-#
-#     return
-#
-#
-# @cuda.jit
-# def compute_coef(
-#                 parts: cuda.cudadrv.devicearray,
-#                 max_ari_list: cuda.cudadrv.devicearray,
-#                 max_part_idx_list: cuda.cudadrv.devicearray,
-#                 temp_outs: cuda.cudadrv.devicearray,
-#                 compare_pair_id: int,
-# ):
-#     """
-#     Given an index representing each a pair of
-#     objects/rows/genes, it computes the CCC coefficient for
-#     each of them.
-#
-#     Args:
-#         parts: A reference to the 3d GPU partitions array.
-#         max_part_idx_list: A reference to the 2d GPU array that stores the indexes of the partitions that maximized the ARI.
-#         max_ari_list: A reference to the 1d GPU array that stores the maximum ARI values.
-#         compare_pair_id: An id representing a pair of partitions to be compared.
-#
-#     Returns:
-#         Returns a tuple with two arrays. These two arrays are the same
-#           arrays returned by the main cm function (cm_values and
-#           max_parts) but for a subset of the data.
-#     """
-#     n_features = parts.shape[0]
-#
-#     # for idx, data_idx in enumerate(compare_pair_id):
-#     i, j = get_coords_from_index(n_features, compare_pair_id)
-#
-#     # get partitions for the pair of objects
-#     obji_parts, objj_parts = parts[i], parts[j]
-#
-#     # compute ari only if partitions are not marked as "missing"
-#     # (negative values), which is assigned when partitions have
-#     # one cluster (usually when all data in the feature has the same
-#     # value).
-#     if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
-#         return
-#
-#     # compare all partitions of one object to the all the partitions
-#     # of the other object, and get the maximium ARI
-#
-#     cdist_parts_basic(
-#         obji_parts,
-#         objj_parts,
-#         temp_outs,
-#         compare_pair_id,
-#     )
-#     # max_flat_idx = comp_values.argmax()
-#
-#     # max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
-#     # max_part_idx_list[compare_pair_id] = max_idx
-#     # max_ari_list[compare_pair_id] = np.max((comp_values[max_idx], 0.0))
-#     #
-#     # return max_ari_list, max_part_idx_list
-#     return
+    Args:
+        parts: A reference to the 3d GPU partitions array.
+        max_part_idx_list: A reference to the 2d GPU array that stores the indexes of the partitions that maximized the ARI.
+        max_ari_list: A reference to the 1d GPU array that stores the maximum ARI values.
+        compare_pair_id: An id representing a pair of partitions to be compared.
+
+    Returns:
+        Returns a tuple with two arrays. These two arrays are the same
+          arrays returned by the main cm function (cm_values and
+          max_parts) but for a subset of the data.
+    """
+    n_features = parts.shape[0]
+
+    # for idx, data_idx in enumerate(compare_pair_id):
+    i, j = get_coords_from_index(n_features, compare_pair_id)
+
+    # get partitions for the pair of objects
+    obji_parts, objj_parts = parts[i], parts[j]
+
+    # compute ari only if partitions are not marked as "missing"
+    # (negative values), which is assigned when partitions have
+    # one cluster (usually when all data in the feature has the same
+    # value).
+    if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
+        return
+
+    # compare all partitions of one object to the all the partitions
+    # of the other object, and get the maximium ARI
+
+    cdist_parts_basic(
+        obji_parts,
+        objj_parts,
+        temp_outs,
+        compare_pair_id,
+    )
+    # max_flat_idx = comp_values.argmax()
+
+    # max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
+    # max_part_idx_list[compare_pair_id] = max_idx
+    # max_ari_list[compare_pair_id] = np.max((comp_values[max_idx], 0.0))
+    #
+    # return max_ari_list, max_part_idx_list
+    return
 
 def get_chunks(
     iterable: Union[int, Iterable], n_threads: int, ratio: float = 1
@@ -386,8 +343,8 @@ def get_chunks(
 
     return res
 
-
-def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
+@cuda.jit(device=True)
+def cdist_parts_basic(x: cuda.cudadrv.devicearray, y: cuda.cudadrv.devicearray, temp_outs: cuda.cudadrv.devicearray, compare_pair_id: int) -> NDArray[float]:
     """
     It implements the same functionality in scipy.spatial.distance.cdist but
     for clustering partitions, and instead of a distance it returns the adjusted
@@ -421,32 +378,6 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
                 continue
 
             res[i, j] = ari(x[i], y[j])
-
-    return res
-
-
-def cdist_parts_parallel(
-    x: NDArray, y: NDArray, executor: ThreadPoolExecutor
-) -> NDArray[float]:
-    """
-    It parallelizes cdist_parts_basic function.
-
-    Args:
-        x: same as in cdist_parts_basic
-        y: same as in cdist_parts_basic
-        executor: an pool executor where jobs will be submitted.
-
-    Results:
-        Same as in cdist_parts_basic.
-    """
-    res = np.zeros((x.shape[0], y.shape[0]))
-
-    inputs = list(chunker(np.arange(res.shape[0]), 1))
-
-    tasks = {executor.submit(cdist_parts_basic, x[idxs], y): idxs for idxs in inputs}
-    for t in as_completed(tasks):
-        idx = tasks[t]
-        res[idx, :] = t.result()
 
     return res
 
@@ -597,111 +528,29 @@ def ccc(
 
     # 2. CCC coefficient computation
 
-    # # allocate result arrays on device global memory
-    # d_max_ari_list = cp.full(n_features_comp, cp.nan, dtype=float)
-    # d_max_part_idx_list = cp.zeros((n_features_comp, 2), dtype=np.uint64)
-    # # allocate temporary arrays on device global memory
-    # d_outs = cp.empty((n_features_comp, range_n_clusters.shape[0], range_n_clusters.shape[0]), dtype=cp.float32)
-    # print(f"before d_outs: {d_outs}")
-    # # use 1D gird to parallelize the computation of CCC coefficients
-    # # Todo: optimize this using updated c_dist function that only compare one partition at a time
-    # threads_per_block = 1
-    # blocks_per_grid = n_features_comp
-    # for i in range(n_features_comp):
-    #     # Directly pass CuPy arrays to kernels JITed with Numba
-    #     compute_coef[blocks_per_grid, threads_per_block](d_parts, d_max_ari_list, d_max_part_idx_list, d_outs, i)
-    # # Wait for all comparisons to finish
-    # cuda.synchronize()
-    # print(f"after d_outs: {d_outs}")
-    # # Transfer data back to host
-    # max_ari_list = cp.asnumpy(d_max_ari_list)
-    # max_part_idx_list = cp.asnumpy(d_max_part_idx_list)
-    # print(max_ari_list)
-    # print(max_part_idx_list)
-
-    # Use CPU multi-threading for baseline
+    # allocate result arrays on device global memory
+    d_max_ari_list = cp.full(n_features_comp, cp.nan, dtype=float)
+    d_max_part_idx_list = cp.zeros((n_features_comp, 2), dtype=np.uint64)
+    # allocate temporary arrays on device global memory
+    d_outs = cp.empty((n_features_comp, range_n_clusters.shape[0], range_n_clusters.shape[0]), dtype=cp.float32)
+    print(f"before d_outs: {d_outs}")
+    # use 1D gird to parallelize the computation of CCC coefficients
+    # Todo: optimize this using updated c_dist function that only compare one partition at a time
+    threads_per_block = 1
+    blocks_per_grid = n_features_comp
+    for i in range(n_features_comp):
+        # Directly pass CuPy arrays to kernels JITed with Numba
+        compute_coef[blocks_per_grid, threads_per_block](d_parts, d_max_ari_list, d_max_part_idx_list, d_outs, i)
+    # Wait for all comparisons to finish
+    cuda.synchronize()
+    print(f"after d_outs: {d_outs}")
+    # Transfer data back to host
+    max_ari_list = cp.asnumpy(d_max_ari_list)
+    max_part_idx_list = cp.asnumpy(d_max_part_idx_list)
     parts = cp.asnumpy(d_parts)
+    print(max_ari_list)
+    print(max_part_idx_list)
 
-    default_n_threads = os.cpu_count()
-
-    with ThreadPoolExecutor(max_workers=default_n_threads) as executor:
-
-        # Below, there are two layers of parallelism: 1) parallel execution
-        # across feature pairs and 2) the cdist_parts_parallel function, which
-        # also runs several threads to compare partitions using ari. In 2) we
-        # need to disable parallelization in case len(cm_values) > 1 (that is,
-        # we have several feature pairs to compare), because parallelization is
-        # already performed at this level. Otherwise, more threads than
-        # specified by the user are started.
-        cdist_parts_enable_threading = True if n_features_comp == 1 else False
-
-        cdist_func = None
-        map_func = executor.map
-        if cdist_parts_enable_threading:
-            map_func = map
-
-            def cdist_func(x, y):
-                return cdist_parts_parallel(x, y, executor)
-
-        else:
-            cdist_func = cdist_parts_basic
-
-        # compute coefficients
-        def compute_coef(idx_list):
-            """
-            Given a list of indexes representing each a pair of
-            objects/rows/genes, it computes the CCC coefficient for
-            each of them. This function is supposed to be used to parallelize
-            processing.
-
-            Args:
-                idx_list: a list of indexes (integers), each of them
-                  representing a pair of objects.
-
-            Returns:
-                Returns a tuple with two arrays. These two arrays are the same
-                  arrays returned by the main cm function (cm_values and
-                  max_parts) but for a subset of the data.
-            """
-            n_idxs = len(idx_list)
-            max_ari_list = np.full(n_idxs, np.nan, dtype=float)
-            max_part_idx_list = np.zeros((n_idxs, 2), dtype=np.uint64)
-
-            for idx, data_idx in enumerate(idx_list):
-                i, j = get_coords_from_index(n_features, data_idx)
-
-                # get partitions for the pair of objects
-                obji_parts, objj_parts = parts[i], parts[j]
-
-                # compute ari only if partitions are not marked as "missing"
-                # (negative values), which is assigned when partitions have
-                # one cluster (usually when all data in the feature has the same
-                # value).
-                if obji_parts[0, 0] == -2 or objj_parts[0, 0] == -2:
-                    continue
-
-                # compare all partitions of one object to the all the partitions
-                # of the other object, and get the maximium ARI
-                comp_values = cdist_func(
-                    obji_parts,
-                    objj_parts,
-                )
-                max_flat_idx = comp_values.argmax()
-
-                max_idx = unravel_index_2d(max_flat_idx, comp_values.shape)
-                max_part_idx_list[idx] = max_idx
-                max_ari_list[idx] = np.max((comp_values[max_idx], 0.0))
-
-            return max_ari_list, max_part_idx_list
-
-        # iterate over all chunks of object pairs and compute the coefficient
-        inputs = get_chunks(n_features_comp, default_n_threads, n_chunks_threads_ratio)
-
-        for idx, (max_ari_list, max_part_idx_list) in zip(
-            inputs, map_func(compute_coef, inputs)
-        ):
-            cm_values[idx] = max_ari_list
-            max_parts[idx, :] = max_part_idx_list
 
     # return an array of values or a single scalar, depending on the input data
     if cm_values.shape[0] == 1:
