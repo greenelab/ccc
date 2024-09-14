@@ -8,6 +8,16 @@ from ccc.coef.impl import ccc
 from utils import clean_gpu_memory
 # This test needs to be improved
 
+
+def test_ccc_gpu_1d_simple():
+    np.random.seed(0)
+    feature1 = np.random.rand(1000)
+    feature2 = np.random.rand(1000)
+    c1 = ccc_gpu(feature1, feature2)
+    c2 = ccc(feature1, feature2)
+    print(f"GPU: {c1}, CPU: {c2}")
+    assert np.isclose(c1, c2, atol=1e-3), f"GPU: {c1}, CPU: {c2}"
+
 @clean_gpu_memory
 def run_ccc_test(size, seed, distribution, params):
     np.random.seed(seed)
@@ -114,7 +124,7 @@ def test_ccc_gpu_1d_edge_cases(case):
 @clean_gpu_memory
 def test_ccc_gpu_2d_simple():
     np.random.seed(0)
-    shape = (20 , 200)  # 200 features, 1,000 samples
+    shape = (20, 200)  # 200 features, 1,000 samples
     print(f"Testing with {shape[0]} features and {shape[1]} samples")
     df = np.random.rand(*shape)
 
@@ -146,33 +156,33 @@ def test_ccc_gpu_2d_simple():
 
 
 # Test for very large arrays (may be slow and memory-intensive)
-# @clean_gpu_memory
-# @pytest.mark.slow
-# def test_ccc_gpu_2d_very_large():
-#     np.random.seed(0)
-#     shape = (200, 1000)  # 200 features, 1,000 samples
-#     print(f"Testing with {shape[0]} features and {shape[1]} samples")
-#     df = np.random.rand(*shape)
-#
-#     # Time GPU version
-#     start_gpu = time.time()
-#     c1 = ccc_gpu(df)
-#     end_gpu = time.time()
-#     gpu_time = end_gpu - start_gpu
-#
-#     # Time CPU version
-#     start_cpu = time.time()
-#     c2 = ccc(df)
-#     end_cpu = time.time()
-#     cpu_time = end_cpu - start_cpu
-#
-#     # Calculate speedup
-#     speedup = cpu_time / gpu_time
-#
-#     print(f"\nGPU time: {gpu_time:.4f} seconds")
-#     print(f"CPU time: {cpu_time:.4f} seconds")
-#     print(f"Speedup: {speedup:.2f}x")
-#
-#     assert np.allclose(c1, c2, rtol=1e-5, atol=1e-5)
-#
-#     return gpu_time, cpu_time, speedup
+@clean_gpu_memory
+@pytest.mark.slow
+def test_ccc_gpu_2d_very_large():
+    np.random.seed(0)
+    shape = (200, 1000)  # 200 features, 1,000 samples
+    print(f"Testing with {shape[0]} features and {shape[1]} samples")
+    df = np.random.rand(*shape)
+
+    # Time GPU version
+    start_gpu = time.time()
+    c1 = ccc_gpu(df)
+    end_gpu = time.time()
+    gpu_time = end_gpu - start_gpu
+
+    # Time CPU version
+    start_cpu = time.time()
+    c2 = ccc(df)
+    end_cpu = time.time()
+    cpu_time = end_cpu - start_cpu
+
+    # Calculate speedup
+    speedup = cpu_time / gpu_time
+
+    print(f"\nGPU time: {gpu_time:.4f} seconds")
+    print(f"CPU time: {cpu_time:.4f} seconds")
+    print(f"Speedup: {speedup:.2f}x")
+
+    assert np.allclose(c1, c2, rtol=1e-5, atol=1e-5)
+
+    return gpu_time, cpu_time, speedup

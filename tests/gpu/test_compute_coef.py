@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from ccc.coef.impl_gpu import ccc as ccc_gpu
 
+
 def test_temp():
     np.random.seed(0)
     feature1 = np.random.rand(100)
