@@ -423,8 +423,8 @@ def cdist_parts_basic(x: NDArray, y: NDArray) -> NDArray[float]:
             if y[j, 0] < 0:
                 continue
 
-            # res[i, j] = cu_rnd_sc(x[i], y[j])
-            res[i, j] = ari(x[i], y[j])
+            res[i, j] = cu_rnd_sc(x[i], y[j])
+            # res[i, j] = ari(x[i], y[j])
 
     return res
 
