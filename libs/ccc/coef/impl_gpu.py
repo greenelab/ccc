@@ -187,7 +187,7 @@ def convert_n_clusters(internal_n_clusters: Optional[Union[int, List[int]]]) -> 
 def get_parts(X: NDArray,
               range_n_clusters: NDArray[np.uint8],
               data_is_numerical: bool = True
-              ) -> cp.ndarray:
+              ) -> tuple[cp.ndarray, cp.ndarray]:
     """
     Compute parts using CuPy for GPU acceleration.
 
@@ -213,6 +213,7 @@ def get_parts(X: NDArray,
 
     # Allocate arrays on device global memory
     d_parts = cp.empty((nx, ny, nz), dtype=np.int16) - 1
+    d_unique_elem_counts = cp.empty((nx, ny), dtype=np.int16) - 1
     # print(f"prev parts: {d_parts}")
 
     if data_is_numerical:
@@ -225,12 +226,15 @@ def get_parts(X: NDArray,
         for x in range(nx):
             for y in range(ny):
                 objects = d_X[x, :] if d_X.ndim == 2 else d_X  # objects in a feature row
+                # Todo: use cupy fusion to optimize the two operations below
                 percentages = d_range_n_percentages[y, :]
-                print(f"GPU percentiles: {percentages}")
+                # print(f"GPU percentiles: {percentages}")
                 bins = cp.quantile(objects, percentages)
-                print(f"GPU quantiles: {bins}")
+                # print(f"GPU quantiles: {bins}")
                 partition = cp.digitize(objects, bins, right=True)
                 d_parts[x, y, :] = partition
+                # Count number of unique elements in each partition, used in the ARI computation
+                d_unique_elem_counts[x, y] = len(cp.unique(partition))
 
         # Remove singletons by putting -2 as values
         partitions_ks = cp.array([len(cp.unique(d_parts[i, j, :])) for i in range(nx) for j in range(ny)]).reshape(nx,
@@ -239,13 +243,14 @@ def get_parts(X: NDArray,
     else:
         # If the data is categorical, then the encoded feature is already the partition
         # Only the first partition is filled, the rest will be -1 (missing)
+        # Todo: fix this to handle categorical data
         d_parts[:, 0] = cp.asarray(X.astype(cp.int16))
 
     # Move data back to host
     # h_parts = cp.asnumpy(d_parts)
     # print(f"after parts: {d_parts}")
     cp.cuda.runtime.deviceSynchronize()
-    return d_parts
+    return d_parts, d_unique_elem_counts
 
 
 # # Todo: kernel on partition paris (1D, 1D) instead of paris of matrices (2D, 2D)
@@ -595,7 +600,7 @@ def ccc(
     # X here (and following) is a numpy array features are in rows, objects are in columns
 
     # Compute partitions for each feature using CuPy
-    d_parts = get_parts(X, range_n_clusters)
+    d_parts, d_uniq_ele_counts = get_parts(X, range_n_clusters)
     print("GPU parts:")
     print(d_parts)
 
