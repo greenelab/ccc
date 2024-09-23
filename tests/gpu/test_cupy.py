@@ -45,7 +45,7 @@ def test_raw_kernel_with_thrust():
         return false;
       });
     }"""
-    kernel = cp.RawModule(code=code,backend='nvcc')
+    kernel = cp.RawModule(code=code, backend='nvcc')
     code = kernel.get_function("xyzw_frequency_thrust_device")
 
     in_str = 'xxxzzzwwax'
@@ -78,3 +78,186 @@ def test_thrust_unique_count():
     # count[0] == 9 Define a raw kernel
     code(grid=(1,), block=(1,), args=(count, in_arr, 7))
     print(count)
+
+
+def test_3d_raw_kernel():
+    # Define a raw kernel to increment all elements by 1
+    kernel = cp.RawKernel(r'''
+    extern "C" __global__
+    void increment_3d(float* array, int x, int y, int z) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        int idy = blockIdx.y * blockDim.y + threadIdx.y;
+        int idz = blockIdx.z * blockDim.z + threadIdx.z;
+
+        if (idx < x && idy < y && idz < z) {
+            int index = idz * y * x + idy * x + idx;
+            array[index] += 1.0f;
+        }
+    }
+    ''', 'increment_3d')
+
+    # Define the shape of the 3D array
+    shape = (64, 64, 64)
+
+    # Allocate and initialize a 3D array on the device
+    d_array = cp.zeros(shape, dtype=cp.float32)
+
+    # Define grid and block dimensions
+    block_dim = (8, 8, 8)
+    grid_dim = (
+        (shape[0] + block_dim[0] - 1) // block_dim[0],
+        (shape[1] + block_dim[1] - 1) // block_dim[1],
+        (shape[2] + block_dim[2] - 1) // block_dim[2]
+    )
+
+    # Launch the kernel
+    kernel(grid_dim, block_dim, (d_array, shape[0], shape[1], shape[2]))
+
+    # Copy the result back to CPU for verification
+    h_result = cp.asnumpy(d_array)
+
+    # Verify the result
+    expected = np.ones(shape, dtype=np.float32)
+    np.testing.assert_array_almost_equal(h_result, expected, decimal=6)
+
+    print("Test passed successfully!")
+
+
+def test_3d_raw_kernel_1d_grid():
+    # Define a raw kernel to increment all elements by 1 using 1D grid and block
+    kernel = cp.RawKernel(r'''
+    extern "C" __global__
+    void increment_3d_1d(float* array, int x, int y, int z) {
+        int tid = blockDim.x * blockIdx.x + threadIdx.x;
+        int total_size = x * y * z;
+
+        if (tid < total_size) {
+            int idz = tid / (x * y);
+            int idy = (tid % (x * y)) / x;
+            int idx = tid % x;
+
+            array[tid] += 1.0f;
+        }
+    }
+    ''', 'increment_3d_1d')
+
+    # Define the shape of the 3D array
+    shape = (64, 64, 64)
+
+    # Allocate and initialize a 3D array on the device
+    d_array = cp.zeros(shape, dtype=cp.float32)
+
+    # Calculate total number of elements
+    total_elements = np.prod(shape)
+
+    # Define 1D grid and block dimensions
+    block_dim = (256,)
+    grid_dim = ((total_elements + block_dim[0] - 1) // block_dim[0],)
+
+    # Launch the kernel
+    kernel(grid_dim, block_dim, (d_array, shape[0], shape[1], shape[2]))
+
+    # Copy the result back to CPU for verification
+    h_result = cp.asnumpy(d_array)
+
+    # Verify the result
+    expected = np.ones(shape, dtype=np.float32)
+    np.testing.assert_array_almost_equal(h_result, expected, decimal=6)
+
+    print("Test passed successfully!")
+
+
+def test_ravle():
+    from sklearn.metrics import confusion_matrix
+    y_true = [2, 0, 2, 2, 0, 1]
+    y_pred = [0, 0, 2, 2, 0, 2]
+    mat = confusion_matrix(y_true, y_pred)
+    print(mat)
+
+
+def test_3d_raw_kernel_grid_stride():
+    # Define a raw kernel to increment all elements by 1 using grid-stride pattern
+    kernel = cp.RawKernel(r'''
+    extern "C" __global__
+    void increment_3d_grid_stride(float* array, int total_size) {
+        int tid = blockDim.x * blockIdx.x + threadIdx.x;
+
+        for (int i = tid; i < total_size; i += blockDim.x * gridDim.x) {
+            // Memory layout: CuPy, like NumPy, stores multi-dimensional arrays in contiguous memory
+            // in row-major order (C-style). This means that elements are laid out sequentially in memory, 
+            // regardless of the array's shape.
+            array[i] += 1.0f;
+        }
+    }
+    ''', 'increment_3d_grid_stride')
+
+    # Define the shape of the 3D array
+    shape = (64, 64, 64)
+
+    # Allocate and initialize a 3D array on the device
+    d_array = cp.zeros(shape, dtype=cp.float32)
+
+    # Calculate total number of elements
+    total_elements = np.prod(shape)
+
+    # Define 1D grid and block dimensions
+    block_dim = (256,)
+    grid_dim = (min(1024, (total_elements + block_dim[0] - 1) // block_dim[0]),)
+
+    # Launch the kernel
+    kernel(grid_dim, block_dim, (d_array, total_elements))
+
+    # Copy the result back to CPU for verification
+    h_result = cp.asnumpy(d_array)
+
+    # Verify the result
+    expected = np.ones(shape, dtype=np.float32)
+    np.testing.assert_array_almost_equal(h_result, expected, decimal=6)
+
+    print("Test passed successfully!")
+
+
+def test_3d_raw_kernel_grid_stride_indexing():
+    # Define a raw kernel to increment all elements by 1 using grid-stride pattern
+    # and explicit 3D indexing
+    kernel = cp.RawKernel(r'''
+    extern "C" __global__
+    void increment_3d_grid_stride(float* array, int x, int y, int z) {
+        int tid = blockDim.x * blockIdx.x + threadIdx.x;
+        int total_size = x * y * z;
+
+        for (int i = tid; i < total_size; i += blockDim.x * gridDim.x) {
+            int iz = i / (x * y);
+            int iy = (i % (x * y)) / x;
+            int ix = i % x;
+
+            // Accessing the 3D array using 3D indices
+            array[iz * (x * y) + iy * x + ix] += 1.0f;
+        }
+    }
+    ''', 'increment_3d_grid_stride')
+
+    # Define the shape of the 3D array
+    shape = (64, 64, 64)
+
+    # Allocate and initialize a 3D array on the device
+    d_array = cp.zeros(shape, dtype=cp.float32)
+
+    # Calculate total number of elements
+    total_elements = np.prod(shape)
+
+    # Define 1D grid and block dimensions
+    block_dim = (256,)
+    grid_dim = (min(1024, (total_elements + block_dim[0] - 1) // block_dim[0]),)
+
+    # Launch the kernel
+    kernel(grid_dim, block_dim, (d_array, shape[0], shape[1], shape[2]))
+
+    # Copy the result back to CPU for verification
+    h_result = cp.asnumpy(d_array)
+
+    # Verify the result
+    expected = np.ones(shape, dtype=np.float32)
+    np.testing.assert_array_almost_equal(h_result, expected, decimal=6)
+
+    print("Test passed successfully!")

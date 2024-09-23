@@ -69,7 +69,7 @@ def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     return cont_mat
 
 
-@njit(cache=True, nogil=True)
+# @njit(cache=True, nogil=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
     """
     Returns the pair confusion matrix from two clustering partitions. It is an
@@ -93,8 +93,10 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
 
     # Computation using the contingency data
     contingency = get_contingency_matrix(part0, part1)
-    n_c = np.ravel(contingency.sum(axis=1))
-    n_k = np.ravel(contingency.sum(axis=0))
+    sum1 = contingency.sum(axis=1)
+    sum0 = contingency.sum(axis=0)
+    n_c = np.ravel(sum1)
+    n_k = np.ravel(sum0)
     sum_squares = (contingency**2).sum()
     C = np.empty((2, 2), dtype=np.int64)
     C[1, 1] = sum_squares - n_samples
