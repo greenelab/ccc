@@ -640,7 +640,7 @@ def ccc(
 
     # get number of cores to use
     n_jobs = os.cpu_count() if n_jobs is None else n_jobs
-    default_n_threads = (os.cpu_count() - n_jobs) if n_jobs < 0 else n_jobs
+    default_n_threads = (os.cpu_count() + n_jobs) if n_jobs < 0 else n_jobs
 
     if internal_n_clusters is not None:
         _tmp_list = List()
