@@ -5,10 +5,92 @@ from numba import cuda
 import rmm
 
 
+d_unravel_index_str = """
+extern "C" __device__ __host__ inline void unravel_index(size_t flat_idx, size_t num_cols, size_t* row, size_t* col) {
+    *row = flat_idx / num_cols;  // Compute row index
+    *col = flat_idx % num_cols;  // Compute column index
+}
+
+"""
+
+d_get_coords_from_index_str = """
+#include <math.h>
+extern "C" __device__ __host__ inline void get_coords_from_index(int n_obj, int idx, int* x, int* y) {
+    // Calculate 'b' based on the input n_obj
+    int b = 1 - 2 * n_obj;
+    // Calculate 'x' using the quadratic formula part
+    float discriminant = b * b - 8 * idx;
+    float x_float = floor((-b - sqrt(discriminant)) / 2);
+    // Assign the integer part of 'x'
+    *x = static_cast<int>(x_float);
+    // Calculate 'y' based on 'x' and the index
+    *y = static_cast<int>(idx + (*x) * (b + (*x) + 2) / 2 + 1);
+}
+
+"""
+
+k_ari_str = """
+extern "C" __global__
+void ari(const int* parts,
+         const int* uniqs,
+         const int n_aris,
+         const int n_parts,
+         const int n_part_mat_elems,
+         float* out)
+         )
+{
+    // tid corresponds to the ari idx
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
+    // used for max reduction
+    // int part_part_elems = n_parts * n_parts;
+    
+    // obtain the corresponding parts and unique counts
+    int feature_comp_idx = tid / n_part_mat_elems;   // comparison pair index for two features
+    int part_pair_idx = tid % part_part_elems;  // comparison pair index for two partitions of one feature pair
+    int i, j;
+    // unravel the feature indices
+    get_coords_from_index(n_parts, feature_comp_idx, &i, &j);
+    // unravel the partition indices
+    
+    
+    // Make pointers to select the parts and unique counts for the feature pair
+    
+    // Initialize shared memory
+    int part_mat_first_tid = tid * part_part_elems;
+    __syncthreads();
+}
+
+"""
+
+
+def get_kernel():
+    """
+    Kernel to compute the air between two partitions indexed from the 3D input array parts.
+
+    The first thread of each logical part vs part ari matrix is responsible to reduce the matrix to the max ari.
+    See the document for illustrations.
+
+    raw kernel args:
+        parts: 3D device array with cluster assignments for x features, y partitions, and z objects.
+        uniqs: 2D device array with the number of unique elements for feature x and partition y.
+        n_aris: Number of ARI computations to perform.
+        n_parts: Number of partitions of a feature, i.e., len(n_range_clusters) to compare.
+        out: Pointer to the pre-allocated 1D device output array with length of number of features to compare.
+    """
+
+    cuda_code = d_get_coords_from_index_str + k_ari_str
+
+    kernel = cp.RawKernel(code=cuda_code, backend="nvcc").get_function("ari")
+    return kernel
+
+
 def adjusted_rand_index(
                         part0: np.ndarray,
                         part1: np.ndarray,
                         size: int,
+                        n_uniq0: int,
+                        n_uniq1: int,
                         out: np.ndarray,
                         compare_pair_id: int,
                         i: int,
@@ -26,6 +108,8 @@ def adjusted_rand_index(
         part0: a 1d array with cluster assignments for n objects.
         part1: a 1d array with cluster assignments for n objects.
         size: the number of objects in the partitions.
+        n_uniq0: the number of unique elements in part0.
+        n_uniq1: the number of unique elements in part1.
         out: pointer to the output array containing all the ARI values. # TODO: make local
         compare_pair_id: the index of the pair of partitions to compare.
         i: the index of the first partition.
@@ -58,7 +142,11 @@ def adjusted_rand_index(
     out[compare_pair_id, i, j] = res
 
 
-def ari_dim2(parts: cp.ndarray, n_features_comp, out: cp.ndarray):
+def ari_dim2(parts: cp.ndarray,
+             n_partitions: int,
+             n_features_comp: int,
+             out: cp.ndarray,
+             unique_element_counts: cp.ndarray):
     """
     Function to compute the ARI between partitions on the GPU. This function is responsible for launching the kernel
     in different streams for each pair of partitions.
@@ -67,11 +155,27 @@ def ari_dim2(parts: cp.ndarray, n_features_comp, out: cp.ndarray):
         parts: 3D device array with cluster assignments for x features, y partitions, and z objects.
         Example initialization for this array: d_parts = cp.empty((nx, ny, nz), dtype=np.int16) - 1
 
+        n_partitions: Number of partitions of a feature to compare.
+
         n_features_comp: Pre-computed number of features to compare.
 
         out: Pointer to the pre-allocated 1D device output array with length of n_features_comp.
+
+        unique_element_counts: 2D device array with the number of unique elements for feature x and partition y.
     """
 
     # Can use non-blocking CPU scheduling or CUDA dynamic parallelism to launch the kernel for each pair of partitions.
+
+    # Each kernel launch will be responsible for computing the ARI between two partitions.
+    n_part_mat_elems = n_partitions * n_partitions
+    n_ari_pairs = n_partitions * n_part_mat_elems
+    cm_values = cp.full(n_features_comp, cp.nan)
+    # Todo: how many ari pairs? n_range_cluster?
+    threads_per_block = 256
+    blocks_per_grid = (n_ari_pairs + threads_per_block - 1) // threads_per_block
+    ari_kernel = get_kernel()
+    ari_kernel(grid=(blocks_per_grid,),
+               block=(threads_per_block,),
+               args=(parts, unique_element_counts, n_features_comp, n_part_mat_elems, out))
 
     raise NotImplementedError("Not implemented yet")

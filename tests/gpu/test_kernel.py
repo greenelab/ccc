@@ -1,6 +1,8 @@
+import pytest
+import math
 import cupy as cp
 import numpy as np
-from ccc.sklearn.metrics_gpu2 import device_func_str
+from ccc.sklearn.metrics_gpu2 import d_get_coords_from_index_str, d_unravel_index_str
 from ccc.coef import get_coords_from_index
 
 
@@ -17,7 +19,7 @@ def test_get_coords_from_index_kernel():
         }
     }
     """
-    cuda_code = device_func_str + test_kernel_code
+    cuda_code = d_get_coords_from_index_str + test_kernel_code
     module = cp.RawModule(code=cuda_code, backend='nvcc')
     kernel = module.get_function("test_kernel")
 
@@ -48,3 +50,54 @@ def test_get_coords_from_index_kernel():
         assert y_cuda == y_py, f"Mismatch in y for index {i}: CUDA={y_cuda}, Python={y_py}"
 
     print("All tests passed successfully!")
+
+
+@pytest.mark.parametrize("num_cols, num_indices", [
+    (10, 45),
+    (15, 100),
+    (20, 200)
+])
+def test_unravel_index_kernel(num_cols, num_indices):
+    test_kernel_code = """
+    extern "C" __global__ void test_unravel_index_kernel(size_t* flat_indices, size_t* rows, size_t* cols, size_t num_cols, size_t num_indices) {
+        int tid = blockIdx.x * blockDim.x + threadIdx.x;
+        if (tid < num_indices) {
+            unravel_index(flat_indices[tid], num_cols, &rows[tid], &cols[tid]);
+        }
+    }
+    """
+
+    cuda_code = d_unravel_index_str + test_kernel_code
+    # Compile the CUDA kernel
+    module = cp.RawModule(code=cuda_code, backend='nvcc')
+    kernel = module.get_function("test_unravel_index_kernel")
+
+    # Create test inputs
+    flat_indices = cp.arange(num_indices, dtype=cp.uint64)
+
+    # Allocate memory for results (rows and cols)
+    d_rows = cp.empty(num_indices, dtype=cp.uint64)
+    d_cols = cp.empty(num_indices, dtype=cp.uint64)
+
+    # Launch the kernel
+    threads_per_block = 256
+    blocks = (num_indices + threads_per_block - 1) // threads_per_block
+    kernel((blocks,), (threads_per_block,), (flat_indices, d_rows, d_cols, num_cols, num_indices))
+
+    # Get results back to host
+    h_rows = cp.asnumpy(d_rows)
+    h_cols = cp.asnumpy(d_cols)
+
+    # Compare with NumPy's unravel_index implementation
+    for i in range(num_indices):
+        # Use numpy.unravel_index as the reference
+        # row_py, col_py = divmod(i, num_cols)
+        row_py, col_py = np.unravel_index(i, (num_cols, num_cols))
+        row_cuda, col_cuda = h_rows[i], h_cols[i]
+
+        # Assertions to ensure CUDA and NumPy match
+        assert row_cuda == row_py, f"Mismatch in row for index {i}: CUDA={row_cuda}, NumPy={row_py}"
+        assert col_cuda == col_py, f"Mismatch in col for index {i}: CUDA={col_cuda}, NumPy={col_py}"
+
+    print("All tests passed successfully!")
+
