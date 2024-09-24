@@ -100,7 +100,7 @@ def test_get_parts(feature_size, cluster_settings, seed, distribution, params):
         raise ValueError(f"Unsupported distribution: {distribution}")
 
     # GPU implementation
-    parts_gpu = get_parts(feature, np.array(gpu_clusters, dtype=np.uint8)).get()
+    parts_gpu = get_parts(feature, np.array(gpu_clusters, dtype=np.uint8))[0].get()
     
     # CPU implementation
     parts_cpu = get_parts_cpu(feature, cpu_clusters)
@@ -216,7 +216,7 @@ def test_get_parts_with_singletons():
     feature0 = np.array([1.3] * 100)
 
     # run
-    parts = get_parts(feature0, np.array([2], dtype=np.uint8)).get()
+    parts = get_parts(feature0, np.array([2], dtype=np.uint8))[0].get()
     parts_cpu = get_parts_cpu(feature0, (2,))
     assert parts is not None
     assert len(parts) == 1 # 1 feature
@@ -225,7 +225,7 @@ def test_get_parts_with_singletons():
     np.testing.assert_array_equal(np.unique(parts[0]), np.array([-2]))
     assert np.array_equal(parts[0], parts_cpu)
 
-    parts = get_parts(feature0, np.array([2, 3], dtype=np.uint8)).get()
+    parts = get_parts(feature0, np.array([2, 3], dtype=np.uint8))[0].get()
     parts_cpu = get_parts_cpu(feature0, (2, 3))
     assert parts is not None
     assert len(parts) == 1
@@ -244,7 +244,7 @@ def test_get_parts_with_categorical_feature():
 
     # run
     # only one partition is requested
-    parts = get_parts(feature0, np.array([2], dtype=np.uint8), data_is_numerical=False).get()
+    parts = get_parts(feature0, np.array([2], dtype=np.uint8), data_is_numerical=False)[0].get()
     parts_cpu = get_parts_cpu(feature0, (2,), data_is_numerical=False)
     assert parts is not None
     assert len(parts) == 1
@@ -253,7 +253,7 @@ def test_get_parts_with_categorical_feature():
     assert np.array_equal(parts[0], parts_cpu)
 
     # more partitions are requested; only the first one has valid information
-    parts = get_parts(feature0, np.array([2, 3], dtype=np.uint8), data_is_numerical=False).get()
+    parts = get_parts(feature0, np.array([2, 3], dtype=np.uint8), data_is_numerical=False)[0].get()
     parts_cpu = get_parts_cpu(feature0, (2, 3), data_is_numerical=False)
     assert parts is not None
     assert len(parts) == 1
@@ -274,7 +274,7 @@ def test_get_parts_2d_simple():
     np.random.seed(0)
     array = np.random.rand(5, 1000)
     print(f"array : \n{array}")
-    parts = get_parts(array, np.array([3], dtype=np.uint8)).get()
+    parts = get_parts(array, np.array([3], dtype=np.uint8))[0].get()
     parts_cpu_row0 = get_parts_cpu(array[0], (3, ))
     parts_cpu_row1 = get_parts_cpu(array[1], (3, ))
     assert parts is not None
