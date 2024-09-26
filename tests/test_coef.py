@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from random import shuffle
+from unittest.mock import patch
 import time
 import os
 
@@ -19,6 +20,7 @@ from ccc.coef import (
     cdist_parts_basic,
     cdist_parts_parallel,
     get_chunks,
+    get_n_workers,
 )
 
 
@@ -1557,3 +1559,27 @@ def test_cm_with_too_few_objects():
         ccc(data, internal_n_clusters=3)
 
     assert "too few objects" in str(e.value)
+
+
+
+@pytest.mark.parametrize("n_jobs, cpu_count, expected", [
+    (None, 4, 4),
+    (2, 4, 2),
+    (-1, 4, 3),
+    (6, 4, 6),
+])
+def test_get_n_workers_valid(n_jobs, cpu_count, expected):
+    with patch('os.cpu_count', return_value=cpu_count):
+        assert get_n_workers(n_jobs) == expected
+
+
+@pytest.mark.parametrize("n_jobs, cpu_count, error_type, error_message", [
+    (0, 4, ValueError, "The number of threads/processes to use must be greater than 0. Got 0"),
+    (-5, 4, ValueError, "The number of threads/processes to use must be greater than 0. Got -1"),
+    (2, None, ValueError, "Could not determine the number of CPU cores. Please specify a positive value of n_jobs"),
+    (None, None, ValueError, "Could not determine the number of CPU cores. Please specify a positive value of n_jobs"),
+])
+def test_get_n_workers_invalid(n_jobs, cpu_count, error_type, error_message):
+    with patch('os.cpu_count', return_value=cpu_count):
+        with pytest.raises(error_type, match=error_message):
+            get_n_workers(n_jobs)
