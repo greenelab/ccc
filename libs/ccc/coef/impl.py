@@ -523,6 +523,8 @@ def get_n_workers(n_jobs: int | None) -> int:
 
     Args:
         n_jobs: value specified by the main ccc function.
+    Returns:
+        The number of workers to use for parallel processing
     """
     n_cpu_cores = os.cpu_count()
     if n_cpu_cores is None:
