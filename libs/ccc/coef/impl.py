@@ -623,8 +623,8 @@ def ccc(
     X_numerical_type = None
     if x.ndim == 1 and (y is not None and y.ndim == 1):
         # both x and y are 1d arrays
-        # TODO: remove assertions and raise exceptions
-        assert x.shape == y.shape, "x and y need to be of the same size"
+        if not x.shape == y.shape:
+            raise ValueError("x and y need to be of the same size")
         n_objects = x.shape[0]
         n_features = 2
 
@@ -640,10 +640,9 @@ def ccc(
         # plus we have the features data type (numerical, categorical, etc)
 
         if isinstance(x, np.ndarray):
-            assert get_feature_type_and_encode(x[0, :])[1], (
-                "If data is a 2d numpy array, it has to be numerical. Use pandas.DataFrame if "
-                "you need to mix features with different data types"
-            )
+            if not get_feature_type_and_encode(x[0, :])[1]:
+                raise ValueError("If data is a 2d numpy array, it has to be numerical. Use pandas.DataFrame if "
+                                 "you need to mix features with different data types")
             n_objects = x.shape[1]
             n_features = x.shape[0]
 
