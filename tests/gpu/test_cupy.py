@@ -261,3 +261,55 @@ def test_3d_raw_kernel_grid_stride_indexing():
     np.testing.assert_array_almost_equal(h_result, expected, decimal=6)
 
     print("Test passed successfully!")
+
+
+def test_raft_api():
+    code = cp.RawKernel(r'''
+    extern "C" __global__
+    #include <raft/core/handle.hpp>
+    #include <raft/core/device_mdarray.hpp>
+    #include <raft/random/make_blobs.cuh>
+    #include <raft/distance/distance.cuh>
+
+    raft::handle_t handle;
+
+    int n_samples = 5000;
+    int n_features = 50;
+
+    auto input = raft::make_device_matrix<float>(handle, n_samples, n_features);
+    auto labels = raft::make_device_vector<int>(handle, n_samples);
+    auto output = raft::make_device_matrix<float>(handle, n_samples, n_samples);
+
+    raft::random::make_blobs(handle, input.view(), labels.view());
+
+    auto metric = raft::distance::DistanceType::L2SqrtExpanded;
+    raft::distance::pairwise_distance(handle, input.view(), input.view(), output.view(), metric);
+    ''', 'raft_test')
+
+
+def test_pair_wise_reduction():
+    # Define a 3D parts array
+    h_parts = np.array([
+        [
+            [1, 2, 3],
+            [0, 2, 2],
+            [1, 3, 3],
+        ],
+        [
+            [1, 1, 1],
+            [3, 1, 2],
+            [1, 3, 3],
+        ],
+        [
+            [0, 0, 3],
+            [2, 1, 2],
+            [1, 0, 1],
+        ],
+    ])
+    # Host loop
+    n_features = h_parts.shape[0]
+    n_parts = h_parts.shape[1]
+    n_objs = h_parts.shape[2]
+
+    n_feat_comp = n_features * (n_features - 1) // 2
+

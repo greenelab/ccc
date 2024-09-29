@@ -1,6 +1,8 @@
 import cupy as cp
 import numpy as np
+import pytest
 from cuml.metrics import adjusted_rand_score
+from sklearn.metrics import adjusted_rand_score
 from cuml.common import CumlArray
 from cuml.internals.memory_utils import using_output_type
 from cuml.internals.safe_imports import gpu_only_import
@@ -57,3 +59,42 @@ def test_stream():
     print(f"Computed {n_iterations} ARI scores")
     print(f"Time taken: {end_time - start_time:.4f} seconds")
     print(results)
+
+
+def generate_data(size):
+    np.random.seed(42)
+    labels_true = np.random.randint(0, 10, size=size)
+    labels_pred = np.random.randint(0, 10, size=size)
+    return labels_true, labels_pred
+
+
+def time_function(func, *args):
+    start_time = time.time()
+    result = func(*args)
+    end_time = time.time()
+    return result, end_time - start_time
+
+
+@pytest.mark.parametrize("size", [1000, 10000, 100000, 1000000])
+def test_adjusted_rand_score_speedup(size):
+    from cuml.metrics import adjusted_rand_score as cuml_ari
+    from sklearn.metrics import adjusted_rand_score as sklearn_ari
+    labels_true, labels_pred = generate_data(size)
+
+    # Sklearn (CPU) implementation
+    _, sklearn_time = time_function(sklearn_ari, labels_true, labels_pred)
+
+    # cuML (GPU) implementation
+    labels_true_gpu = cp.asarray(labels_true)
+    labels_pred_gpu = cp.asarray(labels_pred)
+    _, cuml_time = time_function(cuml_ari, labels_true_gpu, labels_pred_gpu)
+
+    speedup = sklearn_time / cuml_time
+
+    print(f"\nData size: {size}")
+    print(f"Sklearn time: {sklearn_time:.6f} seconds")
+    print(f"cuML time: {cuml_time:.6f} seconds")
+    print(f"Speedup: {speedup:.2f}x")
+
+    # assert speedup > 1, f"cuML should be faster than sklearn, but speedup was only {speedup:.2f}x"
+
