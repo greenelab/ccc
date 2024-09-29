@@ -2,6 +2,7 @@ import cupy as cp
 import numpy as np
 import matplotlib.pyplot as plt
 import pytest
+import re
 
 from ccc.sklearn.metrics import get_contingency_matrix
 
@@ -319,8 +320,17 @@ def test_pair_wise_reduction():
 
 def test_cub_block_sort_kernel():
     kernel_code = r'''
+    /*
+    These constants can be dynamically manipulated using string formatting, providing a hack to non-type
+    template parameters in CUDA kernels using cupy
+    */
+    
+    /* Headers */
     #include <cub/cub.cuh>
-
+    #define BLOCK_THREADS {BLOCK_THREADS}
+    #define ITERM_PER_THREAD {ITERM_PER_THREAD}
+    
+    // Todo: research on how to compile these non-type template parameters using cupy
     // template <int BLOCK_THREADS, int ITEMS_PER_THREAD>
     extern "C" __global__
     void BlockSortKernel(int *d_in, int *d_out)
@@ -328,11 +338,11 @@ def test_cub_block_sort_kernel():
         // extern __shared__ int tmp[];
         // tmp[threadIdx.x] = 1;
         using BlockLoadT = cub::BlockLoad<
-          int, 128, 4, cub::BLOCK_LOAD_TRANSPOSE>;
+          int, BLOCK_THREADS, ITERM_PER_THREAD, cub::BLOCK_LOAD_TRANSPOSE>;
         using BlockStoreT = cub::BlockStore<
-          int, 128, 4z, cub::BLOCK_STORE_TRANSPOSE>;
+          int, BLOCK_THREADS, ITERM_PER_THREAD, cub::BLOCK_STORE_TRANSPOSE>;
         using BlockRadixSortT = cub::BlockRadixSort<
-          int, 128, 4>;
+          int, BLOCK_THREADS, ITERM_PER_THREAD>;
 
         __shared__ union {
             typename BlockLoadT::TempStorage       load;
@@ -340,8 +350,8 @@ def test_cub_block_sort_kernel():
             typename BlockRadixSortT::TempStorage  sort;
         } temp_storage;
 
-        int thread_keys[4];
-        int block_offset = blockIdx.x * (128 * 4);
+        int thread_keys[ITERM_PER_THREAD];
+        int block_offset = blockIdx.x * (BLOCK_THREADS * ITERM_PER_THREAD);
         BlockLoadT(temp_storage.load).Load(d_in + block_offset, thread_keys);
 
         __syncthreads();
@@ -367,9 +377,6 @@ def test_cub_block_sort_kernel():
     */
     '''
 
-    # Compile the CUDA kernel
-    module = cp.RawModule(code=kernel_code, backend='nvcc')
-    kernel = module.get_function('BlockSortKernel')
 
     # Set up test parameters
     num_items = 1024  # Must be a multiple of BLOCK_ITEMS (128 * 4 = 512 in this case)
@@ -379,11 +386,18 @@ def test_cub_block_sort_kernel():
     d_input = cp.asarray(np_input)
     d_output = cp.empty_like(d_input)
 
-    # Launch the kernel
+    # Configure the kernel
     block_threads = 128
     items_per_thread = 4
     block_items = block_threads * items_per_thread
     grid_size = (num_items + block_items - 1) // block_items
+    # Format the kernel string
+    kernel_code = re.sub(r'\{BLOCK_THREADS\}', str(block_threads), kernel_code)
+    kernel_code = re.sub(r'\{ITERM_PER_THREAD\}', str(items_per_thread), kernel_code)
+    # Compile the CUDA kernel
+    module = cp.RawModule(code=kernel_code, backend='nvcc')
+    kernel = module.get_function('BlockSortKernel')
+
     kernel((grid_size,), (block_threads,), (d_input, d_output, 4), shared_mem=block_threads * 4 * 4)
 
     # Get the results back to host
