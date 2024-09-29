@@ -325,6 +325,8 @@ def test_cub_block_sort_kernel():
     extern "C" __global__
     void BlockSortKernel(int *d_in, int *d_out)
     {
+        // extern __shared__ int tmp[];
+        // tmp[threadIdx.x] = 1;
         using BlockLoadT = cub::BlockLoad<
           int, 128, 4, cub::BLOCK_LOAD_TRANSPOSE>;
         using BlockStoreT = cub::BlockStore<
@@ -382,7 +384,7 @@ def test_cub_block_sort_kernel():
     items_per_thread = 4
     block_items = block_threads * items_per_thread
     grid_size = (num_items + block_items - 1) // block_items
-    kernel((grid_size,), (block_threads,), (d_input, d_output))
+    kernel((grid_size,), (block_threads,), (d_input, d_output, 4), shared_mem=block_threads * 4 * 4)
 
     # Get the results back to host
     cp_output = cp.asnumpy(d_output)
