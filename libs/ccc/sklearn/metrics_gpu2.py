@@ -84,6 +84,8 @@ void ari(const int4* parts,
     // Initialize shared memory
     int part_mat_first_tid = tid * part_part_elems;
     __syncthreads();
+    
+    // Todo: use a for loop to compute the ARI and do the max reduction
 }
 
 """

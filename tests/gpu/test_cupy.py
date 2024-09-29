@@ -1,6 +1,9 @@
 import cupy as cp
 import numpy as np
 import matplotlib.pyplot as plt
+import pytest
+
+from ccc.sklearn.metrics import get_contingency_matrix
 
 
 def test_raw_kernel():
@@ -313,3 +316,169 @@ def test_pair_wise_reduction():
 
     n_feat_comp = n_features * (n_features - 1) // 2
 
+
+def test_cub_block_sort_kernel():
+    kernel_code = r'''
+    #include <cub/cub.cuh>
+
+    // template <int BLOCK_THREADS, int ITEMS_PER_THREAD>
+    extern "C" __global__
+    void BlockSortKernel(int *d_in, int *d_out)
+    {
+        using BlockLoadT = cub::BlockLoad<
+          int, 128, 4, cub::BLOCK_LOAD_TRANSPOSE>;
+        using BlockStoreT = cub::BlockStore<
+          int, 128, 4z, cub::BLOCK_STORE_TRANSPOSE>;
+        using BlockRadixSortT = cub::BlockRadixSort<
+          int, 128, 4>;
+
+        __shared__ union {
+            typename BlockLoadT::TempStorage       load;
+            typename BlockStoreT::TempStorage      store;
+            typename BlockRadixSortT::TempStorage  sort;
+        } temp_storage;
+
+        int thread_keys[4];
+        int block_offset = blockIdx.x * (128 * 4);
+        BlockLoadT(temp_storage.load).Load(d_in + block_offset, thread_keys);
+
+        __syncthreads();
+
+        BlockRadixSortT(temp_storage.sort).Sort(thread_keys);
+
+        __syncthreads();
+
+        BlockStoreT(temp_storage.store).Store(d_out + block_offset, thread_keys);
+    }
+
+    /*
+    extern "C" __global__
+    void launch_block_sort_kernel(int *d_in, int *d_out, int num_items)
+    {
+        const int BLOCK_THREADS = 128;
+        const int ITEMS_PER_THREAD = 4;
+        const int BLOCK_ITEMS = BLOCK_THREADS * ITEMS_PER_THREAD;
+
+        int grid_size = (num_items + BLOCK_ITEMS - 1) / BLOCK_ITEMS;
+        BlockSortKernel<BLOCK_THREADS, ITEMS_PER_THREAD><<<grid_size, BLOCK_THREADS>>>(d_in, d_out);
+    }
+    */
+    '''
+
+    # Compile the CUDA kernel
+    module = cp.RawModule(code=kernel_code, backend='nvcc')
+    kernel = module.get_function('BlockSortKernel')
+
+    # Set up test parameters
+    num_items = 1024  # Must be a multiple of BLOCK_ITEMS (128 * 4 = 512 in this case)
+
+    # Generate random input data
+    np_input = np.random.randint(0, 1000, num_items, dtype=np.int32)
+    d_input = cp.asarray(np_input)
+    d_output = cp.empty_like(d_input)
+
+    # Launch the kernel
+    block_threads = 128
+    items_per_thread = 4
+    block_items = block_threads * items_per_thread
+    grid_size = (num_items + block_items - 1) // block_items
+    kernel((grid_size,), (block_threads,), (d_input, d_output))
+
+    # Get the results back to host
+    cp_output = cp.asnumpy(d_output)
+
+    # Verify the results
+    np_sorted = np.sort(np_input)
+
+    # Check if each block is sorted
+    block_size = 512  # BLOCK_THREADS * ITEMS_PER_THREAD
+    for i in range(0, num_items, block_size):
+        block_end = min(i + block_size, num_items)
+        assert np.all(np.diff(cp_output[i:block_end]) >= 0), f"Block starting at index {i} is not sorted"
+
+    print("All blocks are correctly sorted!")
+
+    # Optional: Check if the entire array is sorted (it won't be, as we're only sorting within blocks)
+    # assert np.array_equal(cp_output, np_sorted), "The entire array is not globally sorted"
+
+
+def contingency_matrix_cuda(part0, part1, k0, k1):
+    # CUDA kernel as a string
+    cuda_kernel = r"""
+    extern "C" __global__ void contingency_matrix_kernel(
+        const int* part0,
+        const int* part1,
+        int* cont_mat,
+        int n,
+        int k0,
+        int k1
+    ) {
+        extern __shared__ int shared_mem[];
+        int* shared_part0 = shared_mem;
+        int* shared_part1 = &shared_mem[blockDim.x];
+        int tid = threadIdx.x;
+        int bid = blockIdx.x;
+        int gid = bid * blockDim.x + tid;
+        // Load data into shared memory
+        if (gid < n) {
+            shared_part0[tid] = part0[gid];
+            shared_part1[tid] = part1[gid];
+        }
+        __syncthreads();
+        // Compute contingency matrix
+        for (int i = tid; i < k0 * k1; i += blockDim.x) {
+            int row = i / k1;
+            int col = i % k1;
+            int count = 0;
+            for (int j = 0; j < blockDim.x && j < n; ++j) {
+                if (shared_part0[j] == row && shared_part1[j] == col) {
+                    count++;
+                }
+            }
+            atomicAdd(&cont_mat[row * k1 + col], count);
+        }
+    }
+    """
+
+    # Compile the CUDA kernel
+    module = cp.RawModule(code=cuda_kernel)
+    kernel = module.get_function("contingency_matrix_kernel")
+
+    n = len(part0)
+    d_part0 = cp.asarray(part0)
+    d_part1 = cp.asarray(part1)
+    d_cont_mat = cp.zeros((k0, k1), dtype=np.int32)
+
+    block_size = 256
+    grid_size = (n + block_size - 1) // block_size
+    shared_mem_size = 2 * block_size * 4  # 4 bytes per int
+
+    kernel(
+        grid=(grid_size,),
+        block=(block_size,),
+        args=(d_part0, d_part1, d_cont_mat, n, k0, k1),
+        shared_mem=shared_mem_size
+    )
+
+    return cp.asnumpy(d_cont_mat)
+
+
+@pytest.mark.parametrize("n, k0, k1", [
+    (1000, 5, 5),
+    (10000, 10, 8),
+    (100000, 20, 15),
+])
+def test_contingency_matrix(n, k0, k1):
+    # Generate random input data
+    rng = np.random.default_rng(42)
+    part0 = rng.integers(0, k0, size=n)
+    part1 = rng.integers(0, k1, size=n)
+
+    # Compute contingency matrix using CUDA
+    cuda_result = contingency_matrix_cuda(part0, part1, k0, k1)
+
+    # Compute contingency matrix using NumPy
+    numpy_result = get_contingency_matrix(part0, part1)
+
+    # Assert that the results are equal
+    np.testing.assert_array_equal(cuda_result, numpy_result)
