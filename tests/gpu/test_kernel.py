@@ -2,7 +2,7 @@ import pytest
 import math
 import cupy as cp
 import numpy as np
-from ccc.sklearn.metrics_gpu2 import d_get_coords_from_index_str, d_unravel_index_str
+from ccc.sklearn.metrics_gpu2 import d_get_coords_from_index_str, d_unravel_index_str, k_ari_str
 from ccc.coef import get_coords_from_index
 
 
@@ -101,3 +101,75 @@ def test_unravel_index_kernel(num_cols, num_indices):
 
     print("All tests passed successfully!")
 
+
+def generate_pairwise_combinations(arr):
+    pairs = []
+    num_slices = arr.shape[0]  # Number of 2D arrays in the 3D array
+
+    for i in range(num_slices):
+        for j in range(i + 1, num_slices):  # Only consider pairs in different slices
+            for row_i in arr[i]:  # Each row in slice i
+                for row_j in arr[j]:  # Pairs with each row in slice j
+                    pairs.append([row_i, row_j])
+
+    # Convert list of pairs to a NumPy array
+    return np.array(pairs)
+
+
+@pytest.mark.parametrize("parts", [
+    # 3D array
+    np.array([[[11, 12, 23, 34],
+               [12, 23, 34, 45],
+               [13, 34, 45, 56]],
+
+              [[21, 12, 23, 34],
+               [22, 23, 34, 45],
+               [23, 34, 45, 56]],
+
+              [[31, 12, 23, 34],
+               [32, 23, 34, 45],
+               [33, 34, 45, 56]]]),
+])
+def test_art_parts_selection(parts):
+    pairs = generate_pairwise_combinations(parts)
+
+    kernel_code = d_unravel_index_str + d_get_coords_from_index_str + k_ari_str
+    # Compile the CUDA kernel
+    module = cp.RawModule(code=kernel_code, backend='nvcc')
+    kernel = module.get_function("ari")
+
+    # Create test inputs
+    n_features, n_parts, n_objs = parts.shape
+    n_feature_comp = n_features * (n_features - 1) // 2
+    n_aris = n_feature_comp * n_parts * n_parts
+    block_size = 2
+    grid_size = (n_aris + block_size - 1) // block_size
+    s_mem_size = n_objs * 2 * cp.int32().itemsize
+
+    d_out = cp.empty(n_aris, dtype=cp.int32)
+    d_parts = cp.asarray(parts, dtype=cp.int32)
+    # Each pair of partitions will be compared, used for debugging purposes
+    d_parts_pairs = cp.empty((n_aris, 2, n_objs), dtype=cp.int32)
+    d_uniqs = cp.empty(n_objs, dtype=cp.int32)
+
+    # Print stats
+    print(f"Number of ARIs: {n_aris}")
+    # Print kernel configuration
+    print(f"Grid size: {grid_size}, Block size: {block_size}, Shared memory: {s_mem_size}")
+    # Launch the kernel
+    kernel((grid_size,), (block_size,), (d_parts,
+                                                        d_uniqs,
+                                                        n_aris,
+                                                        n_parts,
+                                                        n_objs,
+                                                        n_parts * n_objs,
+                                                        n_objs * n_objs,
+                                                        d_out,
+                                                        d_parts_pairs),
+                                                        shared_mem=s_mem_size)
+    cp.cuda.runtime.deviceSynchronize()
+    # Get results back to host
+    h_parts_pairs = cp.asnumpy(d_parts_pairs)
+    print(h_parts_pairs)
+    # Assert pairs == d_parts_pairs
+    assert np.all(np.equal(h_parts_pairs, pairs))

@@ -13,7 +13,7 @@ d_unravel_index_str = """
  * @param[out] row Pointer to the row index
  * @param[out] col Pointer to the column index
  */
-extern "C" __device__ __host__ inline void unravel_index(size_t flat_idx, size_t num_cols, size_t* row, size_t* col) {
+extern "C" __device__ __host__ inline void unravel_index(int flat_idx, int num_cols, int* row, int* col) {
     *row = flat_idx / num_cols;  // Compute row index
     *col = flat_idx % num_cols;  // Compute column index
 }
@@ -37,33 +37,44 @@ extern "C" __device__ __host__ inline void get_coords_from_index(int n_obj, int 
 """
 
 k_ari_str = """
+#define debug 0
+
 /**
  * @brief Main ARI kernel. Now only compare a pair of ARIs
  * @param n_parts Number of partitions of each feature
  * @param n_objs Number of objects in each partitions
  * @param n_part_mat_elems Number of elements in the square partition matrix
  * @param n_elems_per_feat Number of elements for each feature, i.e., part[i].x * part[i].y
+ * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
+ * @param uniqs Array of unique counts
+ * @param n_aris Number of ARIs to compute
+ * @param out Output array of ARIs
+ * @param part0 Output array of partition 0, for debugging
+ * @param part1 Output array of partition 1, for debugging
  */
 extern "C" __global__
-void ari(const int4* parts,
-         const int4* uniqs,
+void ari(int* parts,
+         int* uniqs,
          const int n_aris,
          const int n_parts,
          const int n_objs,
-         const uint32 n_elems_per_feat,
+         const int n_elems_per_feat,
          const int n_part_mat_elems,
-         float* out)
+         float* out,
+         int* part_pairs
          )
 {
     // tid corresponds to the ari idx
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    int stride = blockDim.x * gridDim.x;
+    int tid = threadIdx.x;
+    int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int ari_block_idx = blockIdx.x;
+    // int stride = blockDim.x * gridDim.x;
     // used for max reduction
     // int part_part_elems = n_parts * n_parts;
     
     // obtain the corresponding parts and unique counts
-    int feature_comp_flat_idx = tid / n_part_mat_elems;   // comparison pair index for two features
-    int part_pair_flat_idx = tid % part_part_elems;  // comparison pair index for two partitions of one feature pair
+    int feature_comp_flat_idx = ari_block_idx / n_part_mat_elems;   // comparison pair index for two features
+    int part_pair_flat_idx = ari_block_idx % n_part_mat_elems;  // comparison pair index for two partitions of one feature pair
     int i, j;
     // unravel the feature indices
     get_coords_from_index(n_parts, feature_comp_flat_idx, &i, &j);
@@ -72,18 +83,41 @@ void ari(const int4* parts,
     unravel_index(part_pair_flat_idx, n_parts, &m, &n);
     
     // Make pointers to select the parts and unique counts for the feature pair
-    int4* t_data_parti = parts + i * n_elems_per_feat + m * n_objs ;  // t_ for thread
-    int4* t_data_partj = parts + j * n_elems_per_feat + n * n_objs ;
-    int4* t_data_uniqi = uniqs + i * n_parts + m;
-    int4* t_data_uniqj = uniqs + j * n_parts + n;
+    // Todo: Use int4*?
+    int* t_data_parti = parts + i * n_elems_per_feat + m * n_objs ;  // t_ for thread
+    int* t_data_partj = parts + j * n_elems_per_feat + n * n_objs ;
+    //int* t_data_uniqi = uniqs + i * n_parts + m;
+    //int* t_data_uniqj = uniqs + j * n_parts + n;
+    int* blk_part_pairs = part_pairs + ari_block_idx * (2 * n_objs);
     
     // Load gmem data into smem by using different threads
+    extern __shared__ int shared_mem[];
     
-    
-    
+    // Number of chunks of data this block will load
+    // In case block size is smaller than the partition size
+    const int num_chunks = (n_objs + blockDim.x - 1) / blockDim.x;
+    // Loop over the chunks of data
+    for (int chunk = 0; chunk < num_chunks; ++chunk) {
+        // idx is the linear global memory index of the element to load
+        int idx = chunk * blockDim.x + global_tid;
+
+        if (idx < n_objs) {
+            // Load part_i and part_j into shared memory
+            shared_mem[tid] = t_data_parti[idx];
+            shared_mem[tid + n_objs] = t_data_partj[idx];
+            __syncthreads();  // Synchronize to ensure all threads have loaded data into shared memory
+
+            // Each thread writes data back to global memory (for demonstration purposes)
+            // part0[idx] = shared_mem[tid];
+            // part1[idx] = shared_mem[tid + n_objs];
+            blk_part_pairs[idx] = shared_mem[tid];
+            blk_part_pairs[idx + n_objs] = shared_mem[tid + n_objs];
+            __syncthreads();  // Synchronize before moving to the next chunk
+        }
+    }
+        
     // Initialize shared memory
-    int part_mat_first_tid = tid * part_part_elems;
-    __syncthreads();
+    // int part_mat_first_tid = tid * part_part_elems;
     
     // Todo: use a for loop to compute the ARI and do the max reduction
 }
@@ -112,64 +146,7 @@ def get_kernel():
     return kernel
 
 
-def adjusted_rand_index(
-                        part0: np.ndarray,
-                        part1: np.ndarray,
-                        size: int,
-                        n_uniq0: int,
-                        n_uniq1: int,
-                        out: np.ndarray,
-                        compare_pair_id: int,
-                        i: int,
-                        j: int,
-                        stream: cp.cuda.Stream = None):
-    """
-    Computes the adjusted Rand index (ARI) between two clustering partitions.
-    The code is based on the sklearn implementation here:
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_rand_score.html
-    See copyright notice at the top of this file.
-
-    Host function to coordinate the GPU kernel.
-
-    Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
-        size: the number of objects in the partitions.
-        n_uniq0: the number of unique elements in part0.
-        n_uniq1: the number of unique elements in part1.
-        out: pointer to the output array containing all the ARI values. # TODO: make local
-        compare_pair_id: the index of the pair of partitions to compare.
-        i: the index of the first partition.
-        j: the index of the second partition.
-        stream: the CUDA stream to use.
-
-    Returns:
-        A number representing the adjusted Rand index between two clustering
-        partitions. This number is between something around 0 (partitions do not
-        match; it could be negative in some cases) and 1.0 (perfect match).
-    """
-    # TODO:
-    # Implement numpy ravel in the kernel using shared memory?
-    # Use different streams for different pairs?
-    # Ref api: CUML confusion_matrix
-    if not size >= 2:
-        raise ValueError("Need at least two samples to compare.")
-
-
-
-    (tn, fp), (fn, tp) = get_pair_confusion_matrix(part0, part1)
-    # convert to Python integer types, to avoid overflow or underflow
-    tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
-
-    # Special cases: empty data or full agreement
-    if fn == 0 and fp == 0:
-        res = 1.0
-
-    res = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
-    out[compare_pair_id, i, j] = res
-
-
-def ari_dim2(parts: cp.ndarray,
+def ari_dim2(feature_parts: cp.ndarray,
              n_partitions: int,
              n_features_comp: int,
              out: cp.ndarray,
@@ -179,7 +156,7 @@ def ari_dim2(parts: cp.ndarray,
     in different streams for each pair of partitions.
 
     Args:
-        parts: 3D device array with cluster assignments for x features, y partitions, and z objects.
+        feature_parts: 3D device array with cluster assignments for x features, y partitions, and z objects.
         Example initialization for this array: d_parts = cp.empty((nx, ny, nz), dtype=np.int16) - 1
 
         n_partitions: Number of partitions of a feature to compare.
@@ -193,6 +170,9 @@ def ari_dim2(parts: cp.ndarray,
 
     # Can use non-blocking CPU scheduling or CUDA dynamic parallelism to launch the kernel for each pair of partitions.
 
+    # Get metadata
+    n_features, n_parts, n_objs = feature_parts.shape
+
     # Each kernel launch will be responsible for computing the ARI between two partitions.
     n_part_mat_elems = n_partitions * n_partitions
     # Each thread
@@ -201,10 +181,18 @@ def ari_dim2(parts: cp.ndarray,
     # Todo: how many ari pairs? n_range_cluster?
     threads_per_block = 1
     blocks_per_grid = (n_ari_pairs + threads_per_block - 1) // threads_per_block
+
     ari_kernel = get_kernel()
-    # Todo: use different streams
+    # Todo: use different streams?
+    # Allocate output arrays for parts (debugging)
+    out_parts0 = cp.empty(n_objs, dtype=np.int32)
+    out_parts1 = cp.empty(n_objs, dtype=np.int32)
+    shared_mem_size = 2 * n_objs
+
+    # Launch the kernel, using one block per ARI
     ari_kernel(grid=(blocks_per_grid,),
                block=(threads_per_block,),
-               args=(parts, unique_element_counts, n_features_comp, n_part_mat_elems, out))
+               shared_mem=shared_mem_size,
+               args=(feature_parts, unique_element_counts, n_features_comp, n_part_mat_elems, out))
 
     raise NotImplementedError("Not implemented yet")
