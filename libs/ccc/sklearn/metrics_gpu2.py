@@ -37,6 +37,7 @@ extern "C" __device__ __host__ inline void get_coords_from_index(int n_obj, int 
 """
 
 k_ari_str = """
+#include <stdio.h>
 #define debug 0
 
 /**
@@ -56,6 +57,7 @@ extern "C" __global__
 void ari(int* parts,
          int* uniqs,
          const int n_aris,
+         const int n_features,
          const int n_parts,
          const int n_objs,
          const int n_elems_per_feat,
@@ -64,23 +66,41 @@ void ari(int* parts,
          int* part_pairs
          )
 {
-    // tid corresponds to the ari idx
+    // tid is the block-wide thread index [0, blockDim.x]
     int tid = threadIdx.x;
     int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
-    int ari_block_idx = blockIdx.x;
-    // int stride = blockDim.x * gridDim.x;
-    // used for max reduction
-    // int part_part_elems = n_parts * n_parts;
-    
+    // each block is responsible for one ARI computation
+    // int ari_block_idx = blockIdx.x;
+    int ari_block_idx = 3;
+
     // obtain the corresponding parts and unique counts
-    int feature_comp_flat_idx = ari_block_idx / n_part_mat_elems;   // comparison pair index for two features
-    int part_pair_flat_idx = ari_block_idx % n_part_mat_elems;  // comparison pair index for two partitions of one feature pair
+    int feature_comp_flat_idx = ari_block_idx / n_part_mat_elems;   // flat comparison pair index for two features
+    int part_pair_flat_idx = ari_block_idx % n_part_mat_elems;  // flat comparison pair index for two partitions of one feature pair
     int i, j;
+
+    // print parts for debugging
+    if (global_tid == 0) {
+        for (int i = 0; i < n_features; ++i) {
+            for (int j = 0; j < n_parts; ++j) {
+                for (int k = 0; k < n_objs; ++k) {
+                    printf("parts[%d][%d][%d]: %d\\n", i, j, k, parts[i * n_parts * n_objs + j * n_objs + k]);
+                }
+            }
+            printf("\\n");
+        }
+    }
+
     // unravel the feature indices
     get_coords_from_index(n_parts, feature_comp_flat_idx, &i, &j);
+    if (global_tid == 0) {
+        printf("global_tid: %d, i: %d, j: %d\\n", global_tid, i, j);
+    }
     // unravel the partition indices
     int m, n;
     unravel_index(part_pair_flat_idx, n_parts, &m, &n);
+    if (global_tid == 0){
+        printf("global_tid: %d, m: %d, n: %d\\n", global_tid, m, n);
+    }
     
     // Make pointers to select the parts and unique counts for the feature pair
     // Todo: Use int4*?

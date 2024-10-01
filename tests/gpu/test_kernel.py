@@ -160,6 +160,7 @@ def test_art_parts_selection(parts):
     kernel((grid_size,), (block_size,), (d_parts,
                                                         d_uniqs,
                                                         n_aris,
+                                                        n_features,
                                                         n_parts,
                                                         n_objs,
                                                         n_parts * n_objs,
