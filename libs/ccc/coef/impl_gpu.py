@@ -601,8 +601,13 @@ def ccc(
 
     # Compute partitions for each feature using CuPy
     d_parts, d_uniq_ele_counts = get_parts(X, range_n_clusters)
+    # used in the ARI computation later
+    n_parts = range_n_clusters.shape[0]
+    # d_parts_max_per_part = cp.empty(n_features * n_parts, dtype=np.int8)
+    d_parts_max_per_part = cp.amax(d_parts, axis=2)
     print("GPU parts:")
     print(d_parts)
+    print(f"Max per part: {d_parts_max_per_part}")
 
     # 2. CCC coefficient computation
 
