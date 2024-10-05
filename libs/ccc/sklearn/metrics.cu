@@ -62,6 +62,9 @@ void ari(int* parts,
          int* part_pairs = nullptr
          )
 {
+    /*
+    * Step 1: Each thead, unravel flat indices and load the corresponding data into shared memory
+    */
     int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
     // each block is responsible for one ARI computation
     int ari_block_idx = blockIdx.x;
@@ -121,7 +124,7 @@ void ari(int* parts,
     }
     __syncthreads();
 
-    // Copy data to global memory
+    // Copy data to global memory if part_pairs is specified
     if (part_pairs != nullptr) {
         int* out_part0 = part_pairs + ari_block_idx * (2 * n_objs);
         int* out_part1 = out_part0 + n_objs;
@@ -132,7 +135,18 @@ void ari(int* parts,
         }
     }
     
-    // Todo: use a for loop to compute the ARI and do the max reduction
+    /*
+    * Step 2: Compute contingency matrix within the block
+    */
+
+
+    /*
+    * Step 3: Construct pair confusion matrix
+    */
+
+    /*
+    * Step 4: Compute ARI and write to global memory
+    */
 }
 
 // Helper function to generate pairwise combinations (implement this according to your needs)
@@ -238,7 +252,7 @@ void test_ari_parts_selection() {
     }
     std::cout << std::endl;
 
-    // Assert equality
+    // Assert equality on the parts pairs
     bool all_equal = true;
     auto pairs = generate_pairwise_combinations(parts);
     int n_pairs = pairs.size();
