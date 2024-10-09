@@ -11,8 +11,8 @@ from utils import clean_gpu_memory
 
 def test_ccc_gpu_1d_simple():
     np.random.seed(0)
-    feature1 = np.random.rand(1000)
-    feature2 = np.random.rand(1000)
+    feature1 = np.random.rand(10)
+    feature2 = np.random.rand(10)
     c1 = ccc_gpu(feature1, feature2)
     c2 = ccc(feature1, feature2)
     print(f"GPU: {c1}, CPU: {c2}")

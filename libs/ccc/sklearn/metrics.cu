@@ -38,26 +38,59 @@ __device__ __host__ inline void get_coords_from_index(int n_obj, int idx, int* x
 
 
 /**
+ * @brief Compute the contingency matrix for two partitions using shared memory
+ * @param[in] part0 Pointer to the first partition array
+ * @param[in] part1 Pointer to the second partition array
+ * @param[in] n Number of elements in each partition array
+ * @param[out] shared_cont_mat Pointer to shared memory for storing the contingency matrix
+ * @param[in] k Maximum number of clusters (size of contingency matrix is k x k)
+ */
+__device__ void get_contingency_matrix(int* part0, int* part1, int n, int* shared_cont_mat, int k) {
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int num_threads = blockDim.x;
+    int num_blocks = gridDim.x;
+
+    // Initialize shared memory
+    for (int i = tid; i < k * k; i += num_threads) {
+        shared_cont_mat[i] = 0;
+    }
+    __syncthreads();
+
+    // Process elements
+    for (int i = tid; i < n; i += num_threads) {
+        int row = part0[i];
+        int col = part1[i];
+        
+        if (row < k && col < k) {
+            atomicAdd(&shared_cont_mat[row * k + col], 1);
+        }
+    }
+    __syncthreads();
+}
+
+/**
  * @brief Main ARI kernel. Now only compare a pair of ARIs
  * @param n_parts Number of partitions of each feature
  * @param n_objs Number of objects in each partitions
  * @param n_part_mat_elems Number of elements in the square partition matrix
  * @param n_elems_per_feat Number of elements for each feature, i.e., part[i].x * part[i].y
  * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
- * @param uniqs Array of unique counts
+ * @param d_part_maxes Array of unique counts
  * @param n_aris Number of ARIs to compute
  * @param out Output array of ARIs
  * @param part_pairs Output array of part pairs to be compared by ARI
  */
 __global__
 void ari(int* parts,
-         int* uniqs,
+         int* d_part_maxes,
          const int n_aris,
          const int n_features,
          const int n_parts,
          const int n_objs,
          const int n_elems_per_feat,
          const int n_part_mat_elems,
+         const int k,
          float* out,
          int* part_pairs = nullptr
          )
@@ -109,8 +142,8 @@ void ari(int* parts,
     // Todo: Use int4*?
     int* t_data_part0 = parts + i * n_elems_per_feat + m * n_objs ;  // t_ for thread
     int* t_data_part1 = parts + j * n_elems_per_feat + n * n_objs ;
-    //int* t_data_uniqi = uniqs + i * n_parts + m;
-    //int* t_data_uniqj = uniqs + j * n_parts + n;
+    //int* t_data_uniqi = d_part_maxes + i * n_parts + m;
+    //int* t_data_uniqj = d_part_maxes + j * n_parts + n;
     
     // Load gmem data into smem by using different threads
     extern __shared__ int shared_mem[];
@@ -138,8 +171,13 @@ void ari(int* parts,
     /*
     * Step 2: Compute contingency matrix within the block
     */
-
-
+    // start shared mem address for the max values
+    int* s_contingency = shared_mem + 2 * n_objs;
+    // initialize the contingency matrix to zero
+    const int n_contingency_items = k * k;
+    for (int i = threadIdx.x; i < n_contingency_items; i += blockDim.x) {
+        s_contingency[i] = 0;
+    }
     /*
     * Step 3: Construct pair confusion matrix
     */
@@ -168,17 +206,20 @@ std::vector<std::pair<std::vector<int>, std::vector<int>>> generate_pairwise_com
 void test_ari_parts_selection() {
     // Define test input
     std::vector<std::vector<std::vector<int>>> parts = {
-        {{11, 12, 23, 34},
-         {12, 23, 34, 45},
-         {13, 34, 45, 56}},
-        {{21, 12, 23, 34},
-         {22, 23, 34, 45},
-         {23, 34, 45, 56}},
-        {{31, 12, 23, 34},
-         {32, 23, 34, 45},
-         {33, 34, 45, 56}}
+        {{0, 1, 2, 3},
+         {0, 2, 3, 4},
+         {0, 3, 4, 5}},
+        {{1, 1, 2, 3},
+         {1, 2, 3, 4},
+         {1, 3, 4, 5}},
+        {{2, 1, 2, 3},
+         {2, 2, 3, 4},
+         {2, 3, 4, 5}}
     };
 
+    const int k = 6; // specified by the call to ccc , part number from [0...9]
+    vector<int> part_maxes = {3, 4, 5, 3, 4, 5, 3, 4, 5};
+    // auto sz_part_maxes = sizeof(part_maxes) / sizeof(part_maxes[0]);
 
     // Get dimensions
     int n_features = parts.size();
@@ -204,29 +245,33 @@ void test_ari_parts_selection() {
     int block_size = 2;
     // Each block is responsible for one ARI computation
     int grid_size = n_aris;
+    // Compute shared memory size
     size_t s_mem_size = n_objs * 2 * sizeof(int);
+    s_mem_size += k * sizeof(int);  // For the max values
 
     // Allocate device memory
-    int *d_parts, *d_uniqs, *d_parts_pairs;
+    int *d_parts, *d_parts_pairs, *d_part_maxes;
     float *d_out;
     cudaMalloc(&d_parts, n_features * n_parts * n_objs * sizeof(int));
-    cudaMalloc(&d_uniqs, n_objs * sizeof(int));
     cudaMalloc(&d_out, n_aris * sizeof(float));
     cudaMalloc(&d_parts_pairs, n_aris * 2 * n_objs * sizeof(int));
+    cudaMalloc(&d_part_maxes, n_features * n_parts * sizeof(int));
 
     // Copy data to device
     cudaMemcpy(d_parts, h_parts, n_features * n_parts * n_objs * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_part_maxes, part_maxes, n_objs * sizeof(int), cudaMemcpyHostToDevice);
 
     // Launch kernel
     ari<<<grid_size, block_size, s_mem_size>>>(
         d_parts,
-        d_uniqs,
+        d_part_maxes,
         n_aris,
         n_features,
         n_parts,
         n_objs,
         n_parts * n_objs,
         n_parts * n_parts,
+        k,
         d_out,
         d_parts_pairs
     );
@@ -278,7 +323,7 @@ void test_ari_parts_selection() {
 
     // Clean up
     cudaFree(d_parts);
-    cudaFree(d_uniqs);
+    cudaFree(d_part_maxes);
     cudaFree(d_out);
     cudaFree(d_parts_pairs);
     delete[] h_parts_pairs;

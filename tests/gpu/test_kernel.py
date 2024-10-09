@@ -2,8 +2,14 @@ import pytest
 import math
 import cupy as cp
 import numpy as np
-from ccc.sklearn.metrics_gpu2 import d_get_coords_from_index_str, d_unravel_index_str, k_ari_str
+from ccc.sklearn.metrics_gpu2 import (
+    d_get_coords_from_index_str,
+    d_unravel_index_str,
+    d_get_contingency_matrix_str,
+    k_ari_str
+)
 from ccc.coef import get_coords_from_index
+from ccc.sklearn.metrics import get_contingency_matrix
 
 
 def test_get_coords_from_index_kernel():
@@ -100,6 +106,60 @@ def test_unravel_index_kernel(num_cols, num_indices):
         assert col_cuda == col_py, f"Mismatch in col for index {i}: CUDA={col_cuda}, NumPy={col_py}"
 
     print("All tests passed successfully!")
+
+
+def test_get_contingency_matrix_kernel():
+    test_kernel_code = """
+    extern "C"
+    __global__ void test_kernel(int* part0, int* part1, int n, int* cont_mat, int k) {
+        extern __shared__ int shared_cont_mat[];
+        
+        // Call the function to compute contingency matrix in shared memory
+        get_contingency_matrix(part0, part1, n, shared_cont_mat, k);
+        
+        // Copy shared memory back to global memory
+        int tid = threadIdx.x;
+        int num_threads = blockDim.x;
+        
+        for (int i = tid; i < k * k; i += num_threads) {
+            atomicAdd(&cont_mat[i], shared_cont_mat[i]);
+        }
+    }
+    """
+    cuda_code = d_get_contingency_matrix_str + test_kernel_code
+    # Compile the CUDA kernel
+    module = cp.RawModule(code=cuda_code, backend='nvcc')
+    kernel = module.get_function("test_kernel")
+
+    # Test parameters
+    n = 1000
+    k = 5
+
+    # Generate random partitions
+    part0 = np.random.randint(0, k, size=n, dtype=np.int32)
+    part1 = np.random.randint(0, k, size=n, dtype=np.int32)
+    # Transfer data to GPU
+    d_part0 = cp.asarray(part0)
+    d_part1 = cp.asarray(part1)
+    d_cont_mat = cp.zeros((k, k), dtype=cp.int32)
+
+    # Launch the kernel
+    threads_per_block = 256
+    blocks = (n + threads_per_block - 1) // threads_per_block
+    shared_mem_size = k * k * 4  # 4 bytes per int
+    kernel((blocks,), (threads_per_block,),
+           (d_part0, d_part1, n, d_cont_mat, k),
+           shared_mem=shared_mem_size)
+
+    # Get results back to host
+    h_cont_mat = cp.asnumpy(d_cont_mat)
+
+    # Compare with reference implementation
+    ref_cont_mat = get_contingency_matrix(part0, part1)
+
+    np.testing.assert_array_equal(h_cont_mat, ref_cont_mat,
+                                  err_msg="CUDA and reference implementations do not match")
+    print("Test passed successfully!")
 
 
 def generate_pairwise_combinations(arr):

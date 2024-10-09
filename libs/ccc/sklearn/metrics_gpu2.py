@@ -4,6 +4,40 @@ from numba import njit
 from numba import cuda
 import rmm
 
+d_get_contingency_matrix_str = """
+/**
+ * @brief Compute the contingency matrix for two partitions using shared memory
+ * @param[in] part0 Pointer to the first partition array
+ * @param[in] part1 Pointer to the second partition array
+ * @param[in] n Number of elements in each partition array
+ * @param[out] shared_cont_mat Pointer to shared memory for storing the contingency matrix
+ * @param[in] k Maximum number of clusters (size of contingency matrix is k x k)
+ */
+__device__ void get_contingency_matrix(int* part0, int* part1, int n, int* shared_cont_mat, int k) {
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int num_threads = blockDim.x;
+    int num_blocks = gridDim.x;
+
+    // Initialize shared memory
+    for (int i = tid; i < k * k; i += num_threads) {
+        shared_cont_mat[i] = 0;
+    }
+    __syncthreads();
+
+    // Process elements
+    for (int i = tid; i < n; i += num_threads) {
+        int row = part0[i];
+        int col = part1[i];
+        
+        if (row < k && col < k) {
+            atomicAdd(&shared_cont_mat[row * k + col], 1);
+        }
+    }
+    __syncthreads();
+}
+
+"""
 
 d_unravel_index_str = """
 /**
