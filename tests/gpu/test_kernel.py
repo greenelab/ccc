@@ -108,7 +108,10 @@ def test_unravel_index_kernel(num_cols, num_indices):
     print("All tests passed successfully!")
 
 
-def test_get_contingency_matrix_kernel():
+@pytest.mark.parametrize("n", [100, 1000, 10000])
+@pytest.mark.parametrize("threads_per_block", [1, 2, 64, 128, 256, 512])
+@pytest.mark.parametrize("k", [2, 5, 10])
+def test_get_contingency_matrix_kernel(n, threads_per_block, k):
     test_kernel_code = """
     extern "C"
     __global__ void test_kernel(int* part0, int* part1, int n, int* cont_mat, int k) {
@@ -131,21 +134,17 @@ def test_get_contingency_matrix_kernel():
     module = cp.RawModule(code=cuda_code, backend='nvcc')
     kernel = module.get_function("test_kernel")
 
-    # Test parameters
-    n = 1000
-    k = 5
-
     # Generate random partitions
     part0 = np.random.randint(0, k, size=n, dtype=np.int32)
     part1 = np.random.randint(0, k, size=n, dtype=np.int32)
+
     # Transfer data to GPU
     d_part0 = cp.asarray(part0)
     d_part1 = cp.asarray(part1)
     d_cont_mat = cp.zeros((k, k), dtype=cp.int32)
 
     # Launch the kernel
-    threads_per_block = 256
-    blocks = 1  # A pair of partitions is handled by one block
+    blocks = 1  # Each pair of partitions is handled by only one block (to fully utilize shared memory)
     shared_mem_size = k * k * 4  # 4 bytes per int
     kernel((blocks,), (threads_per_block,),
            (d_part0, d_part1, n, d_cont_mat, k),
@@ -158,8 +157,8 @@ def test_get_contingency_matrix_kernel():
     ref_cont_mat = get_contingency_matrix(part0, part1)
 
     np.testing.assert_array_equal(h_cont_mat, ref_cont_mat,
-                                  err_msg="CUDA and reference implementations do not match")
-    print("Test passed successfully!")
+                                  err_msg=f"CUDA and reference implementations do not match for n={n}, threads_per_block={threads_per_block}, k={k}")
+    print(f"Test passed successfully for n={n}, threads_per_block={threads_per_block}, k={k}")
 
 
 def generate_pairwise_combinations(arr):
