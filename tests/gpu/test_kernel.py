@@ -145,7 +145,7 @@ def test_get_contingency_matrix_kernel():
 
     # Launch the kernel
     threads_per_block = 256
-    blocks = (n + threads_per_block - 1) // threads_per_block
+    blocks = 1  # A pair of partitions is handled by one block
     shared_mem_size = k * k * 4  # 4 bytes per int
     kernel((blocks,), (threads_per_block,),
            (d_part0, d_part1, n, d_cont_mat, k),
