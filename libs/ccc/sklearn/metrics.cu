@@ -72,6 +72,67 @@ __device__ void get_contingency_matrix(int *part0, int *part1, int n, int *share
     __syncthreads();
 }
 
+
+/**
+ * @brief CUDA device function to compute the pair confusion matrix
+ * @param[in] part0 Pointer to the first partition array
+ * @param[in] part1 Pointer to the second partition array
+ * @param[in] n_samples Number of samples in each partition
+ * @param[in] contingency Pointer to the contingency matrix
+ * @param[in] k Number of clusters (assuming k is the max of clusters in part0 and part1)
+ * @param[out] C Pointer to the output pair confusion matrix (2x2)
+ */
+__device__ void get_pair_confusion_matrix_kernel(const int* part0, const int* part1, 
+                                                 int n_samples, const int* contingency, 
+                                                 int k, long long* C) {
+    // Compute sum1 and sum0
+    __shared__ int sum1[32];  // Assume max 32 clusters, adjust if needed
+    __shared__ int sum0[32];
+    
+    for (int i = threadIdx.x; i < k; i += blockDim.x) {
+        sum1[i] = 0;
+        sum0[i] = 0;
+        for (int j = 0; j < k; ++j) {
+            sum1[i] += contingency[i * k + j];
+            sum0[i] += contingency[j * k + i];
+        }
+    }
+    __syncthreads();
+
+    // Compute sum_squares
+    __shared__ long long sum_squares;
+    if (threadIdx.x == 0) {
+        sum_squares = 0;
+        for (int i = 0; i < k * k; ++i) {
+            sum_squares += static_cast<long long>(contingency[i]) * contingency[i];
+        }
+    }
+    __syncthreads();
+
+    // Compute C[1,1], C[0,1], C[1,0], and C[0,0]
+    if (threadIdx.x == 0) {
+        C[3] = sum_squares - n_samples;  // C[1,1]
+
+        long long temp = 0;
+        for (int i = 0; i < k; ++i) {
+            for (int j = 0; j < k; ++j) {
+                temp += static_cast<long long>(contingency[i * k + j]) * sum0[j];
+            }
+        }
+        C[1] = temp - sum_squares;  // C[0,1]
+
+        temp = 0;
+        for (int i = 0; i < k; ++i) {
+            for (int j = 0; j < k; ++j) {
+                temp += static_cast<long long>(contingency[j * k + i]) * sum1[j];
+            }
+        }
+        C[2] = temp - sum_squares;  // C[1,0]
+
+        C[0] = static_cast<long long>(n_samples) * n_samples - C[1] - C[2] - sum_squares;  // C[0,0]
+    }
+}
+
 /**
  * @brief Main ARI kernel. Now only compare a pair of ARIs
  * @param n_parts Number of partitions of each feature
