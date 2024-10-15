@@ -75,36 +75,46 @@ __device__ void get_contingency_matrix(int *part0, int *part1, int n, int *share
 
 /**
  * @brief CUDA device function to compute the pair confusion matrix
- * @param[in] part0 Pointer to the first partition array
- * @param[in] part1 Pointer to the second partition array
- * @param[in] n_samples Number of samples in each partition
  * @param[in] contingency Pointer to the contingency matrix
+ * @param[in] sum_rows Pointer to the sum of rows in the contingency matrix
+ * @param[in] sum_cols Pointer to the sum of columns in the contingency matrix
+ * @param[in] n_objs Number of objects in each partition
  * @param[in] k Number of clusters (assuming k is the max of clusters in part0 and part1)
  * @param[out] C Pointer to the output pair confusion matrix (2x2)
  */
-__device__ void get_pair_confusion_matrix_kernel(const int* part0, const int* part1, 
-                                                 int n_samples, const int* contingency, 
-                                                 int k, long long* C) {
-    // Compute sum1 and sum0
-    __shared__ int sum1[32];  // Assume max 32 clusters, adjust if needed
-    __shared__ int sum0[32];
-    
+__device__ void get_pair_confusion_matrix(
+    const int* __restrict__ contingency,
+    int * sum_rows,
+    int * sum_cols,
+    const int n_objs,
+    const int k,
+    int* C
+) {
+    // Initialize sum_rows and sum_cols
     for (int i = threadIdx.x; i < k; i += blockDim.x) {
-        sum1[i] = 0;
-        sum0[i] = 0;
-        for (int j = 0; j < k; ++j) {
-            sum1[i] += contingency[i * k + j];
-            sum0[i] += contingency[j * k + i];
+        sum_rows[i] = 0;
+        sum_cols[i] = 0;
+    }
+    __syncthreads();
+
+    // Compute sum_rows and sum_cols
+    for (int i = threadIdx.x; i < k; i += blockDim.x) {
+        for (int m = 0; m < k; ++m) {
+            for (int n = 0; n < k; ++n) {
+                const int val = contingency[m * k + n];
+                atomicAdd(&sum_rows[m], val);
+                atomicAdd(&sum_cols[n], val);
+            }
         }
     }
     __syncthreads();
 
     // Compute sum_squares
-    __shared__ long long sum_squares;
+    int sum_squares;
     if (threadIdx.x == 0) {
         sum_squares = 0;
         for (int i = 0; i < k * k; ++i) {
-            sum_squares += static_cast<long long>(contingency[i]) * contingency[i];
+            sum_squares += (contingency[i]) * contingency[i];
         }
     }
     __syncthreads();
@@ -209,8 +219,6 @@ __global__ void ari(int *parts,
     // Todo: Use int4*?
     int *t_data_part0 = parts + i * n_elems_per_feat + m * n_objs; // t_ for thread
     int *t_data_part1 = parts + j * n_elems_per_feat + n * n_objs;
-    // int* t_data_uniqi = d_part_maxes + i * n_parts + m;
-    // int* t_data_uniqj = d_part_maxes + j * n_parts + n;
 
     // Load gmem data into smem by using different threads
     extern __shared__ int shared_mem[];
@@ -241,7 +249,7 @@ __global__ void ari(int *parts,
     /*
      * Step 2: Compute contingency matrix within the block
      */
-    // start shared mem address for the max values
+    // shared mem address for the contingency matrix
     int *s_contingency = shared_mem + 2 * n_objs;
     // initialize the contingency matrix to zero
     // const int n_contingency_items = k * k;
@@ -259,11 +267,15 @@ __global__ void ari(int *parts,
             }
         }
     }
-    //
+
     /*
      * Step 3: Construct pair confusion matrix
      */
-
+    // shared mem address for the pair confusion matrix
+    int *s_sum_rows = s_contingency + k * k;
+    int *s_sum_cols = s_sum_rows + k;
+    int *s_pair_confusion_matrix = s_sum_cols + k;
+    
     /*
      * Step 4: Compute ARI and write to global memory
      */
@@ -305,7 +317,7 @@ void test_ari_parts_selection()
          {2, 3, 4, 5}}};
 
     const int k = 6; // specified by the call to ccc , part number from [0...9]
-    std::vector<int> part_maxes = {3, 4, 5, 3, 4, 5, 3, 4, 5};
+    // std::vector<int> part_maxes = {3, 4, 5, 3, 4, 5, 3, 4, 5};
     // auto sz_part_maxes = sizeof(part_maxes) / sizeof(part_maxes[0]);
 
     // Get dimensions
@@ -337,16 +349,16 @@ void test_ari_parts_selection()
     // Each block is responsible for one ARI computation
     int grid_size = n_aris;
     // Compute shared memory size
-    size_t s_mem_size = n_objs * 2 * sizeof(int);
-    s_mem_size += k * sizeof(int); // For the max values
+    size_t s_mem_size = n_objs * 2 * sizeof(int); // For the partition pair to be compared
+    s_mem_size += 2 * k * sizeof(int); // For the internal sum arrays
+    s_mem_size += 4 * sizeof(int); // For the 2 x 2 confusion matrix
 
     // Allocate device memory
-    int *d_parts, *d_parts_pairs, *d_part_maxes;
+    int *d_parts, *d_parts_pairs;
     float *d_out;
     cudaMalloc(&d_parts, n_features * n_parts * n_objs * sizeof(int));
     cudaMalloc(&d_out, n_aris * sizeof(float));
     cudaMalloc(&d_parts_pairs, n_aris * 2 * n_objs * sizeof(int));
-    cudaMalloc(&d_part_maxes, n_features * n_parts * sizeof(int));
 
     // Copy data to device
     cudaMemcpy(d_parts, h_parts, n_features * n_parts * n_objs * sizeof(int), cudaMemcpyHostToDevice);
@@ -422,7 +434,6 @@ void test_ari_parts_selection()
 
     // Clean up
     cudaFree(d_parts);
-    cudaFree(d_part_maxes);
     cudaFree(d_out);
     cudaFree(d_parts_pairs);
     delete[] h_parts_pairs;
