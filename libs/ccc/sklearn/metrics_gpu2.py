@@ -4,6 +4,82 @@ from numba import njit
 from numba import cuda
 import rmm
 
+
+d_get_confusion_matrix_str = """
+/**
+ * @brief CUDA device function to compute the pair confusion matrix
+ * @param[in] contingency Pointer to the contingency matrix
+ * @param[in] sum_rows Pointer to the sum of rows in the contingency matrix
+ * @param[in] sum_cols Pointer to the sum of columns in the contingency matrix
+ * @param[in] n_objs Number of objects in each partition
+ * @param[in] k Number of clusters (assuming k is the max of clusters in part0 and part1)
+ * @param[out] C Pointer to the output pair confusion matrix (2x2)
+ */
+__device__ void get_pair_confusion_matrix(
+    const int* __restrict__ contingency,
+    int * sum_rows,
+    int * sum_cols,
+    const int n_objs,
+    const int k,
+    int* C
+) {
+    // Initialize sum_rows and sum_cols
+    for (int i = threadIdx.x; i < k; i += blockDim.x) {
+        sum_rows[i] = 0;
+        sum_cols[i] = 0;
+    }
+    __syncthreads();
+
+    // Compute sum_rows and sum_cols
+    for (int i = threadIdx.x; i < k; i += blockDim.x) {
+        for (int m = 0; m < k; ++m) {
+            for (int n = 0; n < k; ++n) {
+                const int val = contingency[m * k + n];
+                atomicAdd(&sum_rows[m], val);
+                atomicAdd(&sum_cols[n], val);
+            }
+        }
+    }
+    __syncthreads();
+
+    // Compute sum_squares
+    int sum_squares;
+    if (threadIdx.x == 0) {
+        sum_squares = 0;
+        for (int i = 0; i < k * k; ++i) {
+            sum_squares += (contingency[i]) * contingency[i];
+        }
+    }
+    __syncthreads();
+
+    // Compute C[1,1], C[0,1], C[1,0], and C[0,0]
+    if (threadIdx.x == 0) {
+        C[3] = sum_squares - n_objs;  // C[1,1]
+
+        int temp = 0;
+        for (int i = 0; i < k; ++i) {
+            for (int j = 0; j < k; ++j) {
+                temp += (contingency[i * k + j]) * sum_cols[j];
+            }
+        }
+        C[1] = temp - sum_squares;  // C[0,1]
+
+        temp = 0;
+        for (int i = 0; i < k; ++i) {
+            for (int j = 0; j < k; ++j) {
+                temp += (contingency[j * k + i]) * sum_rows[j];
+            }
+        }
+        C[2] = temp - sum_squares;  // C[1,0]
+
+        C[0] = n_objs * n_objs - C[1] - C[2] - sum_squares;  // C[0,0]
+
+        // print C
+        printf("C[0,0]: %d, C[0,1]: %d, C[1,0]: %d, C[1,1]: %d\\n", C[0], C[1], C[2], C[3]);
+    }
+}
+"""
+
 d_get_contingency_matrix_str = """
 /**
  * @brief Compute the contingency matrix for two partitions using shared memory
