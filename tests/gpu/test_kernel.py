@@ -3,6 +3,7 @@ import math
 import cupy as cp
 import numpy as np
 from ccc.sklearn.metrics_gpu2 import (
+    d_get_confusion_matrix_str,
     d_get_coords_from_index_str,
     d_unravel_index_str,
     d_get_contingency_matrix_str,
@@ -110,7 +111,7 @@ def test_unravel_index_device(num_cols, num_indices):
 
 @pytest.mark.parametrize("n", [100, 1000, 10000])
 @pytest.mark.parametrize("threads_per_block", [1, 2, 64, 128, 256, 512])
-@pytest.mark.parametrize("k", [2, 5, 10])
+@pytest.mark.parametrize("k", [3, 5, 10])   # Max value of a cluster number + 1
 def test_get_contingency_matrix_kernel(n, threads_per_block, k):
     test_kernel_code = """
     extern "C"
@@ -159,6 +160,53 @@ def test_get_contingency_matrix_kernel(n, threads_per_block, k):
     np.testing.assert_array_equal(h_cont_mat, ref_cont_mat,
                                   err_msg=f"CUDA and reference implementations do not match for n={n}, threads_per_block={threads_per_block}, k={k}")
     print(f"Test passed successfully for n={n}, threads_per_block={threads_per_block}, k={k}")
+
+
+@pytest.mark.parametrize("n_objs", [10])
+@pytest.mark.parametrize("threads_per_block", [2])
+@pytest.mark.parametrize("k", [5])   # Max value of a cluster number + 1
+def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
+    test_kernel_code = """
+    extern "C"
+    __global__ void test_kernel(int* part0, int* part1, int n_objs, int k, int* out) {
+        extern __shared__ int shared_mem[];
+
+        // Call the function to compute contingency matrix in shared memory
+        int *s_contingency = shared_mem;
+        get_contingency_matrix(part0, part1, n_objs, s_contingency, k);
+
+        int *s_sum_rows = s_contingency + k * k;
+        int *s_sum_cols = s_sum_rows + k;
+        int *C = s_sum_cols + k;
+        
+        get_pair_confusion_matrix(s_contingency, s_sum_rows, s_sum_cols, n_objs, k, C);
+    }
+    """
+
+    cuda_code = d_get_contingency_matrix_str + d_get_confusion_matrix_str + test_kernel_code
+    # Compile the CUDA kernel
+    module = cp.RawModule(code=cuda_code, backend='nvcc')
+    kernel = module.get_function("test_kernel")
+
+    # Generate random partitions
+    part0 = np.random.randint(0, k, size=n_objs, dtype=np.int32)
+    part1 = np.random.randint(0, k, size=n_objs, dtype=np.int32)
+
+    # Transfer data to GPU
+    d_part0 = cp.asarray(part0)
+    d_part1 = cp.asarray(part1)
+    d_c = cp.zeros((2, 2), dtype=cp.int32)
+
+    # Launch the kernel
+    blocks = 1  # Each pair of partitions is handled by only one block (to fully utilize shared memory)
+    shared_mem_size = k * k * 4  # 4 bytes per int for the cont matrix
+    shared_mem_size += 2 * k * 4  # For the internal sum arrays
+    shared_mem_size += 4 * 4  # For the C matrix
+    kernel((blocks,), (threads_per_block,),
+           (d_part0, d_part1, n_objs, k, d_c),
+           shared_mem=shared_mem_size)
+
+    return
 
 
 def generate_pairwise_combinations(arr):

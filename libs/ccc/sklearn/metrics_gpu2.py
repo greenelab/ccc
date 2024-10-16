@@ -78,6 +78,7 @@ __device__ void get_pair_confusion_matrix(
         printf("C[0,0]: %d, C[0,1]: %d, C[1,0]: %d, C[1,1]: %d\\n", C[0], C[1], C[2], C[3]);
     }
 }
+
 """
 
 d_get_contingency_matrix_str = """
