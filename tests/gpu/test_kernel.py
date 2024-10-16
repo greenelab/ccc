@@ -63,9 +63,9 @@ def test_get_coords_from_index_kernel():
     (15, 100),
     (20, 200)
 ])
-def test_unravel_index_kernel(num_cols, num_indices):
+def test_unravel_index_device(num_cols, num_indices):
     test_kernel_code = """
-    extern "C" __global__ void test_unravel_index_kernel(size_t* flat_indices, size_t* rows, size_t* cols, size_t num_cols, size_t num_indices) {
+    extern "C" __global__ void test_unravel_index_kernel(int* flat_indices, int* rows, int* cols, int num_cols, int num_indices) {
         int tid = blockIdx.x * blockDim.x + threadIdx.x;
         if (tid < num_indices) {
             unravel_index(flat_indices[tid], num_cols, &rows[tid], &cols[tid]);
@@ -79,11 +79,11 @@ def test_unravel_index_kernel(num_cols, num_indices):
     kernel = module.get_function("test_unravel_index_kernel")
 
     # Create test inputs
-    flat_indices = cp.arange(num_indices, dtype=cp.uint64)
+    flat_indices = cp.arange(num_indices, dtype=cp.int32)
 
     # Allocate memory for results (rows and cols)
-    d_rows = cp.empty(num_indices, dtype=cp.uint64)
-    d_cols = cp.empty(num_indices, dtype=cp.uint64)
+    d_rows = cp.zeros(num_indices, dtype=cp.int32)
+    d_cols = cp.zeros(num_indices, dtype=cp.int32)
 
     # Launch the kernel
     threads_per_block = 256
