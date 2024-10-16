@@ -22,6 +22,21 @@ __device__ __host__ inline void unravel_index(int flat_idx, int num_cols, int *r
     *col = flat_idx % num_cols; // Compute column index
 }
 
+/**
+ * @brief Given the number of objects and an index, this function calculates
+ *        the coordinates in a symmetric matrix from a flat index.
+ *        For example, if there are n_obj objects (such as genes), a condensed 
+ *        1D array can be created with pairwise comparisons between these 
+ *        objects, which corresponds to a symmetric 2D matrix. This function 
+ *        calculates the 2D coordinates (x, y) in the symmetric matrix that 
+ *        corresponds to the given flat index.
+ *
+ * @param[in] n_obj The total number of objects (i.e., the size of one dimension 
+ *                  of the square symmetric matrix).
+ * @param[in] idx The flat index from the condensed pairwise array.
+ * @param[out] x Pointer to the calculated row coordinate in the symmetric matrix.
+ * @param[out] y Pointer to the calculated column coordinate in the symmetric matrix.
+ */
 __device__ __host__ inline void get_coords_from_index(int n_obj, int idx, int *x, int *y)
 {
     // Calculate 'b' based on the input n_obj
