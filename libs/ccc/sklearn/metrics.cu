@@ -121,12 +121,12 @@ __device__ void get_pair_confusion_matrix(
 
     // Compute C[1,1], C[0,1], C[1,0], and C[0,0]
     if (threadIdx.x == 0) {
-        C[3] = sum_squares - n_samples;  // C[1,1]
+        C[3] = sum_squares - n_objs;  // C[1,1]
 
-        long long temp = 0;
+        int temp = 0;
         for (int i = 0; i < k; ++i) {
             for (int j = 0; j < k; ++j) {
-                temp += static_cast<long long>(contingency[i * k + j]) * sum0[j];
+                temp += (contingency[i * k + j]) * sum_cols[j];
             }
         }
         C[1] = temp - sum_squares;  // C[0,1]
@@ -134,12 +134,15 @@ __device__ void get_pair_confusion_matrix(
         temp = 0;
         for (int i = 0; i < k; ++i) {
             for (int j = 0; j < k; ++j) {
-                temp += static_cast<long long>(contingency[j * k + i]) * sum1[j];
+                temp += (contingency[j * k + i]) * sum_rows[j];
             }
         }
         C[2] = temp - sum_squares;  // C[1,0]
 
-        C[0] = static_cast<long long>(n_samples) * n_samples - C[1] - C[2] - sum_squares;  // C[0,0]
+        C[0] = n_objs * n_objs - C[1] - C[2] - sum_squares;  // C[0,0]
+
+        // print C
+        printf("C[0,0]: %d, C[0,1]: %d, C[1,0]: %d, C[1,1]: %d\n", C[0], C[1], C[2], C[3]);
     }
 }
 
@@ -151,6 +154,7 @@ __device__ void get_pair_confusion_matrix(
  * @param n_elems_per_feat Number of elements for each feature, i.e., part[i].x * part[i].y
  * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
  * @param n_aris Number of ARIs to compute
+ * @param k The max value of cluster number + 1
  * @param out Output array of ARIs
  * @param part_pairs Output array of part pairs to be compared by ARI
  */
@@ -189,7 +193,7 @@ __global__ void ari(int *parts,
     }
 
     // obtain the corresponding parts and unique counts
-    printf("n_part_mat_elems: %d\n", n_part_mat_elems);
+    // printf("n_part_mat_elems: %d\n", n_part_mat_elems);
     int feature_comp_flat_idx = ari_block_idx / n_part_mat_elems; // flat comparison pair index for two features
     int part_pair_flat_idx = ari_block_idx % n_part_mat_elems;    // flat comparison pair index for two partitions of one feature pair
     int i, j;
@@ -275,7 +279,7 @@ __global__ void ari(int *parts,
     int *s_sum_rows = s_contingency + k * k;
     int *s_sum_cols = s_sum_rows + k;
     int *s_pair_confusion_matrix = s_sum_cols + k;
-    
+    get_pair_confusion_matrix(s_contingency, s_sum_rows, s_sum_cols, n_objs, k, s_pair_confusion_matrix);
     /*
      * Step 4: Compute ARI and write to global memory
      */
