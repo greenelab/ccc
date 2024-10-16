@@ -177,17 +177,19 @@ def generate_pairwise_combinations(arr):
 
 @pytest.mark.parametrize("parts", [
     # 3D array
-    np.array([[[11, 12, 23, 34],
-               [12, 23, 34, 45],
-               [13, 34, 45, 56]],
+    np.array([
+        [[0, 1, 2, 3],
+         [0, 2, 3, 4],
+         [0, 3, 4, 5]],
 
-              [[21, 12, 23, 34],
-               [22, 23, 34, 45],
-               [23, 34, 45, 56]],
+        [[1, 1, 2, 3],
+         [1, 2, 3, 4],
+         [1, 3, 4, 5]],
 
-              [[31, 12, 23, 34],
-               [32, 23, 34, 45],
-               [33, 34, 45, 56]]]),
+        [[2, 1, 2, 3],
+         [2, 2, 3, 4],
+         [2, 3, 4, 5]]
+    ])
 ])
 def test_art_parts_selection(parts):
     pairs = generate_pairwise_combinations(parts)
