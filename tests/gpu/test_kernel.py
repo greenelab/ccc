@@ -10,7 +10,7 @@ from ccc.sklearn.metrics_gpu2 import (
     k_ari_str
 )
 from ccc.coef import get_coords_from_index
-from ccc.sklearn.metrics import get_contingency_matrix
+from ccc.sklearn.metrics import get_contingency_matrix, get_pair_confusion_matrix
 
 
 def test_get_coords_from_index_kernel():
@@ -180,6 +180,12 @@ def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
         int *C = s_sum_cols + k;
         
         get_pair_confusion_matrix(s_contingency, s_sum_rows, s_sum_cols, n_objs, k, C);
+        if (threadIdx.x == 0){
+            for (int i = 0; i < 4; ++i){
+                out[i] = C[i];
+            }
+        }
+        __syncthreads();
     }
     """
 
@@ -189,6 +195,7 @@ def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
     kernel = module.get_function("test_kernel")
 
     # Generate random partitions
+    np.random.seed(0)
     part0 = np.random.randint(0, k, size=n_objs, dtype=np.int32)
     part1 = np.random.randint(0, k, size=n_objs, dtype=np.int32)
 
@@ -206,8 +213,11 @@ def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
            (d_part0, d_part1, n_objs, k, d_c),
            shared_mem=shared_mem_size)
 
-    return
-
+    h_c = cp.asnumpy(d_c)
+    py_c = get_pair_confusion_matrix(part0, part1)
+    print(f"h_c: {h_c}")
+    print(f"py_c: {py_c}")
+    np.testing.assert_array_equal(h_c, py_c)
 
 def generate_pairwise_combinations(arr):
     pairs = []
