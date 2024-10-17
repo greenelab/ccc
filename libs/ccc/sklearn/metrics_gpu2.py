@@ -31,16 +31,25 @@ __device__ void get_pair_confusion_matrix(
     __syncthreads();
 
     // Compute sum_rows and sum_cols
-    for (int i = threadIdx.x; i < k; i += blockDim.x) {
-        for (int m = 0; m < k; ++m) {
-            for (int n = 0; n < k; ++n) {
-                const int val = contingency[m * k + n];
-                atomicAdd(&sum_rows[m], val);
-                atomicAdd(&sum_cols[n], val);
-            }
-        }
+    for (int i = threadIdx.x; i < k * k; i += blockDim.x) {
+        int row = i / k;
+        int col = i % k;
+        int val = contingency[i];
+        atomicAdd(&sum_cols[col], val);
+        atomicAdd(&sum_rows[row], val);
     }
     __syncthreads();
+    // print sum_rows and sum_cols in arrays for debugging
+    if (threadIdx.x == 0) {
+        printf("sum_rows:\\n");
+        for (int i = 0; i < k; ++i) {
+            printf("%d ", sum_rows[i]);
+        }
+        printf("\\nsum_col:\\n");
+        for (int i = 0; i < k; ++i) {
+            printf("%d ", sum_cols[i]);
+        }
+    }
 
     // Compute sum_squares
     int sum_squares;
@@ -51,6 +60,9 @@ __device__ void get_pair_confusion_matrix(
         }
     }
     __syncthreads();
+    if (threadIdx.x == 0) {
+        printf("sum_squares: %d\\n", sum_squares);
+    }
 
     // Compute C[1,1], C[0,1], C[1,0], and C[0,0]
     if (threadIdx.x == 0) {
@@ -112,6 +124,18 @@ __device__ void get_contingency_matrix(int* part0, int* part1, int n, int* share
         }
     }
     __syncthreads();
+    if (tid == 0)
+    {
+        for (int i = 0; i < k; ++i)
+        {
+            printf("\\n");
+            for (int j = 0; j < k; ++j)
+            {
+                printf("%d, ", shared_cont_mat[i * k + j]);
+            }
+        }
+        printf("\\n");
+    }
 }
 
 """
