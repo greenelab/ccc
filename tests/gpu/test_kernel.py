@@ -109,17 +109,17 @@ def test_unravel_index_device(num_cols, num_indices):
     print("All tests passed successfully!")
 
 
-@pytest.mark.parametrize("n", [100, 1000, 10000])
+@pytest.mark.parametrize("n_objs", [100, 1000, 10000])
 @pytest.mark.parametrize("threads_per_block", [1, 2, 64, 128, 256, 512])
 @pytest.mark.parametrize("k", [3, 5, 10])   # Max value of a cluster number + 1
-def test_get_contingency_matrix_kernel(n, threads_per_block, k):
+def test_get_contingency_matrix_kernel(n_objs, threads_per_block, k):
     test_kernel_code = """
     extern "C"
-    __global__ void test_kernel(int* part0, int* part1, int n, int* cont_mat, int k) {
+    __global__ void test_kernel(int* part0, int* part1, int n_objs, int* cont_mat, int k) {
         extern __shared__ int shared_cont_mat[];
         
         // Call the function to compute contingency matrix in shared memory
-        get_contingency_matrix(part0, part1, n, shared_cont_mat, k);
+        get_contingency_matrix(part0, part1, n_objs, shared_cont_mat, k);
         
         // Copy shared memory back to global memory
         int tid = threadIdx.x;
@@ -136,8 +136,8 @@ def test_get_contingency_matrix_kernel(n, threads_per_block, k):
     kernel = module.get_function("test_kernel")
 
     # Generate random partitions
-    part0 = np.random.randint(0, k, size=n, dtype=np.int32)
-    part1 = np.random.randint(0, k, size=n, dtype=np.int32)
+    part0 = np.random.randint(0, k, size=n_objs, dtype=np.int32)
+    part1 = np.random.randint(0, k, size=n_objs, dtype=np.int32)
 
     # Transfer data to GPU
     d_part0 = cp.asarray(part0)
@@ -148,7 +148,7 @@ def test_get_contingency_matrix_kernel(n, threads_per_block, k):
     blocks = 1  # Each pair of partitions is handled by only one block (to fully utilize shared memory)
     shared_mem_size = k * k * 4  # 4 bytes per int
     kernel((blocks,), (threads_per_block,),
-           (d_part0, d_part1, n, d_cont_mat, k),
+           (d_part0, d_part1, n_objs, d_cont_mat, k),
            shared_mem=shared_mem_size)
 
     # Get results back to host
@@ -158,13 +158,13 @@ def test_get_contingency_matrix_kernel(n, threads_per_block, k):
     ref_cont_mat = get_contingency_matrix(part0, part1)
 
     np.testing.assert_array_equal(h_cont_mat, ref_cont_mat,
-                                  err_msg=f"CUDA and reference implementations do not match for n={n}, threads_per_block={threads_per_block}, k={k}")
-    print(f"Test passed successfully for n={n}, threads_per_block={threads_per_block}, k={k}")
+                                  err_msg=f"CUDA and reference implementations do not match for n_objs={n_objs}, threads_per_block={threads_per_block}, k={k}")
+    print(f"Test passed successfully for n_objs={n_objs}, threads_per_block={threads_per_block}, k={k}")
 
 
-@pytest.mark.parametrize("n_objs", [10])
-@pytest.mark.parametrize("threads_per_block", [2])
-@pytest.mark.parametrize("k", [5])   # Max value of a cluster number + 1
+@pytest.mark.parametrize("n_objs", [100, 1000, 10000])
+@pytest.mark.parametrize("threads_per_block", [1, 2, 64, 128, 256, 512])
+@pytest.mark.parametrize("k", [3, 5, 10])   # Max value of a cluster number + 1
 def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
     test_kernel_code = """
     extern "C"
