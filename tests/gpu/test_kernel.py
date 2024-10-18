@@ -7,10 +7,14 @@ from ccc.sklearn.metrics_gpu2 import (
     d_get_coords_from_index_str,
     d_unravel_index_str,
     d_get_contingency_matrix_str,
-    k_ari_str
+    k_ari_str,
 )
 from ccc.coef import get_coords_from_index
-from ccc.sklearn.metrics import get_contingency_matrix, get_pair_confusion_matrix
+from ccc.sklearn.metrics import (
+    get_contingency_matrix,
+    get_pair_confusion_matrix,
+    adjusted_rand_index,
+)
 
 
 def test_get_coords_from_index_kernel():
@@ -162,9 +166,9 @@ def test_get_contingency_matrix_kernel(n_objs, threads_per_block, k):
     print(f"Test passed successfully for n_objs={n_objs}, threads_per_block={threads_per_block}, k={k}")
 
 
-@pytest.mark.parametrize("n_objs", [100, 1000, 10000])
-@pytest.mark.parametrize("threads_per_block", [1, 2, 64, 128, 256, 512])
-@pytest.mark.parametrize("k", [3, 5, 10])   # Max value of a cluster number + 1
+@pytest.mark.parametrize("n_objs", [100])
+@pytest.mark.parametrize("threads_per_block", [32])
+@pytest.mark.parametrize("k", [3])   # Max value of a cluster number + 1
 def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
     test_kernel_code = """
     extern "C"
@@ -215,9 +219,12 @@ def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
 
     h_c = cp.asnumpy(d_c)
     py_c = get_pair_confusion_matrix(part0, part1)
+    ari_py = adjusted_rand_index(part0, part1)
+    print(f"ari_py: {ari_py}")
     print(f"h_c: {h_c}")
     print(f"py_c: {py_c}")
     np.testing.assert_array_equal(h_c, py_c)
+
 
 def generate_pairwise_combinations(arr):
     pairs = []

@@ -181,6 +181,20 @@ __device__ void get_pair_confusion_matrix(
 
         // print C
         printf("C[0,0]: %d, C[0,1]: %d, C[1,0]: %d, C[1,1]: %d\n", C[0], C[1], C[2], C[3]);
+
+        // compute ARI
+        int tn = static_cast<float>(C[0]);
+        int fp = static_cast<float>(C[1]);
+        int fn = static_cast<float>(C[2]);
+        int tp = static_cast<float>(C[3]);
+        printf("tn: %d, fp: %d, fn: %d, tp: %d\n", tn, fp, fn, tp);
+        float ari = 0.0;
+        if (fn == 0 && fp ==0) {
+            ari = 1.0;
+        } else {
+            ari = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn));
+        }
+        printf("ari: %f\n", ari);
     }
 }
 
@@ -321,6 +335,23 @@ __global__ void ari(int *parts,
     /*
      * Step 4: Compute ARI and write to global memory
      */
+    if (threadIdx.x == 0) {
+        int tn = static_cast<float>(s_pair_confusion_matrix[0]);
+        int fp = static_cast<float>(s_pair_confusion_matrix[1]);
+        int fn = static_cast<float>(s_pair_confusion_matrix[2]);
+        int tp = static_cast<float>(s_pair_confusion_matrix[3]);
+        printf("tn: %d, fp: %d, fn: %d, tp: %d\n", tn, fp, fn, tp);
+        float ari = 0.0;
+        if (fn == 0 && fp ==0) {
+            ari = 1.0;
+        } else {
+            ari = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn));
+        }
+        printf("ari: %f\n", ari);
+        out[ari_block_idx] = ari;
+    }
+    __syncthreads();
+
 }
 
 // Helper function to generate pairwise combinations (implement this according to your needs)
@@ -473,6 +504,16 @@ void test_ari_parts_selection()
     {
         std::cout << "Test failed: Mismatches found." << std::endl;
     }
+
+    // Print ARI results
+    float *h_out = new float[n_aris];
+    cudaMemcpy(h_out, d_out, n_aris * sizeof(float), cudaMemcpyDeviceToHost);
+    std::cout << "ARI results: " << std::endl;
+    for (int i = 0; i < n_aris; ++i)
+    {
+        printf("%f, ", h_out[i]);
+    }
+    std::cout << std::endl;
 
     // Clean up
     cudaFree(d_parts);

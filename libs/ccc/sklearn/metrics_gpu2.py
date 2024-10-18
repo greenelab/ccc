@@ -88,7 +88,22 @@ __device__ void get_pair_confusion_matrix(
 
         // print C
         printf("C[0,0]: %d, C[0,1]: %d, C[1,0]: %d, C[1,1]: %d\\n", C[0], C[1], C[2], C[3]);
+        
+        // compute ARI
+        int tn = static_cast<float>(C[0]);
+        int fp = static_cast<float>(C[1]);
+        int fn = static_cast<float>(C[2]);
+        int tp = static_cast<float>(C[3]);
+        printf("tn: %d, fp: %d, fn: %d, tp: %d\\n", tn, fp, fn, tp);
+        float ari = 0.0;
+        if (fn == 0 && fp ==0) {
+            ari = 1.0;
+        } else {
+            ari = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn));
+        }
+        printf("ari: %f\\n", ari);
     }
+    __syncthreads();
 }
 
 """
