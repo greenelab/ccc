@@ -9,7 +9,9 @@ from ccc.sklearn.metrics_gpu2 import (
     d_get_contingency_matrix_str,
     k_ari_str,
 )
-from ccc.coef import get_coords_from_index
+from ccc.coef import (
+    get_coords_from_index,
+)
 from ccc.sklearn.metrics import (
     get_contingency_matrix,
     get_pair_confusion_matrix,
@@ -166,7 +168,7 @@ def test_get_contingency_matrix_kernel(n_objs, threads_per_block, k):
     print(f"Test passed successfully for n_objs={n_objs}, threads_per_block={threads_per_block}, k={k}")
 
 
-@pytest.mark.parametrize("n_objs", [10])
+@pytest.mark.parametrize("n_objs", [100])
 @pytest.mark.parametrize("threads_per_block", [32])
 @pytest.mark.parametrize("k", [3])   # Max value of a cluster number + 1
 def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
@@ -271,6 +273,7 @@ def test_art_parts_selection(parts):
     n_features, n_parts, n_objs = parts.shape
     n_feature_comp = n_features * (n_features - 1) // 2
     n_aris = n_feature_comp * n_parts * n_parts
+    # Todo: parameterize this
     block_size = 2
     grid_size = n_aris
     s_mem_size = n_objs * 2 * cp.int32().itemsize  # For the partition pair to be compared
@@ -304,3 +307,62 @@ def test_art_parts_selection(parts):
     print(h_parts_pairs)
     # Assert pairs == d_parts_pairs
     assert np.all(np.equal(h_parts_pairs, pairs))
+
+
+@pytest.mark.parametrize("n_features, n_parts, n_objs, k", [
+    (2, 2, 100, 10),
+    (5, 10, 200, 10),
+])
+@pytest.mark.parametrize("block_size", [32, 64, 128, 256])
+def test_pairwise_ari(n_features, n_parts, n_objs, k, block_size):
+    parts = np.random.randint(0, k, size=(n_features, n_parts, n_objs), dtype=np.int32)
+    # Create test inputs
+    n_features, n_parts, n_objs = parts.shape
+    n_feature_comp = n_features * (n_features - 1) // 2
+    n_aris = n_feature_comp * n_parts * n_parts
+    ref_aris = np.zeros(n_aris, dtype=np.float32)
+    # Get partition pairs
+    pairs = generate_pairwise_combinations(parts)
+    # Use map-reduce to compute ARIs for all pairs of partitions
+    for i, (part0, part1) in enumerate(pairs):
+        ari = adjusted_rand_index(part0, part1)
+        ref_aris[i] = ari
+
+    print(ref_aris)
+
+    # Compute ARIs using the CUDA kernel
+    grid_size = n_aris
+    s_mem_size = n_objs * 2 * cp.int32().itemsize  # For the partition pair to be compared
+    s_mem_size += 2 * k * cp.int32().itemsize  # For the internal sum arrays
+    s_mem_size += 4 * cp.int32().itemsize  # For the 2 x 2 confusion matrix
+
+    d_out = cp.empty(n_aris, dtype=cp.float32)
+    d_parts = cp.asarray(parts, dtype=cp.int32)
+    d_parts_pairs = cp.empty((n_aris, 2, n_objs), dtype=cp.int32)
+    # Each pair of partitions will be compared, used for debugging purposes
+
+    # Print stats
+    print(f"Number of ARIs: {n_aris}")
+    # Print kernel configuration
+    print(f"Grid size: {grid_size}, Block size: {block_size}, Shared memory: {s_mem_size}")
+    # Compile the CUDA kernel
+    kernel_code = d_unravel_index_str + d_get_coords_from_index_str + d_get_contingency_matrix_str + d_get_confusion_matrix_str + k_ari_str
+    module = cp.RawModule(code=kernel_code, backend='nvcc')
+    kernel = module.get_function("ari")
+    # Launch the kernel
+    kernel((grid_size,), (block_size,), (d_parts,
+                                                        n_aris,
+                                                        n_features,
+                                                        n_parts,
+                                                        n_objs,
+                                                        n_parts * n_objs,
+                                                        n_parts * n_parts,
+                                                        k,
+                                                        d_out,
+                                                        d_parts_pairs),
+                                                        shared_mem=s_mem_size)
+    cp.cuda.runtime.deviceSynchronize()
+    # Get results back to host
+    h_out = cp.asnumpy(d_out)
+    print(h_out)
+    assert np.allclose(h_out, ref_aris)

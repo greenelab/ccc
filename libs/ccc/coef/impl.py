@@ -799,8 +799,8 @@ def ccc(
             max_parts[f_idx, :] = max_part_idx_list
             cm_pvalues[f_idx] = pvalues
 
-    print("CPU parts:")
-    print(parts)
+    # print("CPU parts:")
+    # print(parts)
     # return an array of values or a single scalar, depending on the input data
     if cm_values.shape[0] == 1:
         if return_parts:

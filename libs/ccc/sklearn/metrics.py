@@ -93,15 +93,15 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
 
     # Computation using the contingency data
     contingency = get_contingency_matrix(part0, part1)
-    print(f"py contingency:\n {contingency}")
+    # print(f"py contingency:\n {contingency}")
     sum1 = contingency.sum(axis=1)
     sum0 = contingency.sum(axis=0)
     n_c = np.ravel(sum1)
-    print(f"py sum_row: {n_c}")
+    # print(f"py sum_row: {n_c}")
     n_k = np.ravel(sum0)
-    print(f"py sum_col: {n_k}")
+    # print(f"py sum_col: {n_k}")
     sum_squares = (contingency**2).sum()
-    print(f"py sum_squares: {sum_squares}")
+    # print(f"py sum_squares: {sum_squares}")
     C = np.empty((2, 2), dtype=np.int64)
     C[1, 1] = sum_squares - n_samples
     C[0, 1] = contingency.dot(n_k).sum() - sum_squares
