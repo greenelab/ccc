@@ -166,7 +166,7 @@ def test_get_contingency_matrix_kernel(n_objs, threads_per_block, k):
     print(f"Test passed successfully for n_objs={n_objs}, threads_per_block={threads_per_block}, k={k}")
 
 
-@pytest.mark.parametrize("n_objs", [100])
+@pytest.mark.parametrize("n_objs", [10])
 @pytest.mark.parametrize("threads_per_block", [32])
 @pytest.mark.parametrize("k", [3])   # Max value of a cluster number + 1
 def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
@@ -202,6 +202,8 @@ def test_get_pair_confusion_matrix_device(n_objs, threads_per_block, k):
     np.random.seed(0)
     part0 = np.random.randint(0, k, size=n_objs, dtype=np.int32)
     part1 = np.random.randint(0, k, size=n_objs, dtype=np.int32)
+    print(f"part0: {part0}")
+    print(f"part1: {part1}")
 
     # Transfer data to GPU
     d_part0 = cp.asarray(part0)
@@ -257,6 +259,7 @@ def generate_pairwise_combinations(arr):
     ])
 ])
 def test_art_parts_selection(parts):
+    k = np.max(parts) + 1
     pairs = generate_pairwise_combinations(parts)
 
     kernel_code = d_unravel_index_str + d_get_coords_from_index_str + d_get_contingency_matrix_str + d_get_confusion_matrix_str + k_ari_str
@@ -269,14 +272,15 @@ def test_art_parts_selection(parts):
     n_feature_comp = n_features * (n_features - 1) // 2
     n_aris = n_feature_comp * n_parts * n_parts
     block_size = 2
-    grid_size = (n_aris + block_size - 1) // block_size
-    s_mem_size = n_objs * 2 * cp.int32().itemsize
+    grid_size = n_aris
+    s_mem_size = n_objs * 2 * cp.int32().itemsize  # For the partition pair to be compared
+    s_mem_size += 2 * k * cp.int32().itemsize  # For the internal sum arrays
+    s_mem_size += 4 * cp.int32().itemsize  # For the 2 x 2 confusion matrix
 
     d_out = cp.empty(n_aris, dtype=cp.int32)
     d_parts = cp.asarray(parts, dtype=cp.int32)
     # Each pair of partitions will be compared, used for debugging purposes
     d_parts_pairs = cp.empty((n_aris, 2, n_objs), dtype=cp.int32)
-    d_uniqs = cp.empty(n_objs, dtype=cp.int32)
 
     # Print stats
     print(f"Number of ARIs: {n_aris}")
@@ -284,13 +288,13 @@ def test_art_parts_selection(parts):
     print(f"Grid size: {grid_size}, Block size: {block_size}, Shared memory: {s_mem_size}")
     # Launch the kernel
     kernel((grid_size,), (block_size,), (d_parts,
-                                                        d_uniqs,
                                                         n_aris,
                                                         n_features,
                                                         n_parts,
                                                         n_objs,
                                                         n_parts * n_objs,
-                                                        n_objs * n_objs,
+                                                        n_parts * n_parts,
+                                                        k,
                                                         d_out,
                                                         d_parts_pairs),
                                                         shared_mem=s_mem_size)

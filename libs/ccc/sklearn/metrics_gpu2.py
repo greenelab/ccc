@@ -187,9 +187,6 @@ extern "C" __device__ __host__ inline void get_coords_from_index(int n_obj, int 
 """
 
 k_ari_str = """
-#include <stdio.h>
-#define debug 0
-
 /**
  * @brief Main ARI kernel. Now only compare a pair of ARIs
  * @param n_parts Number of partitions of each feature
@@ -330,6 +327,7 @@ extern "C" __global__ void ari(int *parts,
         out[ari_block_idx] = ari;
     }
     __syncthreads();
+
 }
 
 """

@@ -86,16 +86,16 @@ __device__ void get_contingency_matrix(int *part0, int *part1, int n, int *share
     }
     __syncthreads();
     // print shared_cont_mat for debugging in a 2D way
-    if (bid == 0)
-    {
-        for (int i = 0; i < k; ++i)
-        {
-            for (int j = 0; j < k; ++j)
-            {
-                printf("shared_cont_mat[%d][%d]: %d\n", i, j, shared_cont_mat[i * k + j]);
-            }
-        }
-    }
+    // if (bid == 0)
+    // {
+    //     for (int i = 0; i < k; ++i)
+    //     {
+    //         for (int j = 0; j < k; ++j)
+    //         {
+    //             printf("shared_cont_mat[%d][%d]: %d\n", i, j, shared_cont_mat[i * k + j]);
+    //         }
+    //     }
+    // }
     
 }
 
@@ -134,16 +134,16 @@ __device__ void get_pair_confusion_matrix(
     }
     __syncthreads();
     // print sum_rows and sum_cols in arrays for debugging
-    if (threadIdx.x == 0) {
-        printf("sum_rows:\n");
-        for (int i = 0; i < k; ++i) {
-            printf("%d ", sum_rows[i]);
-        }
-        printf("\nsum_col:\n");
-        for (int i = 0; i < k; ++i) {
-            printf("%d ", sum_cols[i]);
-        }
-    }
+    // if (threadIdx.x == 0) {
+    //     printf("sum_rows:\n");
+    //     for (int i = 0; i < k; ++i) {
+    //         printf("%d ", sum_rows[i]);
+    //     }
+    //     printf("\nsum_col:\n");
+    //     for (int i = 0; i < k; ++i) {
+    //         printf("%d ", sum_cols[i]);
+    //     }
+    // }
     
 
     // Compute sum_squares
@@ -155,7 +155,7 @@ __device__ void get_pair_confusion_matrix(
         }
     }
     __syncthreads();
-    printf("sum_squares: %d\n", sum_squares);
+    // printf("sum_squares: %d\n", sum_squares);
 
     // Compute C[1,1], C[0,1], C[1,0], and C[0,0]
     if (threadIdx.x == 0) {
@@ -229,20 +229,7 @@ __global__ void ari(int *parts,
     int ari_block_idx = blockIdx.x;
 
     // print parts for debugging
-    if (global_tid == 0)
-    {
-        for (int i = 0; i < n_features; ++i)
-        {
-            for (int j = 0; j < n_parts; ++j)
-            {
-                for (int k = 0; k < n_objs; ++k)
-                {
-                    printf("parts[%d][%d][%d]: %d\n", i, j, k, parts[i * n_parts * n_objs + j * n_objs + k]);
-                }
-            }
-            printf("\n");
-        }
-    }
+
 
     // obtain the corresponding parts and unique counts
     // printf("n_part_mat_elems: %d\n", n_part_mat_elems);
@@ -250,26 +237,26 @@ __global__ void ari(int *parts,
     int part_pair_flat_idx = ari_block_idx % n_part_mat_elems;    // flat comparison pair index for two partitions of one feature pair
     int i, j;
 
-    if (global_tid == 0)
-    {
-        printf("ari_block_idx: %d, feature_comp_flat_idx: %d, part_pair_flat_idx: %d\n", ari_block_idx, feature_comp_flat_idx, part_pair_flat_idx);
-    }
+    // if (global_tid == 0)
+    // {
+    //     printf("ari_block_idx: %d, feature_comp_flat_idx: %d, part_pair_flat_idx: %d\n", ari_block_idx, feature_comp_flat_idx, part_pair_flat_idx);
+    // }
 
     // unravel the feature indices
     get_coords_from_index(n_features, feature_comp_flat_idx, &i, &j);
     assert(i < n_features && j < n_features);
     assert(i >= 0 && j >= 0);
-    if (global_tid == 0)
-    {
-        printf("global_tid: %d, i: %d, j: %d\n", global_tid, i, j);
-    }
+    // if (global_tid == 0)
+    // {
+    //     printf("global_tid: %d, i: %d, j: %d\n", global_tid, i, j);
+    // }
     // unravel the partition indices
     int m, n;
     unravel_index(part_pair_flat_idx, n_parts, &m, &n);
-    if (global_tid == 0)
-    {
-        printf("global_tid: %d, m: %d, n: %d\n", global_tid, m, n);
-    }
+    // if (global_tid == 0)
+    // {
+    //     printf("global_tid: %d, m: %d, n: %d\n", global_tid, m, n);
+    // }
 
     // Make pointers to select the parts and unique counts for the feature pair
     // Todo: Use int4*?
@@ -313,16 +300,16 @@ __global__ void ari(int *parts,
     //     s_contingency[i] = 0;
     // }
     get_contingency_matrix(t_data_part0, t_data_part1, n_objs, s_contingency, k);
-    if (global_tid == 0)
-    {
-        for (int i = 0; i < k; ++i)
-        {
-            for (int j = 0; j < k; ++j)
-            {
-                printf("s_contingency[%d][%d]: %d\n", i, j, s_contingency[i * k + j]);
-            }
-        }
-    }
+    // if (global_tid == 0)
+    // {
+    //     for (int i = 0; i < k; ++i)
+    //     {
+    //         for (int j = 0; j < k; ++j)
+    //         {
+    //             printf("s_contingency[%d][%d]: %d\n", i, j, s_contingency[i * k + j]);
+    //         }
+    //     }
+    // }
 
     /*
      * Step 3: Construct pair confusion matrix
@@ -342,7 +329,7 @@ __global__ void ari(int *parts,
         int tp = static_cast<float>(s_pair_confusion_matrix[3]);
         printf("tn: %d, fp: %d, fn: %d, tp: %d\n", tn, fp, fn, tp);
         float ari = 0.0;
-        if (fn == 0 && fp ==0) {
+        if (fn == 0 && fp == 0) {
             ari = 1.0;
         } else {
             ari = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn));
@@ -390,6 +377,24 @@ void test_ari_parts_selection()
          {2, 3, 4, 5}}};
 
     const int k = 6; // specified by the call to ccc , part number from [0...9]
+    
+    // std::vector<std::vector<std::vector<int>>> parts = {
+    //     {{4, 1, 3, 5, 2, 0, 6, 3, 1, 4},
+    //     {0, 2, 6, 4, 5, 3, 1, 0, 6, 2},
+    //     {1, 5, 3, 2, 4, 0, 6, 1, 5, 3}},
+        
+    //     // {{3, 6, 0, 2, 1, 5, 4, 3, 6, 0},
+    //     // {5, 1, 4, 0, 3, 6, 2, 1, 5, 4},
+    //     // {2, 3, 6, 1, 0, 5, 4, 3, 6, 2}},
+        
+    //     {{1, 4, 5, 3, 6, 0, 2, 5, 4, 1},
+    //     {0, 6, 2, 5, 1, 3, 4, 6, 0, 2},
+    //     {4, 1, 3, 6, 5, 0, 2, 4, 1, 3}}
+    // };
+
+    // const int k = 7; // specified by the call to ccc , max(parts) + 1
+    
+
     // std::vector<int> part_maxes = {3, 4, 5, 3, 4, 5, 3, 4, 5};
     // auto sz_part_maxes = sizeof(part_maxes) / sizeof(part_maxes[0]);
 
@@ -465,12 +470,11 @@ void test_ari_parts_selection()
         {
             for (int k = 0; k < n_objs; ++k)
             {
-                std::cout << *(h_parts_pairs + i * 2 * n_objs + j * n_objs + k) << " ";
+                std::cout << *(h_parts_pairs + i * 2 * n_objs + j * n_objs + k) << ", ";
             }
             std::cout << std::endl;
         }
-        std::cout << std::endl
-                  << std::endl;
+        std::cout << std::endl;
     }
     std::cout << std::endl;
 
