@@ -197,99 +197,139 @@ k_ari_str = """
  * @param n_part_mat_elems Number of elements in the square partition matrix
  * @param n_elems_per_feat Number of elements for each feature, i.e., part[i].x * part[i].y
  * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
- * @param uniqs Array of unique counts
  * @param n_aris Number of ARIs to compute
+ * @param k The max value of cluster number + 1
  * @param out Output array of ARIs
- * @param part0 Output array of partition 0, for debugging
- * @param part1 Output array of partition 1, for debugging
+ * @param part_pairs Output array of part pairs to be compared by ARI
  */
-extern "C" __global__
-void ari(int* parts,
-         int* uniqs,
-         const int n_aris,
-         const int n_features,
-         const int n_parts,
-         const int n_objs,
-         const int n_elems_per_feat,
-         const int n_part_mat_elems,
-         float* out,
-         int* part_pairs
-         )
+extern "C" __global__ void ari(int *parts,
+                    const int n_aris,
+                    const int n_features,
+                    const int n_parts,
+                    const int n_objs,
+                    const int n_elems_per_feat,
+                    const int n_part_mat_elems,
+                    const int k,
+                    float *out,
+                    int *part_pairs = nullptr)
 {
-    // tid is the block-wide thread index [0, blockDim.x]
-    int tid = threadIdx.x;
+    /*
+     * Step 1: Each thead, unravel flat indices and load the corresponding data into shared memory
+     */
     int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
     // each block is responsible for one ARI computation
-    // int ari_block_idx = blockIdx.x;
-    int ari_block_idx = 3;
-
-    // obtain the corresponding parts and unique counts
-    int feature_comp_flat_idx = ari_block_idx / n_part_mat_elems;   // flat comparison pair index for two features
-    int part_pair_flat_idx = ari_block_idx % n_part_mat_elems;  // flat comparison pair index for two partitions of one feature pair
-    int i, j;
+    int ari_block_idx = blockIdx.x;
 
     // print parts for debugging
-    if (global_tid == 0) {
-        for (int i = 0; i < n_features; ++i) {
-            for (int j = 0; j < n_parts; ++j) {
-                for (int k = 0; k < n_objs; ++k) {
-                    printf("parts[%d][%d][%d]: %d\\n", i, j, k, parts[i * n_parts * n_objs + j * n_objs + k]);
-                }
-            }
-            printf("\\n");
-        }
-    }
+
+
+    // obtain the corresponding parts and unique counts
+    // printf("n_part_mat_elems: %d\\n", n_part_mat_elems);
+    int feature_comp_flat_idx = ari_block_idx / n_part_mat_elems; // flat comparison pair index for two features
+    int part_pair_flat_idx = ari_block_idx % n_part_mat_elems;    // flat comparison pair index for two partitions of one feature pair
+    int i, j;
+
+    // if (global_tid == 0)
+    // {
+    //     printf("ari_block_idx: %d, feature_comp_flat_idx: %d, part_pair_flat_idx: %d\\n", ari_block_idx, feature_comp_flat_idx, part_pair_flat_idx);
+    // }
 
     // unravel the feature indices
-    get_coords_from_index(n_parts, feature_comp_flat_idx, &i, &j);
-    if (global_tid == 0) {
-        printf("global_tid: %d, i: %d, j: %d\\n", global_tid, i, j);
-    }
+    get_coords_from_index(n_features, feature_comp_flat_idx, &i, &j);
+    assert(i < n_features && j < n_features);
+    assert(i >= 0 && j >= 0);
+    // if (global_tid == 0)
+    // {
+    //     printf("global_tid: %d, i: %d, j: %d\\n", global_tid, i, j);
+    // }
     // unravel the partition indices
     int m, n;
     unravel_index(part_pair_flat_idx, n_parts, &m, &n);
-    if (global_tid == 0){
-        printf("global_tid: %d, m: %d, n: %d\\n", global_tid, m, n);
-    }
-    
+    // if (global_tid == 0)
+    // {
+    //     printf("global_tid: %d, m: %d, n: %d\\n", global_tid, m, n);
+    // }
+
     // Make pointers to select the parts and unique counts for the feature pair
     // Todo: Use int4*?
-    int* t_data_parti = parts + i * n_elems_per_feat + m * n_objs ;  // t_ for thread
-    int* t_data_partj = parts + j * n_elems_per_feat + n * n_objs ;
-    //int* t_data_uniqi = uniqs + i * n_parts + m;
-    //int* t_data_uniqj = uniqs + j * n_parts + n;
-    int* blk_part_pairs = part_pairs + ari_block_idx * (2 * n_objs);
-    
+    int *t_data_part0 = parts + i * n_elems_per_feat + m * n_objs; // t_ for thread
+    int *t_data_part1 = parts + j * n_elems_per_feat + n * n_objs;
+
     // Load gmem data into smem by using different threads
     extern __shared__ int shared_mem[];
-    
-    // Number of chunks of data this block will load
-    // In case block size is smaller than the partition size
-    const int num_chunks = (n_objs + blockDim.x - 1) / blockDim.x;
-    // Loop over the chunks of data
-    for (int chunk = 0; chunk < num_chunks; ++chunk) {
-        // idx is the linear global memory index of the element to load
-        int idx = chunk * blockDim.x + global_tid;
+    int *s_part0 = shared_mem;
+    int *s_part1 = shared_mem + n_objs;
 
-        if (idx < n_objs) {
-            // Load part_i and part_j into shared memory
-            shared_mem[tid] = t_data_parti[idx];
-            shared_mem[tid + n_objs] = t_data_partj[idx];
-            __syncthreads();  // Synchronize to ensure all threads have loaded data into shared memory
+    // Loop over the data using the block-stride pattern
+    for (int i = threadIdx.x; i < n_objs; i += blockDim.x)
+    {
+        s_part0[i] = t_data_part0[i];
+        s_part1[i] = t_data_part1[i];
+    }
+    __syncthreads();
 
-            // Each thread writes data back to global memory (for demonstration purposes)
-            // part0[idx] = shared_mem[tid];
-            // part1[idx] = shared_mem[tid + n_objs];
-            blk_part_pairs[idx] = shared_mem[tid];
-            blk_part_pairs[idx + n_objs] = shared_mem[tid + n_objs];
-            __syncthreads();  // Synchronize before moving to the next chunk
+    // Copy data to global memory if part_pairs is specified
+    if (part_pairs != nullptr)
+    {
+        int *out_part0 = part_pairs + ari_block_idx * (2 * n_objs);
+        int *out_part1 = out_part0 + n_objs;
+
+        for (int i = threadIdx.x; i < n_objs; i += blockDim.x)
+        {
+            out_part0[i] = s_part0[i];
+            out_part1[i] = s_part1[i];
         }
     }
-        
-    // Initialize shared memory
-    // int part_mat_first_tid = tid * part_part_elems;
-    
-    // Todo: use a for loop to compute the ARI and do the max reduction
+
+    /*
+     * Step 2: Compute contingency matrix within the block
+     */
+    // shared mem address for the contingency matrix
+    int *s_contingency = shared_mem + 2 * n_objs;
+    // initialize the contingency matrix to zero
+    // const int n_contingency_items = k * k;
+    // for (int i = threadIdx.x; i < n_contingency_items; i += blockDim.x) {
+    //     s_contingency[i] = 0;
+    // }
+    get_contingency_matrix(t_data_part0, t_data_part1, n_objs, s_contingency, k);
+    // if (global_tid == 0)
+    // {
+    //     for (int i = 0; i < k; ++i)
+    //     {
+    //         for (int j = 0; j < k; ++j)
+    //         {
+    //             printf("s_contingency[%d][%d]: %d\\n", i, j, s_contingency[i * k + j]);
+    //         }
+    //     }
+    // }
+
+    /*
+     * Step 3: Construct pair confusion matrix
+     */
+    // shared mem address for the pair confusion matrix
+    int *s_sum_rows = s_contingency + k * k;
+    int *s_sum_cols = s_sum_rows + k;
+    int *s_pair_confusion_matrix = s_sum_cols + k;
+    get_pair_confusion_matrix(s_contingency, s_sum_rows, s_sum_cols, n_objs, k, s_pair_confusion_matrix);
+    /*
+     * Step 4: Compute ARI and write to global memory
+     */
+    if (threadIdx.x == 0) {
+        int tn = static_cast<float>(s_pair_confusion_matrix[0]);
+        int fp = static_cast<float>(s_pair_confusion_matrix[1]);
+        int fn = static_cast<float>(s_pair_confusion_matrix[2]);
+        int tp = static_cast<float>(s_pair_confusion_matrix[3]);
+        printf("tn: %d, fp: %d, fn: %d, tp: %d\\n", tn, fp, fn, tp);
+        float ari = 0.0;
+        if (fn == 0 && fp == 0) {
+            ari = 1.0;
+        } else {
+            ari = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn));
+        }
+        printf("ari: %f\\n", ari);
+        out[ari_block_idx] = ari;
+    }
+    __syncthreads();
 }
 
 """

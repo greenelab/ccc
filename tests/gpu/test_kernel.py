@@ -259,7 +259,7 @@ def generate_pairwise_combinations(arr):
 def test_art_parts_selection(parts):
     pairs = generate_pairwise_combinations(parts)
 
-    kernel_code = d_unravel_index_str + d_get_coords_from_index_str + k_ari_str
+    kernel_code = d_unravel_index_str + d_get_coords_from_index_str + d_get_contingency_matrix_str + d_get_confusion_matrix_str + k_ari_str
     # Compile the CUDA kernel
     module = cp.RawModule(code=kernel_code, backend='nvcc')
     kernel = module.get_function("ari")
