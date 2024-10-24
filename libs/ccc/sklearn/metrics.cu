@@ -5,6 +5,24 @@
 #include <assert.h>
 
 // Todo: Add CudaCheckError
+#define gpuErrorCheck(ans, abort)
+{
+    gpuAssert((ans), __FILE__, __LINE__, abort);
+}
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort = true)
+{
+    if (code != cudaSuccess)
+    {
+        fprintf(stderr, "assert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        if (abort)
+        {
+            exit(code);
+        }
+    }
+} 
+// call like this
+// gpuErrorCheck(cudaMalloc(...)); // if fails, print message and continue
+// gpuErrorCheck(cudaMalloc(...), true); // if fails, print message and abort
 
 /**
  * @brief Unravel a flat index to the corresponding 2D indicis
@@ -23,13 +41,13 @@ __device__ __host__ inline void unravel_index(int flat_idx, int num_cols, int *r
 /**
  * @brief Given the number of objects and an index, this function calculates
  *        the coordinates in a symmetric matrix from a flat index.
- *        For example, if there are n_obj objects (such as genes), a condensed 
- *        1D array can be created with pairwise comparisons between these 
- *        objects, which corresponds to a symmetric 2D matrix. This function 
- *        calculates the 2D coordinates (x, y) in the symmetric matrix that 
+ *        For example, if there are n_obj objects (such as genes), a condensed
+ *        1D array can be created with pairwise comparisons between these
+ *        objects, which corresponds to a symmetric 2D matrix. This function
+ *        calculates the 2D coordinates (x, y) in the symmetric matrix that
  *        corresponds to the given flat index.
  *
- * @param[in] n_obj The total number of objects (i.e., the size of one dimension 
+ * @param[in] n_obj The total number of objects (i.e., the size of one dimension
  *                  of the square symmetric matrix).
  * @param[in] idx The flat index from the condensed pairwise array.
  * @param[out] x Pointer to the calculated row coordinate in the symmetric matrix.
@@ -85,7 +103,6 @@ __device__ void get_contingency_matrix(int *part0, int *part1, int n, int *share
     __syncthreads();
 }
 
-
 /**
  * @brief CUDA device function to compute the pair confusion matrix
  * @param[in] contingency Pointer to the contingency matrix
@@ -96,22 +113,24 @@ __device__ void get_contingency_matrix(int *part0, int *part1, int n, int *share
  * @param[out] C Pointer to the output pair confusion matrix (2x2)
  */
 __device__ void get_pair_confusion_matrix(
-    const int* __restrict__ contingency,
-    int * sum_rows,
-    int * sum_cols,
+    const int *__restrict__ contingency,
+    int *sum_rows,
+    int *sum_cols,
     const int n_objs,
     const int k,
-    int* C
-) {
+    int *C)
+{
     // Initialize sum_rows and sum_cols
-    for (int i = threadIdx.x; i < k; i += blockDim.x) {
+    for (int i = threadIdx.x; i < k; i += blockDim.x)
+    {
         sum_rows[i] = 0;
         sum_cols[i] = 0;
     }
     __syncthreads();
 
     // Compute sum_rows and sum_cols
-    for (int i = threadIdx.x; i < k * k; i += blockDim.x) {
+    for (int i = threadIdx.x; i < k * k; i += blockDim.x)
+    {
         int row = i / k;
         int col = i % k;
         int val = contingency[i];
@@ -119,12 +138,14 @@ __device__ void get_pair_confusion_matrix(
         atomicAdd(&sum_rows[row], val);
     }
     __syncthreads();
-    
+
     // Compute sum_squares
     int sum_squares;
-    if (threadIdx.x == 0) {
+    if (threadIdx.x == 0)
+    {
         sum_squares = 0;
-        for (int i = 0; i < k * k; ++i) {
+        for (int i = 0; i < k * k; ++i)
+        {
             sum_squares += (contingency[i]) * contingency[i];
         }
     }
@@ -132,26 +153,31 @@ __device__ void get_pair_confusion_matrix(
     // printf("sum_squares: %d\n", sum_squares);
 
     // Compute C[1,1], C[0,1], C[1,0], and C[0,0]
-    if (threadIdx.x == 0) {
-        C[3] = sum_squares - n_objs;  // C[1,1]
+    if (threadIdx.x == 0)
+    {
+        C[3] = sum_squares - n_objs; // C[1,1]
 
         int temp = 0;
-        for (int i = 0; i < k; ++i) {
-            for (int j = 0; j < k; ++j) {
+        for (int i = 0; i < k; ++i)
+        {
+            for (int j = 0; j < k; ++j)
+            {
                 temp += (contingency[i * k + j]) * sum_cols[j];
             }
         }
-        C[1] = temp - sum_squares;  // C[0,1]
+        C[1] = temp - sum_squares; // C[0,1]
 
         temp = 0;
-        for (int i = 0; i < k; ++i) {
-            for (int j = 0; j < k; ++j) {
+        for (int i = 0; i < k; ++i)
+        {
+            for (int j = 0; j < k; ++j)
+            {
                 temp += (contingency[j * k + i]) * sum_rows[j];
             }
         }
-        C[2] = temp - sum_squares;  // C[1,0]
+        C[2] = temp - sum_squares; // C[1,0]
 
-        C[0] = n_objs * n_objs - C[1] - C[2] - sum_squares;  // C[0,0]
+        C[0] = n_objs * n_objs - C[1] - C[2] - sum_squares; // C[0,0]
 
         // print C
         printf("C[0,0]: %d, C[0,1]: %d, C[1,0]: %d, C[1,1]: %d\n", C[0], C[1], C[2], C[3]);
@@ -163,9 +189,12 @@ __device__ void get_pair_confusion_matrix(
         int tp = static_cast<float>(C[3]);
         printf("tn: %d, fp: %d, fn: %d, tp: %d\n", tn, fp, fn, tp);
         float ari = 0.0;
-        if (fn == 0 && fp ==0) {
+        if (fn == 0 && fp == 0)
+        {
             ari = 1.0;
-        } else {
+        }
+        else
+        {
             ari = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn));
         }
         printf("ari: %f\n", ari);
@@ -265,23 +294,26 @@ __global__ void ari(int *parts,
     /*
      * Step 4: Compute ARI and write to global memory
      */
-    if (threadIdx.x == 0) {
+    if (threadIdx.x == 0)
+    {
         int tn = static_cast<float>(s_pair_confusion_matrix[0]);
         int fp = static_cast<float>(s_pair_confusion_matrix[1]);
         int fn = static_cast<float>(s_pair_confusion_matrix[2]);
         int tp = static_cast<float>(s_pair_confusion_matrix[3]);
         printf("tn: %d, fp: %d, fn: %d, tp: %d\n", tn, fp, fn, tp);
         float ari = 0.0;
-        if (fn == 0 && fp == 0) {
+        if (fn == 0 && fp == 0)
+        {
             ari = 1.0;
-        } else {
+        }
+        else
+        {
             ari = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn));
         }
         printf("ari: %f\n", ari);
         out[ari_block_idx] = ari;
     }
     __syncthreads();
-
 }
 
 // Helper function to generate pairwise combinations (implement this according to your needs)
@@ -320,23 +352,22 @@ void test_ari_parts_selection()
          {2, 3, 4, 5}}};
 
     const int k = 6; // specified by the call to ccc , part number from [0...9]
-    
+
     // std::vector<std::vector<std::vector<int>>> parts = {
     //     {{4, 1, 3, 5, 2, 0, 6, 3, 1, 4},
     //     {0, 2, 6, 4, 5, 3, 1, 0, 6, 2},
     //     {1, 5, 3, 2, 4, 0, 6, 1, 5, 3}},
-        
+
     //     // {{3, 6, 0, 2, 1, 5, 4, 3, 6, 0},
     //     // {5, 1, 4, 0, 3, 6, 2, 1, 5, 4},
     //     // {2, 3, 6, 1, 0, 5, 4, 3, 6, 2}},
-        
+
     //     {{1, 4, 5, 3, 6, 0, 2, 5, 4, 1},
     //     {0, 6, 2, 5, 1, 3, 4, 6, 0, 2},
     //     {4, 1, 3, 6, 5, 0, 2, 4, 1, 3}}
     // };
 
     // const int k = 7; // specified by the call to ccc , max(parts) + 1
-    
 
     // std::vector<int> part_maxes = {3, 4, 5, 3, 4, 5, 3, 4, 5};
     // auto sz_part_maxes = sizeof(part_maxes) / sizeof(part_maxes[0]);
@@ -371,8 +402,8 @@ void test_ari_parts_selection()
     int grid_size = n_aris;
     // Compute shared memory size
     size_t s_mem_size = n_objs * 2 * sizeof(int); // For the partition pair to be compared
-    s_mem_size += 2 * k * sizeof(int); // For the internal sum arrays
-    s_mem_size += 4 * sizeof(int); // For the 2 x 2 confusion matrix
+    s_mem_size += 2 * k * sizeof(int);            // For the internal sum arrays
+    s_mem_size += 4 * sizeof(int);                // For the 2 x 2 confusion matrix
 
     // Allocate device memory
     int *d_parts, *d_parts_pairs;
