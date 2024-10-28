@@ -1,7 +1,8 @@
 #include <vector>
+#include <tuple>
 #include <iostream>
 #include "metrics.cuh"
-// #include "gtest/gtest.h"
+#include "gtest/gtest.h"
 
 // Helper function to generate pairwise combinations (implement this according to your needs)
 
@@ -25,40 +26,18 @@ std::vector<std::pair<std::vector<int>, std::vector<int>>> generate_pairwise_com
     return pairs;
 }
 
-void test_ari_parts_selection()
+
+using Vec3 = std::vector<std::vector<std::vector<int>>>;
+using TestParamType = std::tuple<Vec3, float>;
+
+// Define a parameterized test fixture
+class CudaAriTest : public ::testing::TestWithParam<TestParamType> {};
+
+TEST_P(CudaAriTest, CheckSingleResult)
 {
-    // Define test input
-    std::vector<std::vector<std::vector<int>>> parts = {
-        {{0, 1, 2, 3},
-         {0, 2, 3, 4},
-         {0, 3, 4, 5}},
-        {{1, 1, 2, 3},
-         {1, 2, 3, 4},
-         {1, 3, 4, 5}},
-        {{2, 1, 2, 3},
-         {2, 2, 3, 4},
-         {2, 3, 4, 5}}};
-
-    const int k = 6; // specified by the call to ccc , part number from [0...9]
-
-    // std::vector<std::vector<std::vector<int>>> parts = {
-    //     {{4, 1, 3, 5, 2, 0, 6, 3, 1, 4},
-    //     {0, 2, 6, 4, 5, 3, 1, 0, 6, 2},
-    //     {1, 5, 3, 2, 4, 0, 6, 1, 5, 3}},
-
-    //     // {{3, 6, 0, 2, 1, 5, 4, 3, 6, 0},
-    //     // {5, 1, 4, 0, 3, 6, 2, 1, 5, 4},
-    //     // {2, 3, 6, 1, 0, 5, 4, 3, 6, 2}},
-
-    //     {{1, 4, 5, 3, 6, 0, 2, 5, 4, 1},
-    //     {0, 6, 2, 5, 1, 3, 4, 6, 0, 2},
-    //     {4, 1, 3, 6, 5, 0, 2, 4, 1, 3}}
-    // };
-
-    // const int k = 7; // specified by the call to ccc , max(parts) + 1
-
-    // std::vector<int> part_maxes = {3, 4, 5, 3, 4, 5, 3, 4, 5};
-    // auto sz_part_maxes = sizeof(part_maxes) / sizeof(part_maxes[0]);
+    Vec3 parts;
+    float expected_result;
+    std::tie(parts, expected_result) = GetParam();
 
     // Get dimensions
     int n_features = parts.size();
@@ -84,20 +63,53 @@ void test_ari_parts_selection()
         }
     }
 
-    auto h_out = cudaAri(h_parts, n_features, n_parts, n_objs);
+    auto h_out = cudaAri(h_parts, n_features, n_parts, n_objs)[0];
 
-    // Print ARI results
-    std::cout << "ARI results: " << std::endl;
-    for (int i = 0; i < n_aris; ++i)
-    {
-        printf("%f, ", h_out[i]);
-    }
-    std::cout << std::endl;
+    // Check if the result are close
+    EXPECT_NEAR(h_out, expected_result, 1e-2);
 }
 
-int main()
-{
-    std::cout << "Hello, World!" << std::endl;
-    test_ari_parts_selection();
-    return 0;
-}
+// Instantiate the test suite with parameter values
+// These tests are taken from sklearn.metrics.adjusted_rand_score:
+// https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_rand_score.html
+INSTANTIATE_TEST_SUITE_P(
+    CudaAriTestInstances,
+    CudaAriTest,
+    ::testing::Values(
+        TestParamType(
+            Vec3{
+                {{0, 0, 1, 2}},
+                {{0, 0, 1, 1}},
+            },
+            0.57f
+        ),
+        TestParamType(
+            Vec3{
+                {{0, 0, 1, 1}},
+                {{0, 1, 0, 1}},
+            },
+            -0.5f
+        ),
+        TestParamType(
+            Vec3{
+                {{0, 0, 1, 1}},
+                {{0, 0, 1, 1}},
+            },
+            1.0f
+        ),
+        TestParamType(
+            Vec3{
+                {{0, 0, 1, 1}},
+                {{1, 1, 0, 0}},
+            },
+            1.0f
+        ),
+        TestParamType(
+            Vec3{
+                {{0, 0, 0, 0}},
+                {{0, 1, 2, 3}},
+            },
+            0.0f
+        )
+    )
+);
