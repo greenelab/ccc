@@ -321,21 +321,25 @@ __global__ void ari(int *parts,
     __syncthreads();
 }
 
-
+// Todo: parameterize parts' data type
 /**
  * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
  * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
  * @throws std::invalid_argument if "parts" is invalid
  * @return std::vector<float> ARI values for each pair of partitions
  */
-template <typename T>
-auto cudaAri(int* parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<T> {
+// template <typename T>
+auto cudaAri(int* parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<float> {
+    // Edge cases:
+    // 1. GPU memory is not enough to store the partitions -> split the partitions into smaller chunks and do stream processing
+
+
     // Input validation
     if (parts == nullptr) throw std::invalid_argument("Error. Argument 'parts' is nullptr");
 
     // Compute internal variables
     using parts_dtype = typename std::remove_pointer<decltype(parts)>::type;
-    using out_dtype = T;
+    using out_dtype = float;
 
     const auto n_feature_comp = n_features * (n_features - 1) / 2;
     const auto n_aris = n_feature_comp * n_parts * n_parts;
@@ -380,6 +384,11 @@ auto cudaAri(int* parts, const size_t n_features, const size_t n_parts, const si
     thrust::copy(d_out.begin(), d_out.end(), h_out.begin());
     thrust::copy(d_parts_pairs.begin(), d_parts_pairs.end(), h_parts_pairs.begin());
 
+    // Free device memory
+
+    // Convert thrust vectors to std::vector
+    std::vector<float> res(h_out.begin(), h_out.end());
+
     // Return the ARI values
-    return h_out;
+    return res;
 }
