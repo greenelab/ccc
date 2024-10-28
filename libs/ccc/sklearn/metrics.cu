@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 #include <thrust/extrema.h>
 
 #include <iostream>
@@ -14,9 +15,9 @@
 
 
 // Todo: Add CudaCheckError
-#define gpuErrorCheck(ans, abort)
-{
-    gpuAssert((ans), __FILE__, __LINE__, abort);
+#define gpuErrorCheck(ans, abort) \
+{ \
+    gpuAssert((ans), __FILE__, __LINE__, abort); \
 }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort = true)
 {
@@ -28,8 +29,8 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
             exit(code);
         }
     }
-} 
-// call like this
+}
+// // call like this
 // gpuErrorCheck(cudaMalloc(...)); // if fails, print message and continue
 // gpuErrorCheck(cudaMalloc(...), true); // if fails, print message and abort
 
@@ -324,22 +325,23 @@ __global__ void ari(int *parts,
 /**
  * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
  * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
- * @param out Output array of ARIs
  * @throws std::invalid_argument if "parts" is invalid
- * @throws std::invalid_argument if the length of "out" is not equal to the number of ARIs
- * @throws std::runtime_error if the kernel launch fails
- * @return void
+ * @return std::vector<float> ARI values for each pair of partitions
  */
-extern "C"
-void cudaAri(int* parts, const size_t n_features, const size_t n_parts, const size_t n_objs, int* out) {
+template <typename T>
+auto cudaAri(int* parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<T> {
     // Input validation
     if (parts == nullptr) throw std::invalid_argument("Error. Argument 'parts' is nullptr");
-    if (out == nullptr) throw std::invalid_argument("Error. Argument 'out' is nullptr");
 
     // Compute internal variables
+    using parts_dtype = typename std::remove_pointer<decltype(parts)>::type;
+    using out_dtype = T;
+
     const auto n_feature_comp = n_features * (n_features - 1) / 2;
     const auto n_aris = n_feature_comp * n_parts * n_parts;
-da
+    // Allocate host memory
+    thrust::host_vector<out_dtype> h_out(n_aris);
+    thrust::host_vector<parts_dtype> h_parts_pairs(n_aris * 2 * n_objs);
 
     // Set up CUDA kernel configuration
     const auto block_size = 1024; // Todo: query device for max threads per block, older devices only support 512 threads per 1D block
@@ -351,15 +353,33 @@ da
     s_mem_size += 2 * n_parts * parts_dtype_size;    // For the internal sum arrays
     s_mem_size += 4 * parts_dtype_size;              // For the 2 x 2 confusion matrix
 
-    // Allocate device memory
-    // Todo: use cudaMalloc3D for parts
-    decltype (parts) d_parts;
-    decltype (parts) d_parts_pairs; // for debugging
-    decltype (h_out) d_out;
-    gpuErrorCheck(cudaMalloc(&d_parts, n_features * n_parts * n_objs * parts_dtype_size));
-    gpuErrorCheck(cudaMalloc(&d_out, n_aris * sizeof(decltype(*d_out))));
-    gpuErrorCheck(cudaMalloc(&d_parts_pairs, n_aris * 2 * n_objs * parts_dtype_size));
+    // Allocate device memory with thrust
+    thrust::device_vector<parts_dtype> d_parts(parts, parts + n_features * n_parts * n_objs);   // data is copied to device
+    thrust::device_vector<parts_dtype> d_parts_pairs(n_aris * 2 * n_objs);
+    thrust::device_vector<out_dtype> d_out(n_aris);
 
-    // Copy data to device
-    gpuErrorCheck(cudaMemcpy(d_parts, parts, n_features * n_parts * n_objs * parts_dtype_size, cudaMemcpyHostToDevice));
+    // Compute k, the maximum value in d_parts + 1, used for shared memory allocation later
+    auto max_iter = thrust::max_element(d_parts.begin(), d_parts.end());
+    auto k = *max_iter + 1;
+    std::cout << "Maximum value + 1 in d_parts: " << k << std::endl;
+
+    // Launch the kernel
+    ari<<<grid_size, block_size, s_mem_size>>>(
+        thrust::raw_pointer_cast(d_parts.data()),
+        n_aris,
+        n_features,
+        n_parts,
+        n_objs,
+        n_parts * n_objs,
+        n_parts * n_parts,
+        k,
+        thrust::raw_pointer_cast(d_out.data()),
+        thrust::raw_pointer_cast(d_parts_pairs.data()));
+    
+    // Copy data back to host
+    thrust::copy(d_out.begin(), d_out.end(), h_out.begin());
+    thrust::copy(d_parts_pairs.begin(), d_parts_pairs.end(), h_parts_pairs.begin());
+
+    // Return the ARI values
+    return h_out;
 }
