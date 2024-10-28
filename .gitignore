@@ -133,3 +133,6 @@ dmypy.json
 
 # Development directory
 __dev
+
+# Binary files
+libs/ccc/sklearn/metrics
