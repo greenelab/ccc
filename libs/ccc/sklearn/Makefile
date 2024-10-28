@@ -1,11 +1,12 @@
 CU_APPS=metrics
-C_APPS=
+# CPP_APPS=test_kernel
 
-all: ${C_APPS} ${CU_APPS}
+all: ${CPP_APPS} ${CU_APPS}
 
+## Todo: try out O3 optimization
 %: %.cu
 	nvcc -O2 -arch=sm_89 -o $@ $< -lcudadevrt --relocatable-device-code true
-%: %.c
-	gcc -O2 -std=c99 -o $@ $<
+%: %.hpp
+	gcc -O2 -std=c++17 -o $@ $<
 clean:
-	rm -f ${CU_APPS} ${C_APPS}
+	rm -f ${CU_APPS} ${CPP_APPS}
