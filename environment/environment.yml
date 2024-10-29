@@ -10,3 +10,4 @@ dependencies:
   - numba=0.6.*
   - python=3.11
   - pytest=8.*
+  - pybind11=2.*
