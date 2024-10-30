@@ -26,10 +26,6 @@ FetchContent_MakeAvailable(googletest)
 # Testing
 enable_testing()
 
-add_executable(hello_test hello_test.cc)
-target_link_libraries(hello_test GTest::gtest_main)
-gtest_discover_tests(hello_test)
-
-add_executable(testCudaAri test_kernel.cpp)
-target_link_libraries(testCudaAri cudaAriLib GTest::gtest_main GTest::gtest)
+add_executable(testCudaAri tests/test_kernel.cpp)
+target_link_libraries(testCudaAri PRIVATE cudaAriLib GTest::gtest_main GTest::gtest)
 gtest_discover_tests(testCudaAri)

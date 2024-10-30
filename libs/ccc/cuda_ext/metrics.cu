@@ -11,6 +11,7 @@
  * Future optimizations
  * 1. use narrower data types
  * 2. optimized on locality
+ * 3. use warp-level reduction
  */
 
 
@@ -364,7 +365,7 @@ auto cudaAri(int* parts, const size_t n_features, const size_t n_parts, const si
 
     // Compute k, the maximum value in d_parts + 1, used for shared memory allocation later
     auto max_iter = thrust::max_element(d_parts.begin(), d_parts.end());
-    auto k = *max_iter + 1;
+    const auto k = *max_iter + 1;
     std::cout << "Maximum value + 1 in d_parts: " << k << std::endl;
 
     // Launch the kernel

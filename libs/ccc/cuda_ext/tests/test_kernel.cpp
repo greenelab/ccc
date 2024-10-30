@@ -1,7 +1,7 @@
 #include <vector>
 #include <tuple>
 #include <iostream>
-#include "metrics.cuh"
+#include "../metrics.cuh"
 #include "gtest/gtest.h"
 
 // Helper function to generate pairwise combinations (implement this according to your needs)
