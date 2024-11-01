@@ -337,64 +337,77 @@ auto cudaAri(const py::array_t<int, py::array::c_style>& parts, const size_t n_f
     // Edge cases:
     // 1. GPU memory is not enough to store the partitions -> split the partitions into smaller chunks and do stream processing
 
+    // Input processing
+    // Request a buffer descriptor from Python
+    py::buffer_info buffer = parts.request();
 
-    // Input validation
-    // if (parts == nullptr) throw std::invalid_argument("Error. Argument 'parts' is nullptr");
+    // Some basic validation checks ...
+    if (buffer.format != py::format_descriptor<int>::format())
+        throw std::runtime_error("Incompatible format: expected an int array!");
+
+    if (buffer.ndim != 3)
+        throw std::runtime_error("Incompatible buffer dimension!");
+
+    // Apply resources
+    auto result = py::array_t<int>(buffer.size);
+
+    // Obtain numpy.ndarray data pointer
+    const auto parts_ptr = static_cast<int*>(buffer.ptr);
 
     // Compute internal variables
     // Todo: dynamically query types
     using parts_dtype = int;
     using out_dtype = float;
 
-    // const auto n_feature_comp = n_features * (n_features - 1) / 2;
-    // const auto n_aris = n_feature_comp * n_parts * n_parts;
-    // // Allocate host memory
-    // thrust::host_vector<out_dtype> h_out(n_aris);
-    // thrust::host_vector<parts_dtype> h_parts_pairs(n_aris * 2 * n_objs);
+    const auto n_feature_comp = n_features * (n_features - 1) / 2;
+    const auto n_aris = n_feature_comp * n_parts * n_parts;
+    // Allocate host memory
+    thrust::host_vector<out_dtype> h_out(n_aris);
+    thrust::host_vector<parts_dtype> h_parts_pairs(n_aris * 2 * n_objs);
 
-    // // Set up CUDA kernel configuration
-    // const auto block_size = 1024; // Todo: query device for max threads per block, older devices only support 512 threads per 1D block
-    // // Each block is responsible for one ARI computation
-    // const auto grid_size = n_aris;
-    // // Define shared memory size for each block
-    // const auto parts_dtype_size = sizeof(parts_dtype);
-    // auto s_mem_size = n_objs * 2 * parts_dtype_size; // For the partition pair to be compared
-    // s_mem_size += 2 * n_parts * parts_dtype_size;    // For the internal sum arrays
-    // s_mem_size += 4 * parts_dtype_size;              // For the 2 x 2 confusion matrix
+    // Set up CUDA kernel configuration
+    const auto block_size = 1024; // Todo: query device for max threads per block, older devices only support 512 threads per 1D block
+    // Each block is responsible for one ARI computation
+    const auto grid_size = n_aris;
+    // Define shared memory size for each block
+    const auto parts_dtype_size = sizeof(parts_dtype);
+    auto s_mem_size = n_objs * 2 * parts_dtype_size; // For the partition pair to be compared
+    s_mem_size += 2 * n_parts * parts_dtype_size;    // For the internal sum arrays
+    s_mem_size += 4 * parts_dtype_size;              // For the 2 x 2 confusion matrix
 
-    // // Allocate device memory with thrust
+    // Allocate device memory with thrust
     // const int* parts_raw = parts[0][0].data();
-    // thrust::device_vector<parts_dtype> d_parts(parts_raw, parts_raw + n_features * n_parts * n_objs);   // data is copied to device
-    // thrust::device_vector<parts_dtype> d_parts_pairs(n_aris * 2 * n_objs);
-    // thrust::device_vector<out_dtype> d_out(n_aris);
+    thrust::device_vector<parts_dtype> d_parts(parts_ptr, parts_ptr + n_features * n_parts * n_objs);   // data is copied to device
+    thrust::device_vector<parts_dtype> d_parts_pairs(n_aris * 2 * n_objs);
+    thrust::device_vector<out_dtype> d_out(n_aris);
 
-    // // Compute k, the maximum value in d_parts + 1, used for shared memory allocation later
-    // auto max_iter = thrust::max_element(d_parts.begin(), d_parts.end());
-    // const auto k = *max_iter + 1;
-    // std::cout << "Maximum value + 1 in d_parts: " << k << std::endl;
+    // Compute k, the maximum value in d_parts + 1, used for shared memory allocation later
+    auto max_iter = thrust::max_element(d_parts.begin(), d_parts.end());
+    const auto k = *max_iter + 1;
+    std::cout << "Maximum value + 1 in d_parts: " << k << std::endl;
 
-    // // Launch the kernel
-    // ari<<<grid_size, block_size, s_mem_size>>>(
-    //     thrust::raw_pointer_cast(d_parts.data()),
-    //     n_aris,
-    //     n_features,
-    //     n_parts,
-    //     n_objs,
-    //     n_parts * n_objs,
-    //     n_parts * n_parts,
-    //     k,
-    //     thrust::raw_pointer_cast(d_out.data()),
-    //     thrust::raw_pointer_cast(d_parts_pairs.data()));
+    // Launch the kernel
+    ari<<<grid_size, block_size, s_mem_size>>>(
+        thrust::raw_pointer_cast(d_parts.data()),
+        n_aris,
+        n_features,
+        n_parts,
+        n_objs,
+        n_parts * n_objs,
+        n_parts * n_parts,
+        k,
+        thrust::raw_pointer_cast(d_out.data()),
+        thrust::raw_pointer_cast(d_parts_pairs.data()));
     
-    // // Copy data back to host
-    // thrust::copy(d_out.begin(), d_out.end(), h_out.begin());
-    // thrust::copy(d_parts_pairs.begin(), d_parts_pairs.end(), h_parts_pairs.begin());
+    // Copy data back to host
+    thrust::copy(d_out.begin(), d_out.end(), h_out.begin());
+    thrust::copy(d_parts_pairs.begin(), d_parts_pairs.end(), h_parts_pairs.begin());
 
-    // // Free device memory
+    // Free device memory
 
-    // // Convert thrust vectors to std::vector
-    // std::vector<float> res(h_out.begin(), h_out.end());
+    // Convert thrust vectors to std::vector
+    std::vector<float> res(h_out.begin(), h_out.end());
 
     // Return the ARI values
-    return std::vector<float>(0);
+    return res;
 }
