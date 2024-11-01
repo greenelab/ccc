@@ -27,15 +27,14 @@ std::vector<std::pair<std::vector<int>, std::vector<int>>> generate_pairwise_com
 }
 
 
-using Vec3 = std::vector<std::vector<std::vector<int>>>;
-using TestParamType = std::tuple<Vec3, float>;
+using TestParamType = std::tuple<Mat3, float>;
 
 // Define a parameterized test fixture
 class CudaAriTest : public ::testing::TestWithParam<TestParamType> {};
 
 TEST_P(CudaAriTest, CheckSingleResult)
 {
-    Vec3 parts;
+    Mat3 parts;
     float expected_result;
     std::tie(parts, expected_result) = GetParam();
 
@@ -63,7 +62,7 @@ TEST_P(CudaAriTest, CheckSingleResult)
         }
     }
 
-    auto h_out = cudaAri(h_parts, n_features, n_parts, n_objs)[0];
+    auto h_out = cudaAri(parts, n_features, n_parts, n_objs)[0];
 
     // Check if the result are close
     EXPECT_NEAR(h_out, expected_result, 1e-2);
@@ -77,35 +76,35 @@ INSTANTIATE_TEST_SUITE_P(
     CudaAriTest,
     ::testing::Values(
         TestParamType(
-            Vec3{
+            Mat3{
                 {{0, 0, 1, 2}},
                 {{0, 0, 1, 1}},
             },
             0.57f
         ),
         TestParamType(
-            Vec3{
+            Mat3{
                 {{0, 0, 1, 1}},
                 {{0, 1, 0, 1}},
             },
             -0.5f
         ),
         TestParamType(
-            Vec3{
+            Mat3{
                 {{0, 0, 1, 1}},
                 {{0, 0, 1, 1}},
             },
             1.0f
         ),
         TestParamType(
-            Vec3{
+            Mat3{
                 {{0, 0, 1, 1}},
                 {{1, 1, 0, 0}},
             },
             1.0f
         ),
         TestParamType(
-            Vec3{
+            Mat3{
                 {{0, 0, 0, 0}},
                 {{0, 1, 2, 3}},
             },
