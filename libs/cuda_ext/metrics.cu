@@ -333,7 +333,10 @@ __global__ void ari(int *parts,
  * @return std::vector<float> ARI values for each pair of partitions
  */
 // template <typename T>
-auto cudaAri(const py::array_t<int, py::array::c_style>& parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<float> {
+auto cudaAri(const py::array_t<int, py::array::c_style>& parts, 
+             const size_t n_features,
+             const size_t n_parts,
+             const size_t n_objs) -> std::vector<float> {
     // Edge cases:
     // 1. GPU memory is not enough to store the partitions -> split the partitions into smaller chunks and do stream processing
 
