@@ -2,7 +2,7 @@ import pytest
 import math
 import cupy as cp
 import numpy as np
-from ccc.sklearn.metrics_gpu2 import (
+from ccc.sklearn.metrics_gpu import (
     d_get_confusion_matrix_str,
     d_get_coords_from_index_str,
     d_unravel_index_str,

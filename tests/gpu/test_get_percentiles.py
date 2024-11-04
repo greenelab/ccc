@@ -9,6 +9,7 @@ from ccc.coef.impl_gpu import (
 
 from ccc.coef import get_perc_from_k as get_perc_from_k_cpu
 
+
 def test_get_perc_from_k_with_k_less_than_two():
     empty_array = np.empty(0)
     assert_array_equal(get_perc_from_k(1), empty_array)

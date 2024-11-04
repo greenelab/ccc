@@ -11,6 +11,7 @@ from ccc.coef import get_parts as get_parts_cpu
 from ccc.coef import get_perc_from_k as get_perc_from_k_cpu
 import functools
 
+
 def clean_gpu_memory(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -21,11 +22,13 @@ def clean_gpu_memory(func):
             mempool.free_all_blocks()
     return wrapper
 
+
 def find_partition(value, quantiles):
     for i in range(len(quantiles)):
         if value <= quantiles[i]:
             return i
     return len(quantiles)  # If value is greater than all quantiles
+
 
 def verify_partition(feature, index, n_clusters):
     """

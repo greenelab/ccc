@@ -1,6 +1,7 @@
 import functools
 import cupy as cp
 
+
 def clean_gpu_memory(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
