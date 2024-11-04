@@ -49,7 +49,7 @@ from ccc.sklearn.metrics import (
 ])
 def test_simple_ari_results(parts, expected_ari):
     n_features, n_parts, n_objs = parts.shape
-    res = ccc_cuda_ext.ari(parts, n_features, n_parts, n_objs)
+    res = ccc_cuda_ext.ari_int32(parts, n_features, n_parts, n_objs)
     assert np.isclose(res[0], expected_ari, atol=1e-2)
 
 
@@ -89,5 +89,5 @@ def test_pairwise_ari(n_features, n_parts, n_objs, k):
         ari = adjusted_rand_index(part0, part1)
         ref_aris[i] = ari
     # Compute ARIs using CUDA
-    res_aris = ccc_cuda_ext.ari(parts, n_features, n_parts, n_objs)
+    res_aris = ccc_cuda_ext.ari_int32(parts, n_features, n_parts, n_objs)
     assert np.allclose(res_aris, ref_aris)
