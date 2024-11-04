@@ -4,6 +4,8 @@ project(${SKBUILD_PROJECT_NAME} LANGUAGES CUDA)
 set(PYBIND11_NEWPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
-pybind11_add_module(cuda_ccc libs/cuda_ext/binder.cu libs/cuda_ext/metrics.cu)
+set(CUDA_EXT_MODULE_NAME ccc_cuda_ext)
+set(CUDA_EXT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/${CUDA_EXT_MODULE_NAME})
+pybind11_add_module(${CUDA_EXT_MODULE_NAME} ${CUDA_EXT_DIR}/binder.cu ${CUDA_EXT_DIR}/metrics.cu)
 
-install(TARGETS cuda_ccc LIBRARY DESTINATION .)
+install(TARGETS ${CUDA_EXT_MODULE_NAME} LIBRARY DESTINATION .)
