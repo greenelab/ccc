@@ -91,9 +91,7 @@ __device__ __host__ inline void get_coords_from_index(int n_obj, int idx, int *x
 __device__ void get_contingency_matrix(int *part0, int *part1, int n, int *shared_cont_mat, int k)
 {
     int tid = threadIdx.x;
-    int bid = blockIdx.x;
     int num_threads = blockDim.x;
-    int num_blocks = gridDim.x;
     int size = k * k;
 
     // Initialize shared memory
@@ -192,22 +190,6 @@ __device__ void get_pair_confusion_matrix(
         C[2] = temp - sum_squares; // C[1,0]
 
         C[0] = n_objs * n_objs - C[1] - C[2] - sum_squares; // C[0,0]
-
-
-        // compute ARI
-        int tn = static_cast<float>(C[0]);
-        int fp = static_cast<float>(C[1]);
-        int fn = static_cast<float>(C[2]);
-        int tp = static_cast<float>(C[3]);
-        float ari = 0.0;
-        if (fn == 0 && fp == 0)
-        {
-            ari = 1.0;
-        }
-        else
-        {
-            ari = 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn));
-        }
     }
 }
 
@@ -238,7 +220,6 @@ __global__ void ari(int *parts,
     /*
      * Step 1: Each thead, unravel flat indices and load the corresponding data into shared memory
      */
-    int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
     // each block is responsible for one ARI computation
     int ari_block_idx = blockIdx.x;
 
@@ -387,7 +368,6 @@ auto ari(const py::array_t<T, py::array::c_style>& parts,
     // Compute k, the maximum value in d_parts + 1, used for shared memory allocation later
     auto max_iter = thrust::max_element(d_parts.begin(), d_parts.end());
     const auto k = *max_iter + 1;
-    std::cout << "Maximum value + 1 in d_parts: " << k << std::endl;
 
     // Launch the kernel
     ari<<<grid_size, block_size, s_mem_size>>>(
