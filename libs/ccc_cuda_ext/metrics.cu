@@ -332,8 +332,8 @@ __global__ void ari(int *parts,
  * @throws std::invalid_argument if "parts" is invalid
  * @return std::vector<float> ARI values for each pair of partitions
  */
-// template <typename T>
-auto cudaAri(const py::array_t<int, py::array::c_style>& parts, 
+template <typename T>
+auto ari(const py::array_t<T, py::array::c_style>& parts, 
              const size_t n_features,
              const size_t n_parts,
              const size_t n_objs) -> std::vector<float> {
@@ -345,21 +345,21 @@ auto cudaAri(const py::array_t<int, py::array::c_style>& parts,
     py::buffer_info buffer = parts.request();
 
     // Some basic validation checks ...
-    if (buffer.format != py::format_descriptor<int>::format())
+    if (buffer.format != py::format_descriptor<T>::format())
         throw std::runtime_error("Incompatible format: expected an int array!");
 
     if (buffer.ndim != 3)
         throw std::runtime_error("Incompatible buffer dimension!");
 
     // Apply resources
-    auto result = py::array_t<int>(buffer.size);
+    auto result = py::array_t<T>(buffer.size);
 
     // Obtain numpy.ndarray data pointer
-    const auto parts_ptr = static_cast<int*>(buffer.ptr);
+    const auto parts_ptr = static_cast<T*>(buffer.ptr);
 
     // Compute internal variables
     // Todo: dynamically query types
-    using parts_dtype = int;
+    using parts_dtype = T;
     using out_dtype = float;
 
     const auto n_feature_comp = n_features * (n_features - 1) / 2;
@@ -414,3 +414,13 @@ auto cudaAri(const py::array_t<int, py::array::c_style>& parts,
     // Return the ARI values
     return res;
 }
+
+
+// Below is the explicit instantiation of the ari template function.
+//
+// Generally people would write the implementation of template classes and functions in the header file. However, we
+// separate the implementation into a .cpp file to make things clearer. In order to make the compiler know the
+// implementation of the template functions, we need to explicitly instantiate them here, so that they can be picked up
+// by the linker.
+
+template auto ari<int>(const py::array_t<int, py::array::c_style>& parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<float>;
