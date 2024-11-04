@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <pybind11/numpy.h>
-#include "../metrics.cuh"
+#include "../../libs/ccc_cuda_ext/metrics.cuh"
 
 namespace py = pybind11;
 
