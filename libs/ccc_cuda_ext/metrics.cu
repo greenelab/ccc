@@ -306,7 +306,6 @@ __global__ void ari(int *parts,
     __syncthreads();
 }
 
-// Todo: parameterize parts' data type
 /**
  * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
  * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
@@ -314,29 +313,12 @@ __global__ void ari(int *parts,
  * @return std::vector<float> ARI values for each pair of partitions
  */
 template <typename T>
-auto ari(const py::array_t<T, py::array::c_style>& parts, 
-             const size_t n_features,
-             const size_t n_parts,
-             const size_t n_objs) -> std::vector<float> {
+auto ari_base(const T* parts, 
+         const size_t n_features,
+         const size_t n_parts,
+         const size_t n_objs) -> std::vector<float> {
     // Edge cases:
     // 1. GPU memory is not enough to store the partitions -> split the partitions into smaller chunks and do stream processing
-
-    // Input processing
-    // Request a buffer descriptor from Python
-    py::buffer_info buffer = parts.request();
-
-    // Some basic validation checks ...
-    if (buffer.format != py::format_descriptor<T>::format())
-        throw std::runtime_error("Incompatible format: expected an int array!");
-
-    if (buffer.ndim != 3)
-        throw std::runtime_error("Incompatible buffer dimension!");
-
-    // Apply resources
-    auto result = py::array_t<T>(buffer.size);
-
-    // Obtain numpy.ndarray data pointer
-    const auto parts_ptr = static_cast<T*>(buffer.ptr);
 
     // Compute internal variables
     // Todo: dynamically query types
@@ -361,7 +343,7 @@ auto ari(const py::array_t<T, py::array::c_style>& parts,
 
     // Allocate device memory with thrust
     // const int* parts_raw = parts[0][0].data();
-    thrust::device_vector<parts_dtype> d_parts(parts_ptr, parts_ptr + n_features * n_parts * n_objs);   // data is copied to device
+    thrust::device_vector<parts_dtype> d_parts(parts, parts + n_features * n_parts * n_objs);   // data is copied to device
     thrust::device_vector<parts_dtype> d_parts_pairs(n_aris * 2 * n_objs);
     thrust::device_vector<out_dtype> d_out(n_aris);
 
@@ -395,6 +377,56 @@ auto ari(const py::array_t<T, py::array::c_style>& parts,
     return res;
 }
 
+/**
+ * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
+ * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
+ * @throws std::invalid_argument if "parts" is invalid
+ * @return std::vector<float> ARI values for each pair of partitions
+ */
+template <typename T>
+auto ari(const py::array_t<T, py::array::c_style>& parts, 
+             const size_t n_features,
+             const size_t n_parts,
+             const size_t n_objs) -> std::vector<float> {
+    // Edge cases:
+    // 1. GPU memory is not enough to store the partitions -> split the partitions into smaller chunks and do stream processing
+
+    // Input processing
+    // Request a buffer descriptor from Python
+    py::buffer_info buffer = parts.request();
+
+    // Some basic validation checks ...
+    if (buffer.format != py::format_descriptor<T>::format())
+        throw std::runtime_error("Incompatible format: expected an int array!");
+
+    if (buffer.ndim != 3)
+        throw std::runtime_error("Incompatible buffer dimension!");
+
+    // Apply resources
+    auto result = py::array_t<T>(buffer.size);
+
+    // Obtain numpy.ndarray data pointer
+    const auto parts_ptr = static_cast<T*>(buffer.ptr);
+
+    return ari_base(parts_ptr, n_features, n_parts, n_objs);
+}
+
+
+/**
+ * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
+ * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
+ * @throws std::invalid_argument if "parts" is invalid
+ * @return std::vector<float> ARI values for each pair of partitions
+ */
+template <typename T>
+auto ari_vector(const std::vector<T>& parts, 
+             const size_t n_features,
+             const size_t n_parts,
+             const size_t n_objs) -> std::vector<float> {
+    // Obtain array data pointer
+    const auto parts_ptr = parts.data();
+    return ari_base(parts_ptr, n_features, n_parts, n_objs);
+}
 
 // Below is the explicit instantiation of the ari template function.
 //
@@ -404,3 +436,4 @@ auto ari(const py::array_t<T, py::array::c_style>& parts,
 // by the linker.
 
 template auto ari<int>(const py::array_t<int, py::array::c_style>& parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<float>;
+template auto ari_vector<int>(const std::vector<int>& parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<float>;
