@@ -313,7 +313,7 @@ __global__ void ari(int *parts,
  * @return std::vector<float> ARI values for each pair of partitions
  */
 template <typename T>
-auto ari_base(const T* parts, 
+auto ari_core(const T* parts, 
          const size_t n_features,
          const size_t n_parts,
          const size_t n_objs) -> std::vector<float> {
@@ -408,25 +408,25 @@ auto ari(const py::array_t<T, py::array::c_style>& parts,
     // Obtain numpy.ndarray data pointer
     const auto parts_ptr = static_cast<T*>(buffer.ptr);
 
-    return ari_base(parts_ptr, n_features, n_parts, n_objs);
+    return ari_core(parts_ptr, n_features, n_parts, n_objs);
 }
 
 
-/**
- * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
- * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
- * @throws std::invalid_argument if "parts" is invalid
- * @return std::vector<float> ARI values for each pair of partitions
- */
-template <typename T>
-auto ari_vector(const std::vector<T>& parts, 
-             const size_t n_features,
-             const size_t n_parts,
-             const size_t n_objs) -> std::vector<float> {
-    // Obtain array data pointer
-    const auto parts_ptr = parts.data();
-    return ari_base(parts_ptr, n_features, n_parts, n_objs);
-}
+// /**
+//  * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
+//  * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
+//  * @throws std::invalid_argument if "parts" is invalid
+//  * @return std::vector<float> ARI values for each pair of partitions
+//  */
+// template <typename T>
+// auto ari_vector(const Mat3<T>& parts, 
+//              const size_t n_features,
+//              const size_t n_parts,
+//              const size_t n_objs) -> std::vector<float> {
+//     // Obtain array data pointer
+//     const auto parts_ptr = parts.data();
+//     return ari_core<T>(parts_ptr, n_features, n_parts, n_objs);
+// }
 
 // Below is the explicit instantiation of the ari template function.
 //
@@ -436,4 +436,4 @@ auto ari_vector(const std::vector<T>& parts,
 // by the linker.
 
 template auto ari<int>(const py::array_t<int, py::array::c_style>& parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<float>;
-template auto ari_vector<int>(const std::vector<int>& parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<float>;
+template auto ari_core<int>(const int* parts, const size_t n_features, const size_t n_parts, const size_t n_objs) -> std::vector<float>;

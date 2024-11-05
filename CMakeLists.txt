@@ -4,6 +4,9 @@ project(${SKBUILD_PROJECT_NAME} LANGUAGES CUDA CXX)
 # Add this near the top of your file, after project()
 # Define the include directories for the whole project
 set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/libs)
+# Set extention name and source directory
+set(CUDA_EXT_MODULE_NAME ccc_cuda_ext)
+set(CUDA_EXT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/${CUDA_EXT_MODULE_NAME})
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -23,7 +26,7 @@ set(PYTHON_LIBRARY $ENV{CONDA_PREFIX}/lib/libpython${PYTHON_VERSION_FULL}.so)
 
 
 # Set CUDA architecture and Pybind11
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+find_package(Python REQUIRED Development)
 set(PYBIND11_NEWPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
@@ -53,7 +56,7 @@ function(add_tests_from_directory TEST_DIR)
         get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
         
         # Create an executable for this test
-        add_executable(${TEST_NAME} ${TEST_FILE})
+        add_executable(${TEST_NAME} ${TEST_FILE} ${CUDA_EXT_DIR}/metrics.cu)
 
         # target_include_directories(${TEST_NAME} PRIVATE
         #     ${PROJECT_INCLUDE_DIR}  # Add this line
@@ -65,7 +68,7 @@ function(add_tests_from_directory TEST_DIR)
             GTest::gtest_main
             GTest::gtest
             pybind11::headers
-            Python::Module
+            Python::Python
             # Add your other project libraries here
             # project_lib
         )
@@ -83,15 +86,14 @@ function(add_tests_from_directory TEST_DIR)
 endfunction()
 
 # Specify your test directory and call the function
-# add_tests_from_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
+add_tests_from_directory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Optional: Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
+
 # Set up binding then do compilation and installation
-set(CUDA_EXT_MODULE_NAME ccc_cuda_ext)
-set(CUDA_EXT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/${CUDA_EXT_MODULE_NAME})
 pybind11_add_module(${CUDA_EXT_MODULE_NAME} ${CUDA_EXT_DIR}/binder.cu ${CUDA_EXT_DIR}/metrics.cu)
 
-# install(TARGETS ${CUDA_EXT_MODULE_NAME} LIBRARY DESTINATION .)
+install(TARGETS ${CUDA_EXT_MODULE_NAME} LIBRARY DESTINATION .)
