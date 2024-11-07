@@ -2,24 +2,40 @@
 #include <vector>
 #include <pybind11/embed.h> // everything needed for embedding
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
 int main() {
     py::scoped_interpreter guard{}; // start the interpreter and keep it alive
 
-    py::object scope = py::module_::import("__main__").attr("__dict__");
-    py::exec(R"(
-        from ccc.coef import ccc
-        import numpy as np
-        data = np.random.rand(5, 100)
-        c = ccc(data)
-    )");
-    const auto result = py::eval("c", scope).cast<std::vector<float>>();;
-    // Print the results
-    std::cout << "Results: ";
-    for (const auto& val : result) {
-        std::cout << val << " ";
+    try {
+        // Define vectors in C++
+        std::vector<int> part0 = {2, 3, 6, 1, 0, 5, 4, 3, 6, 2};
+        std::vector<int> part1 = {0, 6, 2, 5, 1, 3, 4, 6, 0, 2};
+
+        // Import required Python modules
+        py::module_ np = py::module_::import("numpy");
+        py::module_ ccc_module = py::module_::import("ccc.coef");
+
+        // Convert C++ vectors to numpy arrays
+        py::array_t<int> np_part0 = py::cast(part0);
+        py::array_t<int> np_part1 = py::cast(part1);
+
+        // Call the ccc function
+        py::object result = ccc_module.attr("ccc")(np_part0, np_part1);
+        
+        // Convert result to C++ double
+        const auto correlation = result.cast<double>();
+
+        std::cout << "Correlation coefficient: " << correlation << std::endl;
     }
-    std::cout << std::endl;
+    catch (const py::error_already_set& e) {
+        std::cerr << "Python error: " << e.what() << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    return 0;
 }
