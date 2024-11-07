@@ -68,6 +68,7 @@ function(add_tests_from_directory TEST_DIR)
             GTest::gtest_main
             GTest::gtest
             pybind11::headers
+            pybind11::embed
             Python::Python
             # Add your other project libraries here
             # project_lib
