@@ -1,10 +1,56 @@
 [build-system]
-requires = ["scikit-build-core", "pybind11"]
+requires = [
+    "scikit-build-core>=0.7.0",
+    "pybind11>=2.11.0",
+    "cmake>=3.15",
+    "ninja",
+    "setuptools>=42",
+    "wheel"
+]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "ccc_cuda_ext"
-version = "0.0.1"
+name = "cccgpu"
+version = "0.2.0"
+description = "The Clustermatch Correlation Coefficient (CCC) with GPU acceleration"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "BSD-2-Clause Plus Patent"}
+authors = [
+    {name = "Milton Pividori", email = "miltondp@gmail.com"},
+]
+dependencies = [
+    "numpy>=1.21.0",
+    "scipy",
+    "numba",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+]
 
-[tool.setuptools.packages.find]
-where = ["libs"]
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.scikit-build]
+# Configure scikit-build-core
+cmake.minimum-version = "3.15"
+cmake.args = [
+    "-DCMAKE_CUDA_ARCHITECTURES=75",  # Adjust for your target CUDA architecture
+]
+cmake.verbose = true
+wheel.packages = ["libs/ccc"]  # Directory containing your Python packages
+wheel.exclude = ["*.cpp", "*.h"]  # Exclude C++ headers from wheel
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
