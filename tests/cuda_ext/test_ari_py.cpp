@@ -16,19 +16,19 @@ int main() {
 
         // Import required Python modules
         py::module_ np = py::module_::import("numpy");
-        py::module_ ccc_module = py::module_::import("ccc.coef");
+        py::module_ ccc_module = py::module_::import("ccc.sklearn.metrics");
 
         // Convert C++ vectors to numpy arrays
         py::array_t<int> np_part0 = py::cast(part0);
         py::array_t<int> np_part1 = py::cast(part1);
 
         // Call the ccc function
-        py::object result = ccc_module.attr("ccc")(np_part0, np_part1);
+        py::object result = ccc_module.attr("adjusted_rand_index")(np_part0, np_part1);
         
         // Convert result to C++ double
         const auto correlation = result.cast<double>();
 
-        std::cout << "Correlation coefficient: " << correlation << std::endl;
+        std::cout << "ARI: " << correlation << std::endl;
     }
     catch (const py::error_already_set& e) {
         std::cerr << "Python error: " << e.what() << std::endl;
