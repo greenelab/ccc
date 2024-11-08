@@ -329,8 +329,8 @@ INSTANTIATE_TEST_SUITE_P(
         AriTestParams(5, 10, 200, 10),
         // Document known issues
         AriTestParams(100, 20, 1000, 10)  // FIXME: wrong results
-        // AriTestParams(200, 20, 300, 10)   // TODO: fix illegal mem access
-        // AriTestParams(1000, 10, 300, 10)  // TODO: optimize memory usage
+        // AriTestParams(200, 20, 300, 10)   // FIXME: fix illegal mem access
+        // AriTestParams(1000, 10, 300, 10)  // FIXME: out of memory
     ),
     // Add test name generator for better output
     [](const testing::TestParamInfo<AriTestParams>& info) {

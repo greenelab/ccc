@@ -101,13 +101,14 @@ __device__ void get_contingency_matrix(int *part0, int *part1, int n, int *share
     }
     __syncthreads();
 
-    // Process elements
+    // Process elements with bounds checking
     for (int i = tid; i < n; i += num_threads)
     {
         int row = part0[i];
         int col = part1[i];
 
-        if (row < k && col < k)
+        // Add bounds checking
+        if (row >= 0 && row < k && col >= 0 && col < k)
         {
             atomicAdd(&shared_cont_mat[row * k + col], 1);
         }
@@ -218,34 +219,41 @@ __global__ void ari(int *parts,
                     int *part_pairs = nullptr)
 {
     /*
+     * Step 0: Compute shared memory addresses
+     */
+    extern __shared__ int shared_mem[];
+    int *s_part0 = shared_mem;                        // n_objs elements
+    int *s_part1 = s_part0 + n_objs;                 // n_objs elements
+    int *s_contingency = s_part1 + n_objs;           // k * k elements
+    int *s_sum_rows = s_contingency + (k * k);       // k elements
+    int *s_sum_cols = s_sum_rows + k;                // k elements
+    int *s_pair_confusion_matrix = s_sum_cols + k;   // 4 elements
+
+    /*
      * Step 1: Each thead, unravel flat indices and load the corresponding data into shared memory
      */
     // each block is responsible for one ARI computation
     int ari_block_idx = blockIdx.x;
-
     // obtain the corresponding parts and unique counts
     int feature_comp_flat_idx = ari_block_idx / n_part_mat_elems; // flat comparison pair index for two features
     int part_pair_flat_idx = ari_block_idx % n_part_mat_elems;    // flat comparison pair index for two partitions of one feature pair
     int i, j;
-
     // unravel the feature indices
     get_coords_from_index(n_features, feature_comp_flat_idx, &i, &j);
     assert(i < n_features && j < n_features);
     assert(i >= 0 && j >= 0);
-
     // unravel the partition indices
     int m, n;
     unravel_index(part_pair_flat_idx, n_parts, &m, &n);
-
     // Make pointers to select the parts and unique counts for the feature pair
     // Todo: Use int4*?
     int *t_data_part0 = parts + i * n_elems_per_feat + m * n_objs; // t_ for thread
     int *t_data_part1 = parts + j * n_elems_per_feat + n * n_objs;
 
     // Load gmem data into smem by using different threads
-    extern __shared__ int shared_mem[];
-    int *s_part0 = shared_mem;
-    int *s_part1 = shared_mem + n_objs;
+    // extern __shared__ int shared_mem[];
+    // int *s_part0 = shared_mem;
+    // int *s_part1 = shared_mem + n_objs;
 
     // Loop over the data using the block-stride pattern
     for (int i = threadIdx.x; i < n_objs; i += blockDim.x)
@@ -272,16 +280,16 @@ __global__ void ari(int *parts,
      * Step 2: Compute contingency matrix within the block
      */
     // shared mem address for the contingency matrix
-    int *s_contingency = shared_mem + 2 * n_objs;
+    // int *s_contingency = shared_mem + 2 * n_objs;
     get_contingency_matrix(t_data_part0, t_data_part1, n_objs, s_contingency, k);
 
     /*
      * Step 3: Construct pair confusion matrix
      */
     // shared mem address for the pair confusion matrix
-    int *s_sum_rows = s_contingency + k * k;
-    int *s_sum_cols = s_sum_rows + k;
-    int *s_pair_confusion_matrix = s_sum_cols + k;
+    // int *s_sum_rows = s_contingency + k * k;
+    // int *s_sum_cols = s_sum_rows + k;
+    // int *s_pair_confusion_matrix = s_sum_cols + k;
     get_pair_confusion_matrix(s_contingency, s_sum_rows, s_sum_cols, n_objs, k, s_pair_confusion_matrix);
     /*
      * Step 4: Compute ARI and write to global memory
@@ -355,12 +363,14 @@ auto ari_core(const T* parts,
     const auto k = *max_iter + 1;
     const auto sz_parts_dtype = sizeof(parts_dtype);
     // FIXME: Compute shared memory size
-    auto s_mem_size = 2 * n_objs * sz_parts_dtype; // For the partition pair to be compared
-    s_mem_size += 2 * n_parts * sz_parts_dtype;    // For the internal sum arrays
-    s_mem_size += 4 * sz_parts_dtype;              // For the 2 x 2 confusion matrix
+    auto s_mem_size = 2 * n_objs * sz_parts_dtype;  // For the partition pair to be compared
+    s_mem_size += k * k * sz_parts_dtype;           // For contingency matrix
+    s_mem_size += 2 * n_parts * sz_parts_dtype;     // For the internal sum arrays
+    s_mem_size += 4 * sz_parts_dtype;               // For the 2 x 2 confusion matrix
 
-
-    // Launch the kernel
+    /*
+     * Launch the kernel
+     */
     ari<<<grid_size, block_size, s_mem_size>>>(
         thrust::raw_pointer_cast(d_parts.data()),
         n_aris,
