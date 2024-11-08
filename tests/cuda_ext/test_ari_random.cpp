@@ -1,3 +1,16 @@
+/**
+ * @file test_ari_random.cpp
+ * @brief Test suite for Adjusted Rand Index (ARI) computation using CUDA
+ * 
+ * This test suite validates the CUDA implementation of ARI computation against
+ * a reference Python implementation. It tests various input sizes and configurations
+ * using parameterized tests.
+ * 
+ * The test compares results from:
+ * 1. CUDA implementation (ari_core)
+ * 2. Python reference implementation (ccc.sklearn.metrics.adjusted_rand_index)
+ */
+
 #include <iostream>
 #include <vector>
 #include <random>
@@ -11,9 +24,26 @@
 
 namespace py = pybind11;
 
-// Helper class for test data generation
+/**
+ * @brief Helper class for generating and manipulating test data
+ * 
+ * This class provides static utility functions for:
+ * - Generating random partition data
+ * - Reshaping arrays between different dimensions
+ * - Generating pairwise combinations of partitions
+ */
 class TestDataGenerator {
 public:
+    /**
+     * @brief Generates random partition assignments
+     * 
+     * @param n_features Number of features
+     * @param n_parts Number of partitions per feature
+     * @param n_objs Number of objects
+     * @param k Number of possible cluster assignments
+     * @param seed Random seed for reproducibility
+     * @return std::vector<int> Flattened array of random partition assignments
+     */
     static std::vector<int> generate_random_partitions(int n_features, int n_parts, 
                                                      int n_objs, int k, unsigned seed = 42) {
         std::vector<int> parts(n_features * n_parts * n_objs);
@@ -26,6 +56,15 @@ public:
         return parts;
     }
 
+    /**
+     * @brief Reshapes a flat array into a 3D structure
+     * 
+     * @param flat_array Input array
+     * @param n_features Number of features
+     * @param n_parts Number of partitions per feature
+     * @param n_objs Number of objects
+     * @return 3D vector representing [features][parts][objects]
+     */
     static std::vector<std::vector<std::vector<int>>> reshape_to_3d(
         const std::vector<int>& flat_array, 
         int n_features, int n_parts, int n_objs) {
@@ -101,7 +140,16 @@ public:
     }
 };
 
-// Test parameters with better naming and documentation
+/**
+ * @brief Parameters for ARI test cases
+ * 
+ * Encapsulates the parameters that define a test case for ARI computation:
+ * - Number of features to compare
+ * - Number of partitions per feature
+ * - Number of objects in each partition
+ * - Number of possible cluster assignments
+ * - Tolerance for floating-point comparisons
+ */
 struct AriTestParams {
     int n_features;
     int n_parts;
@@ -125,8 +173,29 @@ struct AriTestParams {
     }
 };
 
+/**
+ * @brief Test fixture for parameterized ARI tests
+ * 
+ * This fixture provides:
+ * 1. Python environment setup and teardown
+ * 2. Reference implementation through Python
+ * 3. Result validation utilities
+ * 
+ * The fixture ensures that:
+ * - Python interpreter is initialized once for all tests
+ * - Required Python modules are imported
+ * - Resources are properly cleaned up
+ */
 class PairwiseAriTest : public ::testing::TestWithParam<AriTestParams> {
 protected:
+    /**
+     * @brief Set up Python environment before any tests run
+     * 
+     * Initializes:
+     * - Python interpreter
+     * - NumPy module
+     * - CCC metrics module
+     */
     static void SetUpTestSuite() {
         if (!guard) {
             guard = std::make_unique<py::scoped_interpreter>();
@@ -139,13 +208,23 @@ protected:
         }
     }
 
+    /**
+     * @brief Clean up Python environment after all tests complete
+     */
     static void TearDownTestSuite() {
         ccc_module.reset();
         np.reset();
         guard.reset();
     }
 
-    // Helper method with better error handling
+    /**
+     * @brief Compute ARI using Python reference implementation
+     * 
+     * @param labels1 First partition
+     * @param labels2 Second partition
+     * @return float ARI score
+     * @throws Logs failure if Python computation fails
+     */
     float compute_ari(const std::vector<int>& labels1, const std::vector<int>& labels2) {
         try {
             py::array_t<int> np_part0 = py::cast(labels1);
@@ -162,7 +241,13 @@ protected:
         }
     }
 
-    // Add helper methods for validation
+    /**
+     * @brief Validate CUDA results against reference implementation
+     * 
+     * @param actual Results from CUDA implementation
+     * @param expected Results from reference implementation
+     * @param tolerance Maximum allowed difference
+     */
     void validate_results(const std::vector<float>& actual, 
                          const std::vector<float>& expected,
                          float tolerance) {
@@ -186,6 +271,17 @@ std::unique_ptr<py::scoped_interpreter> PairwiseAriTest::guard;
 std::unique_ptr<py::module_> PairwiseAriTest::np;
 std::unique_ptr<py::module_> PairwiseAriTest::ccc_module;
 
+/**
+ * @brief Test case for random partition ARI computation
+ * 
+ * This test:
+ * 1. Generates random partition data
+ * 2. Computes ARI using CUDA implementation
+ * 3. Computes reference results using Python
+ * 4. Validates CUDA results against reference
+ * 
+ * @param GetParam() Test parameters defining input size and configuration
+ */
 TEST_P(PairwiseAriTest, RandomPartitions) {
     const auto params = GetParam();
     
@@ -213,6 +309,18 @@ TEST_P(PairwiseAriTest, RandomPartitions) {
     validate_results(res_aris, ref_aris, params.tolerance);
 }
 
+/**
+ * @brief Test suite instantiation with various parameter sets
+ * 
+ * Current test cases:
+ * - Small input (2 features, 2 parts, 100 objects)
+ * - Medium input (5 features, 10 parts, 200 objects)
+ * 
+ * Known issues:
+ * - Wrong results with large inputs (100 features)
+ * - Memory access issues with very large inputs
+ * - GPU memory limitations with extreme inputs
+ */
 INSTANTIATE_TEST_SUITE_P(
     PairwiseAriTestInstances,
     PairwiseAriTest,
