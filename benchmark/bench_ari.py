@@ -31,7 +31,7 @@ def generate_pairwise_combinations(arr):
 @pytest.mark.parametrize("n_features, n_parts, n_objs, k", [
     (100, 10, 300, 10),
     (100, 20, 300, 10),
-    # (100, 20, 1000, 10), # wrong results
+    (100, 20, 100, 10), # wrong results
     # (200, 20, 300, 10), # illegal mem access
     # (1000, 10, 300, 10), # out of gpu mem
 ])

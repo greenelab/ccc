@@ -2,6 +2,8 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/extrema.h>
+#include <thrust/reduce.h>
+#include <thrust/functional.h>
 
 #include <iostream>
 #include <cmath>
@@ -374,8 +376,7 @@ auto ari_core(const T* parts,
 
     // Define shared memory size for each block
     // Compute k, the maximum value in d_parts + 1, used for shared memory allocation later
-    const auto max_iter = thrust::max_element(d_parts.begin(), d_parts.end());
-    const auto k = *max_iter + 1;
+    const auto k = thrust::reduce(d_parts.begin(), d_parts.end(), -1, thrust::maximum<parts_dtype>()) + 1;
     const auto sz_parts_dtype = sizeof(parts_dtype);
     // FIXME: Compute shared memory size
     auto s_mem_size = 2 * n_objs * sz_parts_dtype;  // For the partition pair to be compared
@@ -407,10 +408,11 @@ auto ari_core(const T* parts,
     thrust::copy(d_out.begin(), d_out.end(), h_out.begin());
     thrust::copy(d_parts_pairs.begin(), d_parts_pairs.end(), h_parts_pairs.begin());
 
-    // Free device memory
+    // Copy data to std::vector
+    std::vector<out_dtype> res;
+    thrust::copy(h_out.begin(), h_out.end(), std::back_inserter(res));
 
-    // Convert thrust vectors to std::vector
-    std::vector<float> res(h_out.begin(), h_out.end());
+    // Free device memory
 
     // Return the ARI values
     return res;
