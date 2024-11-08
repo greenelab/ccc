@@ -38,6 +38,16 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 // gpuErrorCheck(cudaMalloc(...)); // if fails, print message and continue
 // gpuErrorCheck(cudaMalloc(...), true); // if fails, print message and abort
 
+
+bool check_shared_memory_size(const size_t s_mem_size)
+{
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+    const auto max_shared_mem = prop.sharedMemPerBlock;
+    return s_mem_size <= max_shared_mem;
+}
+
+
 /**
  * @brief Unravel a flat index to the corresponding 2D indicis
  * @param[in] flat_idx The flat index to unravel
@@ -330,6 +340,11 @@ auto ari_core(const T* parts,
      */
     // 1. GPU memory is not enough to store the partitions -> split the partitions into smaller chunks and do stream processing
 
+    // Input validation
+    if (!parts || n_features == 0 || n_parts == 0 || n_objs == 0) {
+        throw std::invalid_argument("Invalid input parameters");
+    }
+
     /*
      * Pre-computation
      */
@@ -368,6 +383,11 @@ auto ari_core(const T* parts,
     s_mem_size += 2 * n_parts * sz_parts_dtype;     // For the internal sum arrays
     s_mem_size += 4 * sz_parts_dtype;               // For the 2 x 2 confusion matrix
 
+    // Check if shared memory size exceeds device limits
+    if (!check_shared_memory_size(s_mem_size)) {
+        throw std::runtime_error("Required shared memory exceeds device limits");
+    }
+    
     /*
      * Launch the kernel
      */
