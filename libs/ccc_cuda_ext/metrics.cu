@@ -307,8 +307,8 @@ __global__ void ari(int *parts,
 }
 
 /**
- * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
- * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
+ * @brief Internal lower-level ARI computation
+ * @param parts pointer to the 3D Array of partitions with shape of (n_features, n_parts, n_objs)
  * @throws std::invalid_argument if "parts" is invalid
  * @return std::vector<float> ARI values for each pair of partitions
  */
@@ -317,39 +317,48 @@ auto ari_core(const T* parts,
          const size_t n_features,
          const size_t n_parts,
          const size_t n_objs) -> std::vector<float> {
-    // Edge cases:
+    /*
+     * Notes for future bug fixing and optimization
+     */
     // 1. GPU memory is not enough to store the partitions -> split the partitions into smaller chunks and do stream processing
 
-    // Compute internal variables
+    /*
+     * Pre-computation
+     */
     // Todo: dynamically query types
     using parts_dtype = T;
     using out_dtype = float;
-
+    // Compute internal variables
     const auto n_feature_comp = n_features * (n_features - 1) / 2;
     const auto n_aris = n_feature_comp * n_parts * n_parts;
+
+    /*
+     * Memory Allocation
+     */
     // Allocate host memory
     thrust::host_vector<out_dtype> h_out(n_aris);
     thrust::host_vector<parts_dtype> h_parts_pairs(n_aris * 2 * n_objs);
-
-    // Set up CUDA kernel configuration
-    const auto block_size = 1024; // Todo: query device for max threads per block, older devices only support 512 threads per 1D block
-    // Each block is responsible for one ARI computation
-    const auto grid_size = n_aris;
-    // Define shared memory size for each block
-    const auto parts_dtype_size = sizeof(parts_dtype);
-    auto s_mem_size = n_objs * 2 * parts_dtype_size; // For the partition pair to be compared
-    s_mem_size += 2 * n_parts * parts_dtype_size;    // For the internal sum arrays
-    s_mem_size += 4 * parts_dtype_size;              // For the 2 x 2 confusion matrix
-
     // Allocate device memory with thrust
     // const int* parts_raw = parts[0][0].data();
     thrust::device_vector<parts_dtype> d_parts(parts, parts + n_features * n_parts * n_objs);   // data is copied to device
     thrust::device_vector<parts_dtype> d_parts_pairs(n_aris * 2 * n_objs);
     thrust::device_vector<out_dtype> d_out(n_aris);
 
+    // Set up CUDA kernel configuration
+    const auto block_size = 1024; // Todo: query device for max threads per block, older devices only support 512 threads per 1D block
+    // Each block is responsible for one ARI computation
+    const auto grid_size = n_aris;
+
+    // Define shared memory size for each block
     // Compute k, the maximum value in d_parts + 1, used for shared memory allocation later
-    auto max_iter = thrust::max_element(d_parts.begin(), d_parts.end());
+    const auto max_iter = thrust::max_element(d_parts.begin(), d_parts.end());
     const auto k = *max_iter + 1;
+    const auto sz_parts_dtype = sizeof(parts_dtype);
+    // FIXME: Compute shared memory size
+    auto s_mem_size = 2 * n_objs * sz_parts_dtype; // For the partition pair to be compared
+    s_mem_size += 2 * n_parts * sz_parts_dtype;    // For the internal sum arrays
+    s_mem_size += 4 * sz_parts_dtype;              // For the 2 x 2 confusion matrix
+
 
     // Launch the kernel
     ari<<<grid_size, block_size, s_mem_size>>>(
@@ -378,8 +387,8 @@ auto ari_core(const T* parts,
 }
 
 /**
- * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
- * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
+ * @brief API exposed to Python for computing ARI using CUDA upon a 3D Numpy NDArray of partitions
+ * @param parts 3D Numpy.NDArray of partitions with shape of (n_features, n_parts, n_objs)
  * @throws std::invalid_argument if "parts" is invalid
  * @return std::vector<float> ARI values for each pair of partitions
  */
@@ -411,22 +420,6 @@ auto ari(const py::array_t<T, py::array::c_style>& parts,
     return ari_core(parts_ptr, n_features, n_parts, n_objs);
 }
 
-
-// /**
-//  * @brief API exposed for computing ARI using CUDA upon a 3D array of partitions
-//  * @param parts 3D Array of partitions with shape of (n_features, n_parts, n_objs)
-//  * @throws std::invalid_argument if "parts" is invalid
-//  * @return std::vector<float> ARI values for each pair of partitions
-//  */
-// template <typename T>
-// auto ari_vector(const Mat3<T>& parts, 
-//              const size_t n_features,
-//              const size_t n_parts,
-//              const size_t n_objs) -> std::vector<float> {
-//     // Obtain array data pointer
-//     const auto parts_ptr = parts.data();
-//     return ari_core<T>(parts_ptr, n_features, n_parts, n_objs);
-// }
 
 // Below is the explicit instantiation of the ari template function.
 //
