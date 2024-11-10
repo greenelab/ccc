@@ -216,7 +216,6 @@ __device__ void get_pair_confusion_matrix(
  * @param n_aris Number of ARIs to compute
  * @param k The max value of cluster number + 1
  * @param out Output array of ARIs
- * @param part_pairs Output array of part pairs to be compared by ARI
  */
 extern "C"
 __global__ void ari(int *parts,
@@ -227,8 +226,8 @@ __global__ void ari(int *parts,
                     const int n_elems_per_feat,
                     const int n_part_mat_elems,
                     const int k,
-                    float *out,
-                    int *part_pairs = nullptr)
+                    float *out
+                    )
 {
     /*
      * Step 0: Compute shared memory addresses
@@ -274,19 +273,6 @@ __global__ void ari(int *parts,
         s_part1[i] = t_data_part1[i];
     }
     __syncthreads();
-
-    // Copy data to global memory if part_pairs is specified
-    if (part_pairs != nullptr)
-    {
-        int *out_part0 = part_pairs + ari_block_idx * (2 * n_objs);
-        int *out_part1 = out_part0 + n_objs;
-
-        for (int i = threadIdx.x; i < n_objs; i += blockDim.x)
-        {
-            out_part0[i] = s_part0[i];
-            out_part1[i] = s_part1[i];
-        }
-    }
 
     /*
      * Step 2: Compute contingency matrix within the block
@@ -366,7 +352,6 @@ auto ari_core(const T* parts,
     // Allocate device memory with thrust
     // const int* parts_raw = parts[0][0].data();
     thrust::device_vector<parts_dtype> d_parts(parts, parts + n_features * n_parts * n_objs);   // data is copied to device
-    thrust::device_vector<parts_dtype> d_parts_pairs(n_aris * 2 * n_objs);
     thrust::device_vector<out_dtype> d_out(n_aris);
 
     // Set up CUDA kernel configuration
@@ -401,12 +386,10 @@ auto ari_core(const T* parts,
         n_parts * n_objs,
         n_parts * n_parts,
         k,
-        thrust::raw_pointer_cast(d_out.data()),
-        thrust::raw_pointer_cast(d_parts_pairs.data()));
+        thrust::raw_pointer_cast(d_out.data()));
     
     // Copy data back to host
     thrust::copy(d_out.begin(), d_out.end(), h_out.begin());
-    thrust::copy(d_parts_pairs.begin(), d_parts_pairs.end(), h_parts_pairs.begin());
 
     // Copy data to std::vector
     std::vector<out_dtype> res;
