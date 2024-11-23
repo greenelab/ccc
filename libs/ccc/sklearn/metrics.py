@@ -40,34 +40,35 @@ from numba import njit
 
 
 @njit(cache=True, nogil=True)
-def get_contingency_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
+def gpu_contingency_matrix(part0, part1, cont_mat):
     """
-    Given two clustering partitions with k0 and k1 number of clusters each, it
-    returns a contingency matrix with k0 rows and k1 columns. It's an implementation of
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.contingency_matrix.html,
-    but the code is not based on their implementation.
+    GPU kernel to compute the contingency matrix.
+    """
+    idx = cuda.grid(1)
+    if idx < part0.size:
+        row = part0[idx]
+        col = part1[idx]
+        cuda.atomic.add(cont_mat, (row, col), 1)
 
-    Args:
-        part0: a 1d array with cluster assignments for n objects. It assumes that
-            the cluster assignments are integers from 0 to k0-1.
-        part1: a 1d array with cluster assignments for n objects. It assumes that
-            the cluster assignments are integers from 0 to k1-1.
-
-    Returns:
-        A contingency matrix with k0 (number of clusters in part0) rows and k1
-        (number of clusters in part1) columns. Each cell ij represents the
-        number of objects grouped in cluster i (in part0) and cluster j (in
-        part1).
+def get_contingency_matrix_gpu(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
+    """
+    GPU-accelerated function to compute the contingency matrix.
     """
     k0, k1 = np.max(part0) + 1, np.max(part1) + 1
+    cont_mat = np.zeros((k0, k1), dtype=np.int32)
 
-    cont_mat = np.zeros((k0, k1))
+    # Allocate device memory
+    d_part0 = cuda.to_device(part0)
+    d_part1 = cuda.to_device(part1)
+    d_cont_mat = cuda.to_device(cont_mat)
 
-    for i in range(len(part0)):
-        cont_mat[part0[i], part1[i]] += 1
+    # Launch the kernel
+    threads_per_block = 256
+    blocks_per_grid = (part0.size + threads_per_block - 1) // threads_per_block
+    gpu_contingency_matrix[blocks_per_grid, threads_per_block](d_part0, d_part1, d_cont_mat)
 
-    return cont_mat
-
+    # Copy result back to host
+    return d_cont_mat.copy_to_host()
 
 @njit(cache=True, nogil=True)
 def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarray:
@@ -103,33 +104,29 @@ def get_pair_confusion_matrix(part0: np.ndarray, part1: np.ndarray) -> np.ndarra
     C[0, 0] = n_samples**2 - C[0, 1] - C[1, 0] - sum_squares
     return C
 
-
-def adjusted_rand_index(part0: np.ndarray, part1: np.ndarray) -> float:
+def adjusted_rand_index_gpu(part0: np.ndarray, part1: np.ndarray) -> float:
     """
-    Computes the adjusted Rand index (ARI) between two clustering partitions.
-    The code is based on the sklearn implementation here:
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_rand_score.html
-    See copyright notice at the top of this file.
-
-    This function should not be compiled with numba, since it depends on
-    arbitrarily large interger variable (supported by Python) to correctly
-    compute the ARI in large partitions.
-
-    Args:
-        part0: a 1d array with cluster assignments for n objects.
-        part1: a 1d array with cluster assignments for n objects.
-
-    Returns:
-        A number representing the adjusted Rand index between two clustering
-        partitions. This number is between something around 0 (partitions do not
-        match; it could be negative in some cases) and 1.0 (perfect match).
+    Computes the adjusted Rand index (ARI) between two clustering partitions
+    using GPU-accelerated functions.
     """
-    (tn, fp), (fn, tp) = get_pair_confusion_matrix(part0, part1)
-    # convert to Python integer types, to avoid overflow or underflow
-    tn, fp, fn, tp = int(tn), int(fp), int(fn), int(tp)
+    
+    # Allocate memory on the device
+    part0_device = cuda.to_device(part0)
+    part1_device = cuda.to_device(part1)
 
-    # Special cases: empty data or full agreement
+    confusion_matrix = cuda.device_array((2, 2), dtype=np.int64)
+
+    # Calculate pair confusion matrix on GPU
+    get_pair_confusion_matrix_gpu[1, len(part0)](part0_device, part1_device)
+
+    # Fetch the confusion matrix from GPU
+    confusion_matrix_host = confusion_matrix.copy_to_host()
+
+    tn, fp = confusion_matrix_host[0, 0], confusion_matrix_host[0, 1]
+    fn, tp = confusion_matrix_host[1, 0], confusion_matrix_host[1, 1]
+
     if fn == 0 and fp == 0:
         return 1.0
 
     return 2.0 * (tp * tn - fn * fp) / ((tp + fn) * (fn + tn) + (tp + fp) * (fp + tn))
+    
