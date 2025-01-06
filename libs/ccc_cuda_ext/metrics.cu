@@ -198,7 +198,7 @@ __device__ void get_contingency_matrix_batch(const T* part0, const T* part1, con
             (T)0  // Default value for out-of-bounds items
         );
 
-        // Process thread-local data (example: multiply by 2)
+        // Process thread-local data 
         #pragma unroll
         for (int i = 0; i < ITEMS_PER_THREAD; i++) {
             // threadData[i] *= 2;
