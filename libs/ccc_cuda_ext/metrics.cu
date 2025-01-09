@@ -97,8 +97,8 @@ __device__ __host__ inline void get_coords_from_index(int n_obj, int idx, int *x
 
 /**
  * @brief Compute the contingency matrix for two partitions using shared memory
- * @param[in] part0 Pointer to the first partition array
- * @param[in] part1 Pointer to the second partition array
+ * @param[in] part0 Pointer to the first partition array, global memory
+ * @param[in] part1 Pointer to the second partition array, global memory
  * @param[in] n Number of elements in each partition array
  * @param[out] shared_cont_mat Pointer to shared memory for storing the contingency matrix
  * @param[in] k Maximum number of clusters (size of contingency matrix is k x k)
@@ -353,9 +353,12 @@ __global__ void ari(int *parts,
      * Step 0: Compute shared memory addresses
      */
     extern __shared__ int shared_mem[];
-    int *s_part0 = shared_mem;                        // n_objs elements
-    int *s_part1 = s_part0 + n_objs;                 // n_objs elements
-    int *s_contingency = s_part1 + n_objs;           // k * k elements
+    // NOTE: comment out the following lines for now
+    // int *s_part0 = shared_mem;                        // n_objs elements
+    // int *s_part1 = s_part0 + n_objs;                 // n_objs elements
+    // int *s_contingency = s_part1 + n_objs;           // k * k elements
+    // NOTE Ends
+    int *s_contingency = shared_mem;           // k * k elements
     int *s_sum_rows = s_contingency + (k * k);       // k elements
     int *s_sum_cols = s_sum_rows + k;                // k elements
     int *s_pair_confusion_matrix = s_sum_cols + k;   // 4 elements
@@ -386,13 +389,15 @@ __global__ void ari(int *parts,
     // int *s_part0 = shared_mem;
     // int *s_part1 = shared_mem + n_objs;
 
+    // NOTE: comment out the following lines for now
     // Loop over the data using the block-stride pattern
-    for (int i = threadIdx.x; i < n_objs; i += blockDim.x)
-    {
-        s_part0[i] = t_data_part0[i];
-        s_part1[i] = t_data_part1[i];
-    }
-    __syncthreads();
+    // for (int i = threadIdx.x; i < n_objs; i += blockDim.x)
+    // {
+    //     s_part0[i] = t_data_part0[i];
+    //     s_part1[i] = t_data_part1[i];
+    // }
+    // __syncthreads();
+    // NOTE Ends
 
     /*
      * Step 2: Compute contingency matrix within the block
@@ -483,8 +488,11 @@ auto ari_core(const T* parts,
     // Compute k, the maximum value in d_parts + 1, used for shared memory allocation later
     const auto k = thrust::reduce(d_parts.begin(), d_parts.end(), -1, thrust::maximum<parts_dtype>()) + 1;
     const auto sz_parts_dtype = sizeof(parts_dtype);
-    // FIXME: Compute shared memory size
-    auto s_mem_size = 2 * n_objs * sz_parts_dtype;  // For the partition pair to be compared
+    // Compute shared memory size
+    // FIXME: Partition pair size should be fixed. Stream processing should be used for large input
+    // NOTE: Use global memory to fix the issue for now and then optimize with shared memory
+    // auto s_mem_size = 2 * n_objs * sz_parts_dtype;  // For the partition pair to be compared
+    auto s_mem_size = 0;
     s_mem_size += k * k * sz_parts_dtype;           // For contingency matrix
     s_mem_size += 2 * n_parts * sz_parts_dtype;     // For the internal sum arrays
     s_mem_size += 4 * sz_parts_dtype;               // For the 2 x 2 confusion matrix
