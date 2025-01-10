@@ -894,7 +894,7 @@ def test_cm_return_parts_categorical_variable():
     numerical_feature0_median = np.percentile(numerical_feature0, 50)
 
     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.str_)
     categorical_feature1[numerical_feature0 < numerical_feature0_median] = "l"
     categorical_feature1[numerical_feature0 >= numerical_feature0_median] = "u"
     _unique_values = np.unique(categorical_feature1)
@@ -1248,7 +1248,7 @@ def test_cm_numerical_and_categorical_features_perfect_relationship():
     numerical_feature0_median = np.percentile(numerical_feature0, 50)
 
     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.str_)
     categorical_feature1[numerical_feature0 < numerical_feature0_median] = "l"
     categorical_feature1[numerical_feature0 >= numerical_feature0_median] = "u"
     _unique_values = np.unique(categorical_feature1)
@@ -1275,7 +1275,7 @@ def test_cm_numerical_and_categorical_features_strong_relationship():
     numerical_feature0_perc = np.percentile(numerical_feature0, 25)
 
     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.str_)
     categorical_feature1[numerical_feature0 < numerical_feature0_perc] = "l"
     categorical_feature1[numerical_feature0 >= numerical_feature0_perc] = "u"
     _unique_values = np.unique(categorical_feature1)
@@ -1301,7 +1301,7 @@ def test_cm_numerical_and_categorical_features_no_relationship():
     numerical_feature0 = np.random.rand(100)
 
     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.str_)
     categorical_feature1[numerical_feature0 < 0.50] = "l"
     categorical_feature1[numerical_feature0 >= 0.50] = "u"
     np.random.shuffle(categorical_feature1)
@@ -1377,7 +1377,7 @@ def test_cm_numerical_and_categorical_features_with_pandas_dataframe_two_feature
     numerical_feature0_median = np.percentile(numerical_feature0, 50)
 
     # create a categorical variable perfectly correlated with the numerical one (this is actually an ordinal feature)
-    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.unicode_)
+    categorical_feature1 = np.full(numerical_feature0.shape[0], "", dtype=np.str_)
     categorical_feature1[numerical_feature0 < numerical_feature0_median] = "l"
     categorical_feature1[numerical_feature0 >= numerical_feature0_median] = "u"
     _unique_values = np.unique(categorical_feature1)
