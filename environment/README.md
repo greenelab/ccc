@@ -83,7 +83,7 @@ cd environment/
 1. Create a conda environment and install main packages:
 
  ```bash
-conda env create --name ccc --file environment.yml
+conda env create --name ccc --file environment-cuda.yml
 conda run -n ccc --no-capture-output bash scripts/install_other_packages.sh
  ```
 
@@ -131,7 +131,7 @@ bash scripts/install_other_packages.sh
 1. Export conda environment:
 
 ```bash
-conda env export --name ccc --file environment.yml
+conda env export --name ccc --file environment-cuda.yml
 ```
 
 1. Modify `environment.yml` and leave only manually installed packages (not their dependencies).

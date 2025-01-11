@@ -1,0 +1,21 @@
+name: ccc-rapid
+channels:
+  - rapidsai
+  - conda-forge
+  - nvidia
+dependencies:
+  - rapids=24.08
+  - cuda-version>=12.0,<=12.5
+  - cupy=13.*
+  - pip
+  - python=3.10
+  - minepy
+  - pip:
+    - sphinx==8.*
+    - numba==0.60.*
+    - pytest==8.*
+    - pybind11==2.*
+    - ipython==8.*
+    - seaborn==0.13.*
+    - upsetplot==0.9.*
+    
