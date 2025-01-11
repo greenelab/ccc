@@ -14,7 +14,6 @@ from numba.typed import List
 
 from ccc.pytorch.core import unravel_index_2d
 from ccc.sklearn.metrics import adjusted_rand_index as ari
-# from ccc.sklearn.metrics_gpu2 import adjusted_rand_index as ari
 from ccc.scipy.stats import rank
 from ccc.utils import chunker, DummyExecutor
 
@@ -36,7 +35,7 @@ def get_perc_from_k(k: int) -> list[float]:
     return [(1.0 / k) * i for i in range(1, k)]
 
 
-# @njit(cache=True, nogil=True)
+@njit(cache=True, nogil=True)
 def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     """
     Performs a simple quantile clustering on one dimensional data (1d). Quantile
@@ -57,27 +56,24 @@ def run_quantile_clustering(data: NDArray, k: int) -> NDArray[np.int16]:
     data_rank = rank(data, data_sorted)
     data_perc = data_rank / len(data)
 
-    # percentiles = [0.0] + get_perc_from_k(k) + [1.0]
-    percentiles = get_perc_from_k(k)
-    # print(f"CPU percentages: {str(percentiles)}")
+    percentiles = [0.0] + get_perc_from_k(k) + [1.0]
 
-    # cut_points = np.searchsorted(data_perc[data_sorted], percentiles, side="right")
-    #
-    # current_cluster = 0
-    # part = np.zeros(data.shape, dtype=np.int16) - 1
-    #
-    # for i in range(len(cut_points) - 1):
-    #     lim1 = cut_points[i]
-    #     lim2 = cut_points[i + 1]
-    #
-    #     part[data_sorted[lim1:lim2]] = current_cluster
-    #     current_cluster += 1
-    bins = np.quantile(data, percentiles)
-    part = np.digitize(data, bins, right=True)
+    cut_points = np.searchsorted(data_perc[data_sorted], percentiles, side="right")
+
+    current_cluster = 0
+    part = np.zeros(data.shape, dtype=np.int16) - 1
+
+    for i in range(len(cut_points) - 1):
+        lim1 = cut_points[i]
+        lim2 = cut_points[i + 1]
+
+        part[data_sorted[lim1:lim2]] = current_cluster
+        current_cluster += 1
+
     return part
 
 
-# @njit(cache=True, nogil=True)
+@njit(cache=True, nogil=True)
 def get_range_n_clusters(
     n_features: int, internal_n_clusters: Iterable[int] = None
 ) -> NDArray[np.uint8]:
@@ -113,7 +109,7 @@ def get_range_n_clusters(
     return np.array(clusters_range_list, dtype=np.uint16)
 
 
-# @njit(cache=True, nogil=True)
+@njit(cache=True, nogil=True)
 def get_parts(
     data: NDArray, range_n_clusters: tuple[int], data_is_numerical: bool = True
 ) -> NDArray[np.int16]:
@@ -674,7 +670,6 @@ def ccc(
     # get number of cores to use
     n_workers = get_n_workers(n_jobs)
 
-    # Converts internal_n_clusters to a list of integers if it's provided.
     if internal_n_clusters is not None:
         _tmp_list = List()
 
@@ -799,8 +794,6 @@ def ccc(
             max_parts[f_idx, :] = max_part_idx_list
             cm_pvalues[f_idx] = pvalues
 
-    # print("CPU parts:")
-    # print(parts)
     # return an array of values or a single scalar, depending on the input data
     if cm_values.shape[0] == 1:
         if return_parts:
