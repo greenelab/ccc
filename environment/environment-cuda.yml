@@ -1,4 +1,4 @@
-name: ccc-rapid
+name: ccc-gpu
 channels:
   - rapidsai
   - conda-forge
