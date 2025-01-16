@@ -18,4 +18,6 @@ dependencies:
     - ipython==8.*
     - seaborn==0.13.*
     - upsetplot==0.9.*
+    - numpy==2.*
+    - numba==0.60.*
     

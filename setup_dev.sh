@@ -12,3 +12,8 @@ conda activate ccc-gpu
 
 # Set the PYTHONPATH
 export PYTHONPATH=`readlink -f ./libs/`:$PYTHONPATH
+
+# Set the CUDA_HOME and LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="~/anaconda3/envs/ccc-cuda/lib/:$LD_LIBRARY_PATH"
+export LIBRARY_PATH="~/anaconda3/envs/ccc-cuda/lib/:$LD_LIBRARY_PATH"
+export CUDA_HOME="~/anaconda3/envs/ccc-cuda"
