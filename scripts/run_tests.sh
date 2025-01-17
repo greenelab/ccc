@@ -15,6 +15,14 @@ echo -e "\033[34mRunning Python tests...\033[0m"
 pytest -rs --color=yes ./tests/ --ignore ./tests/gpu/excluded
 
 # Run C++ tests
+echo -e "\033[34mBuilding C++ tests...\033[0m"
+# Clean up build directory
+rm -rf build
+# TODO: fix `pip install .` for not generating the build directory
+# Build the CUDA extension module
+cmake -S . -B build
+cmake --build build
+
 echo -e "\033[34mRunning C++ tests...\033[0m"
 for test in ./build/test_*; do
     echo "Running $test..."
