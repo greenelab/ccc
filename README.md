@@ -5,6 +5,9 @@
 [![bioRxiv Manuscript](https://img.shields.io/badge/manuscript-bioRxiv-blue.svg)](https://doi.org/10.1101/2022.06.15.496326)
 [![HTML Manuscript](https://img.shields.io/badge/manuscript-HTML-blue.svg)](https://greenelab.github.io/ccc-manuscript/)
 
+> [!TIP]
+> **Looking for GPU acceleration?** Check out [**CCC-GPU**](https://github.com/pivlab/ccc-gpu) — a CUDA-accelerated implementation of CCC that achieves up to **73x speedups** (benchmarked on synthetic gene expression data, comparing CCC on 12 AMD Ryzen Threadripper 7960X cores vs. CCC-GPU on a single NVIDIA RTX 4090 GPU). Install it with `pip install cccgpu`.
+
 ## Overview
 
 The Clustermatch Correlation Coefficient (CCC) is a highly-efficient, next-generation not-only-linear correlation coefficient that can work on numerical and categorical data types.
